@@ -86,7 +86,7 @@ def evaluate_with_wf(
     last = available_end(data_dir)
     if end > last:
         raise ValueError(f"Snapshot ends {last}; refusing to silently shorten the test")
-    result = (evaluator or WfEvaluator(data_dir=data_dir)).evaluate(weights, cutoff, end)
+    result = (evaluator or WfEvaluator(data_dir=data_dir, normalize=False)).evaluate(weights, cutoff, end)
     portfolio, benchmark = result.portfolio.model_dump(), result.benchmark.model_dump()
     checks = _checks(weights, policy, portfolio, benchmark)
     label, model_cutoff = window_label(cutoff, author_model)
@@ -103,7 +103,7 @@ def evaluate_with_wf(
         "label": label,
         "author_model": author_model,
         "model_training_cutoff": model_cutoff,
-        "assumptions": result.assumptions,
+        "assumptions": [*result.assumptions, f"Frozen asset weights total {sum(weights.values()):.6f}; the residual is cash, without normalization. Cash reserve is a monthly target, not a continuous historical floor."],
         "leakage": leakage_statement(label, cutoff, author_model, model_cutoff),
         "limitations": (
             "Leakage-safe walk-forward engine on a point-in-time snapshot: monthly rebalance to the frozen "

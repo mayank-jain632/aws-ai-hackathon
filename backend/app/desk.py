@@ -65,9 +65,36 @@ class StrategyInput(StrictModel):
             raise ValueError("Strategy contains unsupported historical tickers")
         if any(
             not math.isfinite(w) or w <= 0 or w > 1 for w in self.weights.values()
-        ) or not math.isclose(sum(self.weights.values()), 1, abs_tol=1e-6):
-            raise ValueError("Long-only weights must be positive and sum to one")
+        ) or sum(self.weights.values()) > 1 + 1e-9:
+            raise ValueError("Long-only weights must be positive and sum to at most one; the remainder is cash")
         return self
+
+
+def check_allocation(weights, mandate):
+    """Validate target or projected holdings as fractions of the fund capital.
+
+    Sector labels are the existing static ten-name classification, not live data.
+    Unknown holdings fail closed when a sector cap applies.
+    """
+    if not mandate:
+        return
+    reserve = float(mandate.get("min_cash", 0)) / 100
+    if sum(weights.values()) > 1 - reserve + 1e-9:
+        raise ValueError("Allocation would breach the fund cash reserve")
+    sector_limit = float(mandate.get("max_sector", 100)) / 100
+    if sector_limit < 1:
+        from backend.app.wf.masking import SECTORS
+
+        totals = {}
+        for symbol, weight in weights.items():
+            if weight <= 0:
+                continue
+            if symbol not in SECTORS:
+                raise ValueError(f"Unknown sector for {symbol}; cannot enforce sector limit")
+            sector = SECTORS[symbol]
+            totals[sector] = totals.get(sector, 0) + weight
+        if any(weight > sector_limit + 1e-9 for weight in totals.values()):
+            raise ValueError("Allocation would breach the fund sector limit")
 
 
 class ReviewInput(StrictModel):
@@ -196,6 +223,8 @@ class Desk:
                 raise ValueError(
                     "Strategy violates the mandate's universe or position limit"
                 )
+            context = json.loads(getattr(self.manager, "context", "") or "{}")
+            check_allocation(body.weights, context.get("mandate"))
             record = {
                 **body.model_dump(mode="json"),
                 "id": uuid4().hex,
@@ -303,6 +332,8 @@ class Desk:
             policy = self.policy()
             if selected_engine() == "wf":
                 return self._evaluate_wf(strategy_id, record, policy)
+            if not math.isclose(sum(record["weights"].values()), 1, abs_tol=1e-9):
+                raise ValueError("Cash allocations require the WF engine; legacy normalizes weights")
             # Both windows and weights are frozen before the evaluator is created.
             window = data.prices_full(list(record["weights"]) + [data.REFERENCE])
             available_end = window.index.max().date().isoformat()
@@ -384,13 +415,13 @@ class Desk:
                 raise ValueError("Test exceeds fund drawdown limit")
             # Do not imply support for constraints the existing backtest cannot model.
             if (
-                mandate.get("min_cash", 0)
-                or mandate.get("exclusions")
+                mandate.get("exclusions")
                 or mandate.get("rebalance", "monthly") != "monthly"
             ):
                 raise ValueError(
-                    "Cash reserve, exclusions or rebalance mandate needs a matching evaluation engine before execution"
+                    "Exclusions or rebalance mandate needs a matching evaluation engine before execution"
                 )
+            check_allocation(strategy["weights"], mandate)
         return policy, strategy
 
 

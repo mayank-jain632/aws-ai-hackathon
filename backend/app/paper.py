@@ -11,7 +11,7 @@ import httpx
 from dotenv import dotenv_values
 
 from backend.app.agent import ROOT
-from backend.app.desk import digest, stamp
+from backend.app.desk import check_allocation, digest, stamp
 from backend.app.watchdog import gate as watchdog_gate
 
 PAPER_URL = "https://paper-api.alpaca.markets"
@@ -158,10 +158,13 @@ def submit(desk, body):
                 > fund["capital"]
             ):
                 raise ValueError("Projected holdings exceed fund capital")
-            if fund.get("max_sector", 100) < 100:
-                raise ValueError(
-                    "Sector-limit enforcement is not connected to the order adapter yet"
-                )
+            projected = {p["symbol"]: float(p["market_value"]) for p in positions}
+            delta = body.notional if body.side == "buy" else -body.notional
+            projected[body.symbol] = projected.get(body.symbol, 0) + delta
+            reserve = capital * float(fund.get("min_cash", 0)) / 100
+            if cash - delta < reserve - 0.01:
+                raise ValueError("Order would breach the fund cash reserve")
+            check_allocation({symbol: value / capital for symbol, value in projected.items()}, fund)
         # Recheck immediately before the broker call, then persist intent before I/O.
         desk.execution_checks(body.strategy_id)
         record = {

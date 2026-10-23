@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import re
 
-from backend.app.desk import Policy
+from backend.app.desk import Policy, check_allocation
 from backend.app.synthesis.schema import OrderPlan, PlannedOrder
+from backend.app.wf.masking import SECTORS
 
 MIN_TRADE = 5.0  # dollars; smaller rebalances are noise
 
@@ -49,10 +50,12 @@ def plan_orders(
     if mandate:
         capital = min(capital, float(mandate.get("capital", capital)))
         position_cap = min(position_cap, float(mandate.get("max_position", 100)) / 100)
-        if mandate.get("max_sector", 100) < 100:
-            blocked.append("sector limit has no enforcement engine yet")
-        if mandate.get("min_cash", 0) or mandate.get("exclusions") or mandate.get("rebalance", "monthly") != "monthly":
-            blocked.append("cash reserve, exclusions or non-monthly rebalance need a matching engine")
+        try:
+            check_allocation(weights, mandate)
+        except ValueError as error:
+            blocked.append(str(error))
+        if mandate.get("exclusions") or mandate.get("rebalance", "monthly") != "monthly":
+            blocked.append("exclusions or non-monthly rebalance need a matching engine")
 
     sells: list[PlannedOrder] = []
     buys: list[PlannedOrder] = []
@@ -91,14 +94,29 @@ def plan_orders(
     # not assumed to settle in time for the same batch)
     sells.sort(key=lambda o: -o.notional)
     buys.sort(key=lambda o: -o.notional)
-    spendable = cash
+    reserve = capital * float((mandate or {}).get("min_cash", 0)) / 100
+    spendable = max(0.0, min(cash - reserve, capital - reserve - sum(positions.values())))
+    projected = dict(positions)
     kept_buys: list[PlannedOrder] = []
     for b in buys:
+        sector_cap = float((mandate or {}).get("max_sector", 100)) / 100 * capital
+        if sector_cap < capital:
+            if any(symbol not in SECTORS for symbol, value in projected.items() if value > 0) or b.symbol not in SECTORS:
+                blocked.append("Unknown holding sector; cannot enforce sector limit")
+                continue
+            used = sum(value for symbol, value in projected.items() if SECTORS[symbol] == SECTORS[b.symbol])
+            allowed = max(0.0, sector_cap - used)
+            b = b.model_copy(update={"notional": round(min(b.notional, allowed), 2)})
+            if b.notional < MIN_TRADE:
+                skipped[b.symbol] = "sector limit leaves no buy capacity"
+                continue
         if b.notional <= spendable:
             kept_buys.append(b)
             spendable -= b.notional
+            projected[b.symbol] = projected.get(b.symbol, 0) + b.notional
         elif spendable >= MIN_TRADE:
             kept_buys.append(b.model_copy(update={"notional": round(spendable, 2), "note": (b.note + "; " if b.note else "") + "reduced to available cash"}))
+            projected[b.symbol] = projected.get(b.symbol, 0) + round(spendable, 2)
             spendable = 0.0
         else:
             skipped[b.symbol] = "no cash left in this batch"

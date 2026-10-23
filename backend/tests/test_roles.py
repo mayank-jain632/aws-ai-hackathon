@@ -332,7 +332,8 @@ def test_desk_artifacts_and_worker_tokens_are_fund_scoped(tmp_path, monkeypatch)
         )
         h1 = {"X-Agent-Token": first.token, "X-Agent-ID": "strategy"}
         registered = client.post(
-            "/api/internal/desk/strategy", headers=h1, json=strategy_body()
+            "/api/internal/desk/strategy", headers=h1,
+            json=strategy_body() | {"weights": {"AAPL": 0.15, "MSFT": 0.15}}
         )
         assert registered.status_code == 200, registered.text
         sid = registered.json()["id"]
