@@ -9,9 +9,13 @@ scripts/agentcore_cleanup.py reads to remove exactly these resources.
   Runtime      aaron_watchdog_opinion             (backend/app/agentcore/remote/opinion_agent.py)
   Account      CloudWatch Transaction Search, so runtime spans reach GenAI Observability
 
-Usage (credentials from your profile, for example AWS_PROFILE=team4-toolkit):
-  uv run python scripts/agentcore_deploy.py --account 556200168424
-  uv run python scripts/agentcore_deploy.py --account 556200168424 --apply
+Every ARN, the bucket name and the log group come from the signed-in account, so the same
+command works in Aaron's participant account or the hosting account. --account is an optional
+guard that stops unless the credentials are in that account.
+
+  uv run python scripts/agentcore_deploy.py                # preview
+  uv run python scripts/agentcore_deploy.py --apply        # deploy or update
+  uv run python scripts/agentcore_deploy.py --policy       # hosted-role IAM statement for this runtime
 """
 
 import argparse
@@ -223,18 +227,34 @@ def deploy_runtime(control, role_arn: str, bucket: str, key: str, region: str) -
     return runtime
 
 
+def hosted_role_statement(runtime_arn: str) -> dict:
+    """What the hosted app's role needs to call this runtime (D25: the deployment owner adds it)."""
+    return {
+        "Sid": "InvokeWatchdogOpinionRuntime",
+        "Effect": "Allow",
+        "Action": "bedrock-agentcore:InvokeAgentRuntime",
+        "Resource": [runtime_arn, f"{runtime_arn}/runtime-endpoint/*"],
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--account", required=True, help="Expected AWS account ID; nothing runs in any other account")
+    parser.add_argument("--account", help="Optional guard: stop unless the credentials are in this account")
     parser.add_argument("--region", default="us-east-1")
     parser.add_argument("--apply", action="store_true", help="Create or update the resources")
+    parser.add_argument("--policy", action="store_true", help="Print the hosted-role IAM statement for the deployed runtime")
     args = parser.parse_args()
+    if args.policy:
+        print(json.dumps(hosted_role_statement(json.loads(INVENTORY.read_text())["runtime_arn"]), indent=2))
+        return
     session = boto3.Session(region_name=args.region)
     identity = session.client("sts").get_caller_identity()
-    if identity["Account"] != args.account:
-        sys.exit(f"Signed in to {identity['Account']}, expected {args.account}. Nothing changed.")
-    bucket = f"aaron-agentcore-watchdog-{args.account}"
-    print(f"Account {args.account} as {identity['Arn'].split('/')[-2]}, region {args.region}")
+    account = identity["Account"]
+    if args.account and account != args.account:
+        sys.exit(f"Signed in to {account}, expected {args.account}. Nothing changed.")
+    args.account = account
+    bucket = f"aaron-agentcore-watchdog-{account}"
+    print(f"Account {account} as {identity['Arn'].split('/')[-2]}, region {args.region}")
     for line in [f"IAM role {ROLE}", f"S3 bucket {bucket}", f"AgentCore Runtime {RUNTIME} ({MODEL})", "CloudWatch Transaction Search on, 100% trace indexing"]:
         print(f"  create or update: {line}")
     if not args.apply:
@@ -275,6 +295,8 @@ def main() -> None:
     print(f"Runtime READY: {runtime['agentRuntimeArn']}")
     print(f"Inventory: {INVENTORY.relative_to(ROOT)}")
     print(f"Enable it in the backend: AGENTCORE_OPINION_ARN={runtime['agentRuntimeArn']}")
+    print("Hosted-role statement (D25, for the deployment owner):")
+    print(json.dumps(hosted_role_statement(runtime["agentRuntimeArn"]), indent=2))
 
 
 if __name__ == "__main__":

@@ -90,6 +90,16 @@ def test_bad_reply_or_aws_error_falls_back(hosted, fake):
     assert agentcore.recent()[-1]["ok"] is False
 
 
+def test_memory_failure_sends_no_lessons_instead_of_raising(hosted, monkeypatch):
+    def broken(query, top_k=5):
+        raise RuntimeError("memory down")
+
+    monkeypatch.setattr(aws, "recall", broken)
+    fake = hosted(FakeRuntime({"opinion": OPINION, "model": "us.openai.gpt-5.6-luna"}))
+    assert agentcore.second_opinion(opinion.SYSTEM, CONTEXT, opinion.SecondOpinion, "Calder Family Trust")["explanation"] == "A sizing mistake."
+    assert json.loads(fake.calls[0]["payload"])["lessons"] == []
+
+
 def test_status_route_is_people_only(hosted, monkeypatch):
     from fastapi.testclient import TestClient
 

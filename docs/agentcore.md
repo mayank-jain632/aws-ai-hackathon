@@ -12,23 +12,48 @@ The canvas stays on EC2. One pipeline agent runs on Amazon Bedrock AgentCore: th
 
 Every invocation, successful or not, goes to `.local/agentcore/invocations.jsonl` with its session ID, X-Ray trace ID and console link. People can read it at `GET /api/agentcore`, together with links to the runtime, GenAI Observability and the runtime log group.
 
-## Run it
+## Run it (Aaron's participant account)
 
 ```sh
-AWS_PROFILE=team4-toolkit uv run python scripts/agentcore_deploy.py --account <id>            # preview
-AWS_PROFILE=team4-toolkit uv run python scripts/agentcore_deploy.py --account <id> --apply    # deploy or update
+AWS_PROFILE=team4-toolkit uv run python scripts/agentcore_deploy.py            # preview
+AWS_PROFILE=team4-toolkit uv run python scripts/agentcore_deploy.py --apply    # deploy or update
 AWS_PROFILE=team4-toolkit AGENTCORE_OPINION_ARN=<printed ARN> uv run python scripts/watchdog_demo.py --fast
 ```
 
-The demo's $40,000 MSFT block produces a hosted second opinion; its line reads `Second opinion (agentcore:aaron_watchdog_opinion-...)`.
+The demo's $40,000 MSFT block produces a hosted second opinion; its line reads `Second opinion (agentcore:aaron_watchdog_opinion-...)`. With `AGENTCORE_OPINION_ARN` unset, as on the hosted app today, the hook returns None and `opinion.py` behaves exactly as before.
 
-The deploy packages Linux arm64 wheels for Python 3.12 (`bedrock-agentcore`, `aws-opentelemetry-distro`, `boto3`) with the agent file, uploads the zip to the owner's bucket, creates the execution role and runtime, and turns on CloudWatch Transaction Search. All resources are tagged `Project=AWS-Hackathon`, `Owner=aaron`, `Team=4`. The inventory is in ignored `.local/agentcore/resources.json`.
+The deploy takes the account from the signed-in credentials and derives every ARN, the bucket name and the log group from it (`--account <id>` is an optional guard). It packages Linux arm64 wheels for Python 3.12 (`bedrock-agentcore`, `aws-opentelemetry-distro`, `boto3`) with the agent file, uploads the zip to the owner's bucket, creates the execution role and runtime, turns on CloudWatch Transaction Search, and sets trace indexing to 100% so every invocation opens on the X-Ray trace page. All resources are tagged `Project=AWS-Hackathon`, `Owner=aaron`, `Team=4`. The inventory is in ignored `.local/agentcore/resources.json`.
 
-Cleanup previews by default, checks the account and every ownership tag, and then removes only the inventoried runtime, log group, bucket and role:
+Cleanup previews by default, checks the account and every ownership tag, and then removes only the inventoried runtime, log group, bucket and role. `--restore-transaction-search` also returns the span destination and indexing to their previous values:
 
 ```sh
-AWS_PROFILE=team4-toolkit uv run python scripts/agentcore_cleanup.py --apply
+AWS_PROFILE=team4-toolkit uv run python scripts/agentcore_cleanup.py --apply --restore-transaction-search
 ```
+
+## Hosting account runbook (for the deployment owner, after the freeze)
+
+The hosted app calls AWS as `team4-agent-canvas` in the hosting account, which is not Aaron's participant account. To have it use the hosted second opinion:
+
+1. With hosting-account credentials, from a checkout of `main`: `./workshop-run uv run python scripts/agentcore_deploy.py`, then the same with `--apply`. It prints the runtime ARN and the exact IAM statement.
+2. Add that statement to the `team4-agent-canvas` role policy in `scripts/hosting.py` (shape below; `--policy` prints it again from the inventory).
+3. Set `AGENTCORE_OPINION_ARN=<printed ARN>` in the hosted environment and redeploy. Lessons recall needs D26's Memory permissions on the same role; without them the runtime still answers, with no lessons.
+4. Check: trigger a blocked order, then `GET /api/agentcore` shows the invocation with `ok: true` and an X-Ray trace ID.
+
+## IAM handoff for team4-agent-canvas
+
+```json
+{
+  "Sid": "InvokeWatchdogOpinionRuntime",
+  "Effect": "Allow",
+  "Action": "bedrock-agentcore:InvokeAgentRuntime",
+  "Resource": [
+    "arn:aws:bedrock-agentcore:us-east-1:<hosting-account-id>:runtime/aaron_watchdog_opinion-<suffix>",
+    "arn:aws:bedrock-agentcore:us-east-1:<hosting-account-id>:runtime/aaron_watchdog_opinion-<suffix>/runtime-endpoint/*"
+  ]
+}
+```
+
+`<suffix>` is the ID AgentCore assigns at creation; the deploy prints the full ARNs. Not applied anywhere (D25). AgentCore Runtime also accepts a resource-based policy (`PutResourcePolicy`), so the hosted role could call the runtime in Aaron's participant account without a second deploy: that needs this statement with that runtime's ARN plus a runtime policy naming the `team4-agent-canvas` role. Neither is set up.
 
 ## Roadmap, not built: AgentCore Gateway
 

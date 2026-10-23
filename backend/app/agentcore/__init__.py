@@ -85,11 +85,16 @@ def recent(limit: int = 20) -> list[dict]:
 
 
 def recalled_lessons(context: dict) -> list[str]:
+    """Lessons from the watchdog's AgentCore Memory (D26). Any failure means no lessons, never an error."""
     from backend.app.watchdog import aws
 
     order = context.get("order", {})
     rules = ", ".join(context.get("rules", []))
-    return aws.recall(f"{order.get('side', '')} {order.get('symbol', '')} blocked on {rules}: lessons about these limits")
+    try:
+        return aws.recall(f"{order.get('side', '')} {order.get('symbol', '')} blocked on {rules}: lessons about these limits")
+    except Exception as error:  # noqa: BLE001 a failed recall must not break the review
+        log.warning("AgentCore Memory recall failed, sending no lessons: %s", error)
+        return []
 
 
 def second_opinion(system: str, context: dict, model_cls, fund: str) -> dict | None:
@@ -121,7 +126,7 @@ def second_opinion(system: str, context: dict, model_cls, fund: str) -> dict | N
         )
         body = json.loads(response["response"].read())
         opinion = model_cls.model_validate(body["opinion"]).model_dump()
-    except (BotoCoreError, ClientError, ValueError, KeyError) as error:
+    except (BotoCoreError, ClientError, ValueError, KeyError, TypeError) as error:
         remember({**record, "ok": False, "error": f"{type(error).__name__}: {str(error)[:300]}", "ms": round((time.monotonic() - started) * 1000)})
         log.warning("AgentCore second opinion failed, using the local path: %s", error)
         return None
