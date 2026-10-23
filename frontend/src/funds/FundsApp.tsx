@@ -25,7 +25,7 @@ export default function FundsApp() {
   useEffect(() => {
     let active = true
     const controller = new AbortController()
-    const update = () => api<{funds: Fund[]}>('/api/funds', {signal: controller.signal}).then(data => { if (active) { setFunds(data.funds); setLoading(false) } }).catch(e => { if (active) { setError(e.message); setLoading(false) } })
+    const update = () => api<{funds: Fund[]}>('/api/funds', {signal: controller.signal}).then(data => { if (active) { setFunds(data.funds); setLoading(false); setError(current => current === 'Could not refresh funds. Reconnecting…' ? '' : current) } }).catch(() => { if (active) { setError('Could not refresh funds. Reconnecting…'); setLoading(false) } })
     void update(); void api<typeof identity>('/api/me', {signal: controller.signal}).then(value => { if(active) setIdentity(value) }).catch(() => {})
     const timer = window.setInterval(update,4000)
     return () => { active = false; controller.abort(); clearInterval(timer) }
@@ -33,7 +33,7 @@ export default function FundsApp() {
   useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(''),4500); return () => clearTimeout(timer) }, [notice])
   async function save(mandate: Mandate) {
     const fund = await api<Fund>(setup === 'edit' && selected ? `/api/funds/${selected.id}/mandate` : '/api/funds', json(setup === 'edit' ? 'PUT' : 'POST',mandate))
-    await refresh(); setSetup(null); setNotice(setup === 'edit' ? 'Fund mandate updated.' : 'Fund created. Your workspace is ready.'); go(fund.id)
+    setFunds(previous => [...previous.filter(item => item.id !== fund.id), fund]); setSetup(null); setNotice(setup === 'edit' ? 'Fund mandate updated.' : 'Fund created. Your workspace is ready.'); go(fund.id)
   }
   async function plan() {
     if (!selected) return
@@ -51,7 +51,7 @@ export default function FundsApp() {
   const totalAgents = activeFunds.reduce((sum,fund) => sum + fund.metrics.agents,0)
   const working = activeFunds.reduce((sum,fund) => sum + fund.metrics.working,0)
   return <div className="fund-shell">
-    <aside className="fund-sidebar"><a className="desk-brand" href="#/"><span className="desk-logo">f<span>.</span></span><strong>Fund desk</strong></a><span className="workspace-label">Team 4 workspace</span><nav className="primary-nav" aria-label="Main navigation"><a href="#/" className={!location.id ? 'selected' : ''}><span>▦</span>All funds<span className="nav-count">{activeFunds.length}</span></a><button onClick={() => setSetup('new')}><span>＋</span>Create fund</button></nav><div className="sidebar-funds"><p>Your funds</p>{activeFunds.map(fund => <a key={fund.id} href={`#/funds/${fund.id}/overview`} className={selected?.id === fund.id ? 'selected' : ''}><i className={`dot ${fund.status}`}/><span>{fund.name}</span></a>)}</div><div className="sidebar-bottom"><div className="aws-status"><i/>Connected to Amazon Bedrock</div><div className="user-row"><span className="user-avatar">{identity.email === 'local' ? 'T' : identity.email[0].toUpperCase()}</span><div><strong>{identity.email === 'local' ? 'Local team' : identity.email.split('@')[0]}</strong><small>Shared workspace</small></div>{identity.hosted && <a href="/logout" aria-label="Sign out" title="Sign out">↪</a>}</div></div></aside>
+    <aside className="fund-sidebar"><a className="desk-brand" href="#/"><span className="desk-logo">f<span>.</span></span><strong>Fund desk</strong></a><span className="workspace-label">Team 4 workspace</span><nav className="primary-nav" aria-label="Main navigation"><a href="#/" className={!location.id ? 'selected' : ''}><span>▦</span>All funds<span className="nav-count">{activeFunds.length}</span></a><button onClick={() => setSetup('new')}><span>＋</span>Create fund</button></nav><div className="sidebar-funds"><p>Your funds</p>{activeFunds.map(fund => <a key={fund.id} href={`#/funds/${fund.id}/overview`} className={selected?.id === fund.id ? 'selected' : ''}><i className={`dot ${fund.status}`}/><span>{fund.name}</span></a>)}</div><div className="sidebar-bottom"><div className="aws-status"><i/>Amazon Bedrock agents</div><div className="user-row"><span className="user-avatar">{identity.email === 'local' ? 'T' : identity.email[0].toUpperCase()}</span><div><strong>{identity.email === 'local' ? 'Local team' : identity.email.split('@')[0]}</strong><small>Shared workspace</small></div>{identity.hosted && <a href="/logout" aria-label="Sign out" title="Sign out">↪</a>}</div></div></aside>
     <main className={`fund-main ${selected && location.tab === 'agents' ? 'canvas-page' : ''}`}>
       <header className="desk-topbar"><div className="breadcrumb"><a href="#/">Workspace</a><span>/</span>{selected ? selected.name : 'All funds'}</div><div className="topbar-right"><span className="paper-label">Paper trading & research</span><span className="team-avatars" title="Shared team workspace"><i>K</i><i>M</i><i>G</i></span></div></header>
       {error && <div className="fund-alert" role="alert">{error}<button aria-label="Dismiss error" onClick={() => setError('')}>×</button></div>}

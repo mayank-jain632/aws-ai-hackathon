@@ -1,9 +1,14 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { defaults, objectives, riskNames, money, type Mandate } from './types'
 
 type Props = { initial?: Mandate; onClose: () => void; onSave: (mandate: Mandate) => Promise<void> }
 export function FundSetup({ initial, onClose, onSave }: Props) {
   const [value, setValue] = useState<Mandate>(initial || { ...defaults, universe: [...defaults.universe] })
+  const dialog = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null
+    return () => previous?.focus()
+  }, [])
   const [step, setStep] = useState(0)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -20,7 +25,14 @@ export function FundSetup({ initial, onClose, onSave }: Props) {
     setBusy(true)
     try { await onSave({ ...value, universe }) } catch (e) { setError(e instanceof Error ? e.message : 'Could not save your fund.') } finally { setBusy(false) }
   }
-  return <div className="setup-backdrop" onKeyDown={e => { if (e.key === 'Escape' && !busy) onClose() }}><section role="dialog" aria-modal="true" aria-labelledby="setup-title" className="setup-dialog">
+  return <div className="setup-backdrop" onKeyDown={e => { if (e.key === 'Escape' && !busy) onClose() }}><section ref={dialog} onKeyDown={event => {
+    if (event.key !== 'Tab') return
+    const items = dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input, select, textarea, summary')
+    if (!items?.length) return
+    const first = items[0], last = items[items.length - 1]
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+  }} role="dialog" aria-modal="true" aria-labelledby="setup-title" className="setup-dialog">
     <header className="setup-heading"><div><p className="muted">{initial ? 'Update your mandate' : 'Make room for a new strategy'}</p><h1 id="setup-title">{initial ? 'Fund settings' : 'Create a fund'}</h1></div><button type="button" className="quiet icon" aria-label="Close fund setup" disabled={busy} onClick={onClose}>×</button></header>
     <nav className="setup-steps" aria-label="Fund setup steps">{['Your mandate','Risk & investments','Permissions & review'].map((title,i) => <button type="button" key={title} className={step === i ? 'current' : step > i ? 'done' : ''} disabled={busy || i > step} onClick={() => setStep(i)}><span>{step > i ? '✓' : i + 1}</span>{title}</button>)}</nav>
     <form onSubmit={submit}><div className="setup-content" key={step}>
