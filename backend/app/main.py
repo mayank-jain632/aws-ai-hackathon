@@ -18,6 +18,7 @@ from backend.app.access import HostedAccess
 from backend.app.agent import AgentManager
 from backend.app.roles import Role, allow_child, require_tool
 from backend.app.routes.agentcore import router as agentcore_router
+from backend.app.routes.charts import router as charts_router
 from backend.app.routes.desk import router as desk_router
 from backend.app.routes.funds import router as funds_router
 from backend.app.routes.models import router as models_router
@@ -351,6 +352,7 @@ app.include_router(models_router)
 app.include_router(sharing_router)
 app.include_router(watchdog_router)
 app.include_router(scores_router)
+app.include_router(charts_router)
 app.include_router(synthesis_router)
 app.include_router(agentcore_router)
 
