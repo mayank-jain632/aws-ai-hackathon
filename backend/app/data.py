@@ -163,18 +163,41 @@ def fedfunds_at(cutoff: str) -> float:
 
 @lru_cache(maxsize=1)
 def _events() -> pd.DataFrame:
-    df = pd.read_csv(DATA_DIR / "gdelt" / "tone.csv", parse_dates=["date"])
+    df = pd.read_csv(DATA_DIR / "gdelt" / "curated_events.csv", parse_dates=["date"])
+    return df.sort_values(["date", "subject"]).reset_index(drop=True)
+
+
+@lru_cache(maxsize=1)
+def _tone() -> pd.DataFrame:
+    path = DATA_DIR / "gdelt" / "tone.csv"
+    if not path.exists():
+        return pd.DataFrame(columns=["date", "subject", "kind", "tone"]).astype({"date": "datetime64[ns]"})
+    df = pd.read_csv(path, parse_dates=["date"])
     return df.sort_values(["date", "subject"]).reset_index(drop=True)
 
 
 def events(cutoff: str, subjects: list[str] | None = None) -> pd.DataFrame:
-    """GDELT daily average news tone, rows dated <= cutoff.
+    """Dated news events with a tone score, rows dated <= cutoff. Citeable by agents.
 
-    Columns: date, subject, kind, tone. kind is "company" (subject = ticker) or
-    "theme" (ukraine_energy, china_reopening, chip_export_controls). Tone is the GDELT
-    GKG average tone, roughly -10..+10, negative means more negative coverage.
+    Columns: date, subject, kind, tone, headline. kind is "company" (subject = ticker)
+    or "theme" (ukraine_energy, china_reopening, chip_export_controls). tone is on the
+    GDELT scale, roughly -10..+10, negative is bad news. Source: the hand-curated
+    data/gdelt/curated_events.csv (see data/README.md for why it is curated).
     """
     df = _events()
+    df = df[df["date"] <= pd.Timestamp(cutoff)]
+    if subjects:
+        df = df[df["subject"].isin(subjects)]
+    return df.copy()
+
+
+def tone(cutoff: str, subjects: list[str] | None = None) -> pd.DataFrame:
+    """GDELT daily average news tone from the DOC API, rows dated <= cutoff.
+
+    Columns: date, subject, kind, tone. Empty if data/gdelt/tone.csv was not produced
+    (the GDELT API rate-limits aggressively; see data/README.md).
+    """
+    df = _tone()
     df = df[df["date"] <= pd.Timestamp(cutoff)]
     if subjects:
         df = df[df["subject"].isin(subjects)]
@@ -193,4 +216,5 @@ __all__ = [
     "macro",
     "fedfunds_at",
     "events",
+    "tone",
 ]

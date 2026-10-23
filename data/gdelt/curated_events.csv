@@ -1,0 +1,84 @@
+date,subject,kind,tone,headline
+2021-04-26,AAPL,company,0,Apple ships iOS 14.5 with App Tracking Transparency; ad-dependent peers warn of impact
+2021-05-26,XOM,company,-2,Activist fund Engine No. 1 wins board seats at Exxon over climate strategy
+2021-07-05,AMZN,company,0,Andy Jassy succeeds Jeff Bezos as Amazon CEO
+2021-10-28,CAT,company,1,Caterpillar posts record Q3 profit but flags supply-chain constraints
+2022-01-18,MSFT,company,2,Microsoft agrees to buy Activision Blizzard for $68.7B
+2022-02-24,ukraine_energy,theme,-8,Russia invades Ukraine; Brent crude trades above $100
+2022-03-08,ukraine_energy,theme,-6,United States bans imports of Russian oil and gas
+2022-03-28,china_reopening,theme,-6,Shanghai begins citywide zero-COVID lockdown
+2022-04-13,JPM,company,-3,JPMorgan Q1 profit falls 42% on reserve build and Russia exposure
+2022-04-20,PG,company,3,Procter & Gamble raises sales outlook on pricing power despite cost inflation
+2022-04-28,AMZN,company,-5,Amazon posts first quarterly loss since 2015 on Rivian writedown and slowing growth
+2022-06-14,ukraine_energy,theme,-6,Gazprom cuts Nord Stream 1 gas flows to Europe
+2022-07-29,XOM,company,5,Exxon reports record Q2 profit of $17.9B on high oil and refining margins
+2022-08-08,NVDA,company,-5,Nvidia warns Q2 revenue will miss as gaming sales fall 33%
+2022-08-26,ukraine_energy,theme,-7,European TTF gas price peaks near EUR 340/MWh
+2022-08-31,chip_export_controls,theme,-5,Nvidia discloses US license requirement restricting A100/H100 sales to China
+2022-09-26,ukraine_energy,theme,-7,Nord Stream pipelines ruptured by sabotage in the Baltic Sea
+2022-10-07,chip_export_controls,theme,-6,US Commerce Department issues sweeping export controls on advanced chips and tools to China
+2022-10-19,PG,company,-3,Procter & Gamble cuts full-year outlook on currency headwinds
+2022-10-22,china_reopening,theme,-4,Xi Jinping secures third term at Party Congress; Chinese equities slide
+2022-10-27,CAT,company,4,Caterpillar beats on Q3 with strong pricing and dealer demand
+2022-10-28,XOM,company,5,Exxon reports record Q3 profit of $19.7B
+2022-11-06,AAPL,company,-5,Apple says COVID restrictions at Zhengzhou plant will cut iPhone 14 Pro shipments
+2022-11-14,AMZN,company,-4,Amazon begins layoffs of about ten thousand corporate staff
+2022-11-27,china_reopening,theme,-6,Protests against zero-COVID spread across Chinese cities
+2022-12-05,ukraine_energy,theme,-4,EU embargo on seaborne Russian crude and G7 $60 price cap take effect
+2022-12-07,china_reopening,theme,5,China scraps most zero-COVID rules including mass testing and quarantine
+2023-01-04,AMZN,company,-4,Amazon expands layoffs to eighteen thousand roles
+2023-01-08,china_reopening,theme,5,China reopens borders and ends inbound quarantine
+2023-01-23,MSFT,company,5,Microsoft announces multibillion-dollar extended partnership with OpenAI
+2023-01-31,XOM,company,5,Exxon reports record annual profit of $55.7B for 2022
+2023-02-07,MSFT,company,4,Microsoft launches ChatGPT-powered Bing and Edge
+2023-02-08,GOOGL,company,-6,Alphabet shares fall 8% after Bard demo shows factual error
+2023-03-05,china_reopening,theme,1,China sets 2023 growth target of around 5% at National People's Congress
+2023-03-10,JPM,company,-6,Silicon Valley Bank fails; regional bank stress spreads
+2023-04-21,PG,company,3,Procter & Gamble beats on Q3 and raises sales guidance
+2023-04-27,CAT,company,3,Caterpillar posts record Q1 profit on pricing and volume
+2023-05-01,JPM,company,3,JPMorgan acquires First Republic Bank in FDIC-assisted deal
+2023-05-10,GOOGL,company,3,Google I/O unveils PaLM 2 and generative search
+2023-05-24,NVDA,company,8,Nvidia guides Q2 revenue to $11B on AI demand; shares jump 24%
+2023-05-30,NVDA,company,5,Nvidia market value crosses $1 trillion
+2023-06-05,AAPL,company,3,Apple unveils Vision Pro headset at WWDC
+2023-06-13,UNH,company,-5,UnitedHealth warns of higher medical utilization; shares fall 6%
+2023-08-17,china_reopening,theme,-5,Evergrande files for Chapter 15 bankruptcy protection in New York
+2023-09-25,AMZN,company,3,Amazon to invest up to $4B in Anthropic
+2023-09-26,AMZN,company,-5,FTC and 17 states sue Amazon for monopolization
+2023-10-11,XOM,company,2,Exxon agrees to buy Pioneer Natural Resources for $59.5B
+2023-10-13,MSFT,company,3,Microsoft closes Activision Blizzard acquisition
+2023-10-17,chip_export_controls,theme,-5,US tightens chip export rules to close A800/H800 loophole for China
+2023-12-06,GOOGL,company,3,Google launches Gemini model family
+2024-01-12,JPM,company,4,JPMorgan reports record annual profit of $49.6B
+2024-02-21,NVDA,company,7,Nvidia Q4 beat with data center revenue up 409%
+2024-02-21,UNH,company,-7,Change Healthcare cyberattack disrupts US claims processing
+2024-02-22,GOOGL,company,-4,Google pauses Gemini image generation after historical inaccuracies
+2024-03-21,AAPL,company,-5,US Department of Justice sues Apple for smartphone monopolization
+2024-04-25,CAT,company,-3,Caterpillar Q1 sales miss on weaker dealer demand
+2024-04-30,AMZN,company,4,AWS growth reaccelerates to 17% in Q1
+2024-05-03,XOM,company,2,Exxon completes Pioneer acquisition
+2024-05-20,JPM,company,-2,Jamie Dimon says succession timetable is no longer five years; shares dip
+2024-06-10,AAPL,company,4,Apple announces Apple Intelligence at WWDC
+2024-06-18,NVDA,company,5,Nvidia becomes the world's most valuable company
+2024-07-19,MSFT,company,-6,CrowdStrike update crashes millions of Windows machines worldwide
+2024-08-05,GOOGL,company,-6,Federal judge rules Google is a monopolist in search
+2024-08-28,NVDA,company,-3,Nvidia beats but Blackwell delay worries investors
+2024-09-24,china_reopening,theme,4,PBOC unveils broad stimulus package; Chinese stocks rally
+2024-12-02,chip_export_controls,theme,-4,US adds controls on HBM memory and chipmaking tools to China; 140 entities listed
+2024-12-04,UNH,company,-8,UnitedHealthcare CEO Brian Thompson shot dead in New York
+2025-01-01,ukraine_energy,theme,-3,Russian gas transit through Ukraine ends as agreement expires
+2025-01-13,chip_export_controls,theme,-4,US announces AI Diffusion rule restricting advanced chip exports by country tier
+2025-01-27,NVDA,company,-8,DeepSeek R1 triggers $589B single-day drop in Nvidia value
+2025-01-27,MSFT,company,-5,DeepSeek efficiency claims hit AI infrastructure spenders
+2025-04-02,china_reopening,theme,-8,US announces reciprocal tariffs; China retaliates and rates escalate above 100%
+2025-04-03,AAPL,company,-6,Apple falls 9% on tariff exposure to Chinese manufacturing
+2025-04-15,chip_export_controls,theme,-6,Nvidia says H20 exports to China now need a license; takes $5.5B charge
+2025-04-15,NVDA,company,-6,Nvidia takes $5.5B charge on H20 China export restrictions
+2025-04-17,GOOGL,company,-5,Federal judge rules Google illegally monopolized ad tech markets
+2025-04-17,UNH,company,-8,UnitedHealth cuts 2025 guidance on care costs; shares fall 22%
+2025-04-24,PG,company,-4,Procter & Gamble cuts outlook citing tariffs and weaker consumer demand
+2025-04-30,CAT,company,-4,Caterpillar Q1 misses; flags tariff costs
+2025-05-12,china_reopening,theme,5,US and China agree 90-day tariff truce in Geneva
+2025-05-13,chip_export_controls,theme,3,US rescinds AI Diffusion rule ahead of replacement framework
+2025-05-13,UNH,company,-8,UnitedHealth CEO Andrew Witty steps down; company suspends guidance
+2025-05-14,UNH,company,-7,Report of DOJ criminal probe into UnitedHealth Medicare practices

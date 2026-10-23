@@ -8,8 +8,16 @@ a query, for a date range:
 
 The raw GKG files (one zip every 15 minutes since 2015) would be tens of gigabytes
 for this window, so the API's daily summary is what we use. The API rate-limits to
-one request every 5 seconds; the script sleeps between queries and retries on 429.
-Windows are fetched one calendar year at a time.
+one request every 5 seconds and throttles an address for minutes after a burst; the
+script sleeps 7 s between queries, backs off 30 s, 60 s, ... on 429, and resumes from
+data/gdelt/raw/ so a rerun never repeats a finished subject. Windows are fetched one
+calendar year at a time.
+
+Because the API was unreliable on the day of the hackathon, agents read the
+hand-curated data/gdelt/curated_events.csv (dated headlines with a tone score on the
+same -10..+10 scale, written from well-known public events) through
+backend.app.data.events(). The daily tone from this script, when present, is exposed
+separately as backend.app.data.tone().
 
 Output: data/gdelt/tone.csv with columns date,subject,kind,tone
     kind = "company" (subject = ticker) or "theme"
@@ -65,17 +73,19 @@ def query_window(q: str, start: str, end: str) -> pd.DataFrame:
         "enddatetime": end.replace("-", "") + "235959",
         "format": "csv",
     }
-    for attempt in range(6):
+    for attempt in range(8):
         r = requests.get(API, params=params, headers={"User-Agent": USER_AGENT}, timeout=60)
         if r.status_code == 429 or "limit requests" in r.text[:200]:
-            time.sleep(6 + 3 * attempt)
+            wait = 30 * (attempt + 1)  # GDELT throttles an address for minutes after a burst
+            print(f"  429 from GDELT, waiting {wait}s", flush=True)
+            time.sleep(wait)
             continue
         if r.status_code != 200 or not r.text.lstrip("﻿").startswith("Date"):
             raise RuntimeError(f"GDELT {r.status_code}: {r.text[:200]!r}")
         df = pd.read_csv(io.StringIO(r.text.lstrip("﻿")))
         df.columns = ["date", "series", "tone"][: len(df.columns)]
         df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
-        time.sleep(5.2)
+        time.sleep(7)
         return df
     raise RuntimeError("GDELT rate limit not clearing")
 

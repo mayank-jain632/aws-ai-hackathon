@@ -26,3 +26,4 @@ resources.json
 backend/.cache/
 data/sec/raw/
 .claude/
+data/gdelt/raw/
