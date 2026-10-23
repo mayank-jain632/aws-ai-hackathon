@@ -76,9 +76,10 @@ If the session changed code or found something the team needs to know:
 
 ## Verified facts (check here before guessing)
 
-- Run the app: `test -f .env.local || cp .env.example .env.local`, then `npm run dev`. It builds one Docker container with the frontend, the FastAPI backend, and the Dexter workers; open http://127.0.0.1:5173. Stop it with `npm run stop`. Source changes need a rebuild with the same command.
+- Run the app: follow "Set up and run" in `README.md` (it creates `.env` and `.env.local`, then `npm run dev`). It builds one Docker container with the frontend, the FastAPI backend, and the Dexter workers; open http://127.0.0.1:5173. Stop it with `npm run stop`. Source changes need a rebuild with the same command.
 - AWS region `us-east-1`. Workshop Studio credentials are temporary and expire about every 60 minutes; refresh them in Workshop Studio.
-- Default model: `us.openai.gpt-5.6-luna` on Amazon Bedrock through the Converse API; override with `BEDROCK_MODEL_ID` in `.env.local`. Requests to it must omit `temperature`.
+- Model: `us.openai.gpt-5.6-luna` on Amazon Bedrock through the Converse API. The canvas app sets it in code (`backend/app/agent.py`, `backend/worker/`); `BEDROCK_MODEL_ID` only affects the older `backend/agent.py` and `backend/infer.py`. Requests to this model must omit `temperature`.
+- `.env.example` lists keys for Dexter's finance, web search, and X integrations. Adding a key does not turn a tool on; the adapter only exposes file and delegation tools so far. Live data APIs return today's data, so anything used for a historical decision still has to pass the no-look-ahead rule above.
 - Models the event allows, and which ones need the data retention setting changed: `docs/reference/aws-services-and-allowed-models.md`.
 - Canvas agent tools today: `create_agent`, `list_agents`, `message_agent`. Up to six agents and four active runs.
 - Checks: `uv run pytest backend/tests`, `npm run check:python`, `npm run lint`, `npm run build`.
