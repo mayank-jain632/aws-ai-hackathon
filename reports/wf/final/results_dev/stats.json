@@ -1,0 +1,124 @@
+{
+ "window": "dev",
+ "decisions": 8,
+ "llm": {
+  "calls": 0,
+  "cache_hits": 0,
+  "input_tokens": 0,
+  "output_tokens": 0
+ },
+ "significance": {
+  "vs_equal_weight_buy_hold": {
+   "excess_weekly_mean": -0.00013091917354003668,
+   "excess_lo": -0.004584171561056005,
+   "excess_hi": 0.004322333213975932,
+   "p_le_zero": 0.3795,
+   "sharpe_diff": -0.049411114206276086,
+   "sharpe_diff_lo": -3.4267409331448535,
+   "sharpe_diff_hi": 0.967336721489257
+  },
+  "vs_spy_buy_hold": {
+   "excess_weekly_mean": 0.002889045427739087,
+   "excess_lo": -0.00691966616702136,
+   "excess_hi": 0.012697757022499534,
+   "p_le_zero": 0.1285,
+   "sharpe_diff": 0.889571902099408,
+   "sharpe_diff_lo": -4.2292215395492505,
+   "sharpe_diff_hi": 4.878504399155139
+  },
+  "vs_mechanical_seed": {
+   "excess_weekly_mean": -0.0019518715304290002,
+   "excess_lo": -0.003961206656679261,
+   "excess_hi": 0.0027857843300083673,
+   "p_le_zero": 0.689,
+   "sharpe_diff": -0.2145526831178317,
+   "sharpe_diff_lo": -3.3311383237852716,
+   "sharpe_diff_hi": 0.7240176252241145
+  },
+  "vs_momentum_12_1_top5": {
+   "excess_weekly_mean": -0.0031473767902332056,
+   "excess_lo": -0.004729207213199804,
+   "excess_hi": -0.0003951307231020995,
+   "p_le_zero": 1.0,
+   "sharpe_diff": -0.26813275730760866,
+   "sharpe_diff_lo": -3.6196651740554127,
+   "sharpe_diff_hi": 1.1930344053470558
+  },
+  "random_policy_percentile": 54.6,
+  "random_policy_n": 500
+ },
+ "research_ic": {
+  "technical@1w": {
+   "mean_ic": 0.10189274042782323,
+   "t_stat": 0.9476884954262067,
+   "hit_rate": 0.625,
+   "n": 8
+  },
+  "fundamentals@1w": {
+   "mean_ic": -0.06617698369706741,
+   "t_stat": -0.5596494578178032,
+   "hit_rate": 0.25,
+   "n": 8
+  },
+  "macro@1w": {
+   "mean_ic": -0.1620604508631197,
+   "t_stat": -1.2005210631508814,
+   "hit_rate": 0.375,
+   "n": 8
+  },
+  "sentiment@1w": {
+   "mean_ic": 0.12434262441755055,
+   "t_stat": 0.684192749454695,
+   "hit_rate": 0.6,
+   "n": 5
+  },
+  "geopolitics@1w": {
+   "mean_ic": 0.01334378189943021,
+   "t_stat": 0.09937846848765676,
+   "hit_rate": 0.5,
+   "n": 8
+  },
+  "strategy_weight@1w": {
+   "mean_ic": -0.00246677597990623,
+   "t_stat": -0.016217040195632932,
+   "hit_rate": 0.625,
+   "n": 8
+  },
+  "technical@4w": {
+   "mean_ic": 0.2339343098434991,
+   "t_stat": 2.8951592367159944,
+   "hit_rate": 0.875,
+   "n": 8
+  },
+  "fundamentals@4w": {
+   "mean_ic": 0.016993583315795743,
+   "t_stat": 0.1832589574851263,
+   "hit_rate": 0.5,
+   "n": 8
+  },
+  "macro@4w": {
+   "mean_ic": -0.35015844247387073,
+   "t_stat": -3.917685527140879,
+   "hit_rate": 0.125,
+   "n": 8
+  },
+  "sentiment@4w": {
+   "mean_ic": 0.0893357444571331,
+   "t_stat": 1.5721217163043466,
+   "hit_rate": 0.6,
+   "n": 5
+  },
+  "geopolitics@4w": {
+   "mean_ic": -0.11711315391265739,
+   "t_stat": -1.0850155293828048,
+   "hit_rate": 0.5,
+   "n": 8
+  },
+  "strategy_weight@4w": {
+   "mean_ic": 0.06754903660757675,
+   "t_stat": 0.8210471385697206,
+   "hit_rate": 0.75,
+   "n": 8
+  }
+ }
+}

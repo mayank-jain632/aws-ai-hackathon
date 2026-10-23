@@ -1,0 +1,1158 @@
+{
+  "decision_date": "2025-11-21",
+  "contaminated": false,
+  "model_id": "us.anthropic.claude-opus-4-6-v1",
+  "memos": [
+    {
+      "analyst": "technical",
+      "date": "2025-11-21",
+      "headline": "GOOGL and CAT Lead on Relative Strength; MSFT Oversold but Broken; UNH Structurally Damaged",
+      "body": "I see a clear bifurcation in this universe today. GOOGL is sitting at its 52-week high with RSI 68 and extraordinary relative strength vs SPY (+18% over 4w, +40% over 12w), while CAT is +56% over 26 weeks and +25% relative strength over 12 weeks — both are textbook momentum leaders I want to own. On the weak side, MSFT has an RSI of 28.1 and is nearly 8% below its 50-day mean with -7.1% relative strength over 4 weeks, which looks like a breakdown rather than a buyable dip given the deteriorating 12-week trend of -7.4%. UNH is the most structurally damaged name here: trading 47.6% below its 52-week high and 13.7% below its 200-day mean, this is a secular downtrend I want no part of. AAPL remains the cleanest large-cap trend, just 1.4% off its high with balanced RSI at 59.7 and strong relative strength.",
+      "views": [
+        {
+          "ticker": "GOOGL",
+          "stance": "long",
+          "confidence": 0.8,
+          "note": "At 52-week highs with RSI 68 and dominant relative strength (+40% vs SPY over 12w); would reassess on a close below the 50-day mean (~263).",
+          "sources": [
+            "px:GOOGL:2025-11-21"
+          ]
+        },
+        {
+          "ticker": "AAPL",
+          "stance": "long",
+          "confidence": 0.75,
+          "note": "Only 1.4% off highs, RSI 59.7 is healthy, +15.2% relative strength vs SPY over 12w; would cut below the 50-day mean (~259).",
+          "sources": [
+            "px:AAPL:2025-11-21"
+          ]
+        },
+        {
+          "ticker": "CAT",
+          "stance": "long",
+          "confidence": 0.7,
+          "note": "Massive 26w return of +56% with +25% relative strength over 12w and RSI 53 leaving room to run; risk is a close below 520.",
+          "sources": [
+            "px:CAT:2025-11-21"
+          ]
+        },
+        {
+          "ticker": "XOM",
+          "stance": "neutral",
+          "confidence": 0.5,
+          "note": "Quiet uptrend above both moving averages with balanced RSI 53, but relative strength vs SPY is only modestly positive and 26w return of +10% is unremarkable.",
+          "sources": [
+            "px:XOM:2025-11-21"
+          ]
+        },
+        {
+          "ticker": "MSFT",
+          "stance": "avoid",
+          "confidence": 0.65,
+          "note": "RSI 28 is oversold but the 4w return of -9.8% and -7.1% relative strength signal a breakdown; would reconsider only on a reclaim above the 50-day mean (~513).",
+          "sources": [
+            "px:MSFT:2025-11-21"
+          ]
+        },
+        {
+          "ticker": "UNH",
+          "stance": "avoid",
+          "confidence": 0.85,
+          "note": "Down 47.6% from 52-week high and 13.7% below 200-day mean — this is a secular downtrend, not a dip; no level to buy until price reclaims the 200-day.",
+          "sources": [
+            "px:UNH:2025-11-21"
+          ]
+        },
+        {
+          "ticker": "NVDA",
+          "stance": "neutral",
+          "confidence": 0.5,
+          "note": "Still well above 200-day mean (+17%) but 13.6% drawdown and negative 4w/12w relative strength suggest consolidation; need a reclaim of 186 to get constructive.",
+          "sources": [
+            "px:NVDA:2025-11-21"
+          ]
+        },
+        {
+          "ticker": "AMZN",
+          "stance": "neutral",
+          "confidence": 0.45,
+          "note": "RSI 40.6 and -13.1% drawdown with weak 12w relative strength (-6.3% vs SPY) keep me sidelined; a close above 228 would improve the picture.",
+          "sources": [
+            "px:AMZN:2025-11-21"
+          ]
+        },
+        {
+          "ticker": "JPM",
+          "stance": "neutral",
+          "confidence": 0.45,
+          "note": "Mild pullback to RSI 40 with 200-day support intact (+7.2% above), but 12w relative strength is slightly negative; watching 290 as support.",
+          "sources": [
+            "px:JPM:2025-11-21"
+          ]
+        },
+        {
+          "ticker": "PG",
+          "stance": "avoid",
+          "confidence": 0.55,
+          "note": "Trading 5.4% below its 200-day mean and 16% off highs with negative 12w and 26w returns — a persistent downtrend in a defensive name is a red flag.",
+          "sources": [
+            "px:PG:2025-11-21"
+          ]
+        }
+      ]
+    },
+    {
+      "analyst": "fundamentals",
+      "date": "2025-11-21",
+      "headline": "NVDA's 56% Net Margin and 62% Revenue Growth Dominate; UNH Earnings Collapse Demands Caution",
+      "body": "I see the clearest earnings power in NVDA, which just printed $57.01B in quarterly revenue (+62.5% YoY) with a staggering 56.0% net margin and only $8.47B in total debt — this is the best combination of growth, profitability, and balance sheet strength in the universe. GOOGL and MSFT also stand out with 34.2% and 35.7% net margins respectively, both growing revenue double-digits (15.9% and 18.4% YoY) on modest leverage. On the other end, UNH's net income collapsed 61.2% YoY to $2.35B on $113.16B of revenue, compressing net margin to just 2.1% while carrying $80.14B in debt — I cannot pay for that earnings trajectory until I see margin stabilization. XOM's revenue declined 5.2% with net income down 12.3%, reflecting commodity headwinds that may persist, and CAT's 6.7% net income decline despite 9.5% revenue growth signals margin pressure I want to watch before committing.",
+      "views": [
+        {
+          "ticker": "NVDA",
+          "stance": "long",
+          "confidence": 0.95,
+          "note": "62.5% revenue growth, 56% net margin, and minimal $8.47B debt make this the strongest fundamental profile in the universe; a sustained margin decline below 45% would change my view.",
+          "sources": [
+            "sec:NVDA:2026Q3"
+          ]
+        },
+        {
+          "ticker": "GOOGL",
+          "stance": "long",
+          "confidence": 0.8,
+          "note": "$102.35B revenue growing 15.9% YoY with 34.2% net margin and only $14.79B debt is durable, high-quality earnings power at low leverage.",
+          "sources": [
+            "sec:GOOGL:2025Q3"
+          ]
+        },
+        {
+          "ticker": "MSFT",
+          "stance": "long",
+          "confidence": 0.8,
+          "note": "18.4% revenue growth to $77.67B with 35.7% net margin and manageable $43.21B debt; net income growth of 12.5% lagging revenue growth slightly but margin level is elite.",
+          "sources": [
+            "sec:MSFT:2026Q1"
+          ]
+        },
+        {
+          "ticker": "AMZN",
+          "stance": "long",
+          "confidence": 0.7,
+          "note": "Revenue of $180.17B (+13.4% YoY) with net margin expanding to 11.8% and net income up 38.2% shows operating leverage kicking in; I'd reassess if margins compress back below 8%.",
+          "sources": [
+            "sec:AMZN:2025Q3"
+          ]
+        },
+        {
+          "ticker": "AAPL",
+          "stance": "neutral",
+          "confidence": 0.55,
+          "note": "Revenue growth of 7.9% is modest and $90.68B in total debt is the highest in the tech cohort; the 86.4% net income jump likely reflects a tough prior-year comp rather than sustainable acceleration.",
+          "sources": [
+            "sec:AAPL:2025Q4"
+          ]
+        },
+        {
+          "ticker": "JPM",
+          "stance": "neutral",
+          "confidence": 0.6,
+          "note": "Solid 31% net margin and 11.6% net income growth, but $427.2B in total debt and cyclical exposure to credit quality keep me at neutral until I see the rate environment stabilize.",
+          "sources": [
+            "sec:JPM:2025Q3"
+          ]
+        },
+        {
+          "ticker": "PG",
+          "stance": "neutral",
+          "confidence": 0.5,
+          "note": "Defensive 21.2% net margin and 20% net income growth are reassuring, but 3% revenue growth limits upside and $24.32B debt is meaningful relative to the revenue base.",
+          "sources": [
+            "sec:PG:2026Q1"
+          ]
+        },
+        {
+          "ticker": "UNH",
+          "stance": "avoid",
+          "confidence": 0.85,
+          "note": "Net income down 61.2% YoY to $2.35B with net margin collapsing to 2.1% on $80.14B of debt is a clear cash-flow compression signal; I need to see margin recovery above 4% before reconsidering.",
+          "sources": [
+            "sec:UNH:2025Q3"
+          ]
+        },
+        {
+          "ticker": "XOM",
+          "stance": "avoid",
+          "confidence": 0.7,
+          "note": "Revenue declining 5.2% and net income down 12.3% with an 8.8% net margin reflects commodity price headwinds; would reconsider on sustained revenue stabilization.",
+          "sources": [
+            "sec:XOM:2025Q3"
+          ]
+        },
+        {
+          "ticker": "CAT",
+          "stance": "neutral",
+          "confidence": 0.55,
+          "note": "Revenue grew 9.5% but net income fell 6.7%, implying margin compression to 13.0%; I want to see cost discipline restore earnings leverage before turning constructive.",
+          "sources": [
+            "sec:CAT:2025Q3"
+          ]
+        }
+      ]
+    },
+    {
+      "analyst": "macro",
+      "date": "2025-11-21",
+      "headline": "Fed in Easing Mode but Sticky 3% CPI and Rising Unemployment Signal a Cautious Late-Cycle Regime",
+      "body": "I see the Fed firmly in an easing cycle — the upper bound has dropped 75bp over the past year to 4.00%, with 50bp of that in the last three months alone. However, headline CPI is running at 3.0% y/y (Sep print), which limits the pace of further cuts and keeps real rates elevated. The labor market is softening meaningfully: unemployment at 4.40% is up 30bp over both three and twelve months, consistent with a late-cycle slowdown rather than outright recession. The 10y-2y spread has re-steepened to +55bp from +10bp a year ago, confirming the curve has normalized, while the 10y yield at 4.06% (down 37bp y/y) suggests the bond market is pricing moderate growth deceleration. My regime call is 'easing into slowdown' — duration-sensitive growth should benefit from falling yields, banks face margin pressure from a flatter front end, cyclicals are vulnerable to weakening demand, and staples offer relative safety. A CPI print breaking above 3.5% y/y or unemployment jumping above 4.7% would force me to revisit this framework.",
+      "views": [
+        {
+          "ticker": "MSFT",
+          "stance": "long",
+          "confidence": 0.7,
+          "note": "Duration-sensitive mega-cap growth benefits from falling 10y yields and easing cycle; quality balance sheet provides late-cycle resilience.",
+          "sources": [
+            "fred:DGS10:2025-11-21",
+            "fred:DFEDTARU:2025-11-20",
+            "fred:UNRATE:2025-09-01"
+          ]
+        },
+        {
+          "ticker": "AAPL",
+          "stance": "long",
+          "confidence": 0.65,
+          "note": "Lower long-end rates support valuations for high-duration equities, though consumer softening from rising unemployment is a modest headwind.",
+          "sources": [
+            "fred:DGS10:2025-11-21",
+            "fred:DFEDTARU:2025-11-20",
+            "fred:UNRATE:2025-09-01"
+          ]
+        },
+        {
+          "ticker": "PG",
+          "stance": "long",
+          "confidence": 0.6,
+          "note": "Defensive staples outperform in late-cycle slowdowns; rising unemployment and easing policy historically favor this sector.",
+          "sources": [
+            "fred:UNRATE:2025-09-01",
+            "fred:DFEDTARU:2025-11-20",
+            "fred:CPIAUCSL:2025-09-01"
+          ]
+        },
+        {
+          "ticker": "JPM",
+          "stance": "neutral",
+          "confidence": 0.55,
+          "note": "Steeper curve is a positive, but ongoing rate cuts compress NIM on the front end and rising unemployment raises credit loss provisions.",
+          "sources": [
+            "fred:T10Y2Y:2025-11-20",
+            "fred:DFEDTARU:2025-11-20",
+            "fred:UNRATE:2025-09-01"
+          ]
+        },
+        {
+          "ticker": "CAT",
+          "stance": "avoid",
+          "confidence": 0.6,
+          "note": "Classic cyclical facing headwinds from softening labor market and late-cycle demand deceleration; 3% CPI limits fiscal stimulus room.",
+          "sources": [
+            "fred:UNRATE:2025-09-01",
+            "fred:CPIAUCSL:2025-09-01",
+            "fred:FEDFUNDS:2025-10-01"
+          ]
+        },
+        {
+          "ticker": "XOM",
+          "stance": "neutral",
+          "confidence": 0.45,
+          "note": "Energy is a macro wildcard — slowdown dampens demand expectations, but supply dynamics are outside my framework; no strong directional call.",
+          "sources": [
+            "fred:UNRATE:2025-09-01",
+            "fred:CPIAUCSL:2025-09-01"
+          ]
+        },
+        {
+          "ticker": "NVDA",
+          "stance": "long",
+          "confidence": 0.6,
+          "note": "Falling yields and easing cycle favor high-growth, long-duration names; secular AI demand partially insulates from cyclical slowdown.",
+          "sources": [
+            "fred:DGS10:2025-11-21",
+            "fred:DFEDTARU:2025-11-20"
+          ]
+        },
+        {
+          "ticker": "UNH",
+          "stance": "neutral",
+          "confidence": 0.5,
+          "note": "Defensive characteristics are appealing in a slowdown, but healthcare policy uncertainty and sticky medical inflation temper conviction.",
+          "sources": [
+            "fred:UNRATE:2025-09-01",
+            "fred:CPIAUCSL:2025-09-01"
+          ]
+        }
+      ]
+    },
+    {
+      "analyst": "sentiment",
+      "date": "2025-11-21",
+      "headline": "Post-Earnings Sentiment Divergence: AMZN and CAT Surged While NVDA and MSFT Sold Off — Positioning Implications",
+      "body": "I am reading the post-earnings price reactions across the universe as the clearest sentiment signal available. AMZN (+9.6%) and CAT (+11.6%) saw outsized positive reactions to their Q3 results, suggesting narrative momentum that may still have legs, though three weeks later some of that enthusiasm is likely priced. NVDA's -3.2% drop on its 11/19 earnings print is the freshest data point and signals that even strong results are meeting elevated expectations — a classic crowded-positive-tone warning. MSFT's -2.9% post-earnings fade and AAPL's flat -0.4% reaction suggest lukewarm sentiment that hasn't deteriorated enough to be contrarian yet. JPM's -1.9% earnings-day decline and subsequent quiet filing flow point to a market that has already digested the news without conviction either way.",
+      "views": [
+        {
+          "ticker": "AMZN",
+          "stance": "long",
+          "confidence": 0.65,
+          "note": "The +9.6% earnings reaction was the strongest in the universe and the 11/20 follow-on 8-K suggests continued corporate activity, though three weeks of drift may have absorbed some upside.",
+          "sources": [
+            "sec8k:AMZN:0001018724-25-000121",
+            "sec8k:AMZN:0001104659-25-114647"
+          ]
+        },
+        {
+          "ticker": "NVDA",
+          "stance": "avoid",
+          "confidence": 0.6,
+          "note": "A -3.2% sell-the-news reaction just yesterday on earnings signals crowded positive positioning meeting reality; sentiment needs to reset before I'd get constructive.",
+          "sources": [
+            "sec8k:NVDA:0001045810-25-000228"
+          ]
+        },
+        {
+          "ticker": "CAT",
+          "stance": "long",
+          "confidence": 0.55,
+          "note": "The +11.6% earnings pop was the largest single-day move in the universe, but it is now three weeks old and likely largely priced — I hold modest conviction the narrative shift persists.",
+          "sources": [
+            "sec8k:CAT:0000018230-25-000043"
+          ]
+        },
+        {
+          "ticker": "MSFT",
+          "stance": "avoid",
+          "confidence": 0.5,
+          "note": "A -2.9% post-earnings decline combined with a board-level change filing suggests unsettled sentiment without a clear catalyst to reverse it near-term.",
+          "sources": [
+            "sec8k:MSFT:0001193125-25-256310",
+            "sec8k:MSFT:0001193125-25-225125"
+          ]
+        },
+        {
+          "ticker": "AAPL",
+          "stance": "neutral",
+          "confidence": 0.4,
+          "note": "The -0.4% earnings reaction is essentially flat — no narrative shift in either direction, leaving me without a sentiment edge.",
+          "sources": [
+            "sec8k:AAPL:0000320193-25-000077"
+          ]
+        },
+        {
+          "ticker": "JPM",
+          "stance": "neutral",
+          "confidence": 0.4,
+          "note": "The -1.9% earnings-day dip and subsequent routine filings suggest the market has moved on; no tone inflection to trade.",
+          "sources": [
+            "sec8k:JPM:0001628280-25-044845",
+            "sec8k:JPM:0001628280-25-044887",
+            "sec8k:JPM:0001193125-25-246803"
+          ]
+        },
+        {
+          "ticker": "PG",
+          "stance": "neutral",
+          "confidence": 0.35,
+          "note": "A muted +0.2% earnings reaction and a flurry of routine 8-Ks signal stable but uninspiring sentiment — no edge here.",
+          "sources": [
+            "sec8k:PG:0000080424-25-000240",
+            "sec8k:PG:0001193125-25-262609",
+            "sec8k:PG:0001193125-25-264728"
+          ]
+        },
+        {
+          "ticker": "UNH",
+          "stance": "neutral",
+          "confidence": 0.35,
+          "note": "The +0.5% earnings reaction was tepid and subsequent filings (Reg FD, bylaws amendment) don't indicate a sentiment shift worth trading.",
+          "sources": [
+            "sec8k:UNH:0000731766-25-000301",
+            "sec8k:UNH:0000731766-25-000308",
+            "sec8k:UNH:0000731766-25-000310"
+          ]
+        }
+      ]
+    },
+    {
+      "analyst": "geopolitics",
+      "date": "2025-11-21",
+      "headline": "Elevated Policy Uncertainty and Surging VIX Signal Structural Geopolitical Risk Across the Universe",
+      "body": "I am writing with the VIX at 26.42, up 45% over one month and nearly 70% over three months, while the Economic Policy Uncertainty Index sits at 312.65—down modestly month-over-month but up 76% over three months, indicating a structurally elevated policy-risk regime rather than a one-off spike. High-yield OAS has widened 23 bps over three months to 3.17%, confirming that credit markets are beginning to price geopolitical and policy tail risk. WTI crude at $60.07 is down 6.4% over three months despite a modest monthly bounce, suggesting demand-side concerns (possibly sanctions/tariff-related slowdown fears) are outweighing supply disruption premia. I have highest conviction on names with concentrated China/export-control exposure (NVDA, AAPL) and lowest conviction on domestically oriented defensives (PG, UNH) where policy risk is more diffuse; a material de-escalation in US-China trade tensions or a rollback of semiconductor export controls would change my view on the tech names.",
+      "views": [
+        {
+          "ticker": "NVDA",
+          "stance": "avoid",
+          "confidence": 0.75,
+          "note": "Semiconductor export controls to China remain the single largest structural geopolitical overhang; the 76% 3m surge in policy uncertainty and elevated VIX reinforce that this risk is not yet fully discounted.",
+          "sources": [
+            "fred:VIXCLS:2025-11-20",
+            "fred:USEPUINDXD:2025-11-20"
+          ]
+        },
+        {
+          "ticker": "AAPL",
+          "stance": "avoid",
+          "confidence": 0.65,
+          "note": "Heavy supply-chain concentration in China and rising policy uncertainty create ongoing tariff and production-disruption risk that the current vol environment underscores.",
+          "sources": [
+            "fred:VIXCLS:2025-11-20",
+            "fred:USEPUINDXD:2025-11-20"
+          ]
+        },
+        {
+          "ticker": "XOM",
+          "stance": "neutral",
+          "confidence": 0.5,
+          "note": "WTI at $60 reflects demand weakness despite geopolitical supply risks; four 8-K filings in six weeks suggest active corporate repositioning, but I lack clarity on whether energy-security tailwinds offset macro headwinds.",
+          "sources": [
+            "fred:DCOILWTICO:2025-11-20",
+            "sec8k:XOM:0000034088-25-000055",
+            "sec8k:XOM:0000034088-25-000059",
+            "sec8k:XOM:0001193125-25-279379",
+            "sec8k:XOM:0000034088-25-000074"
+          ]
+        },
+        {
+          "ticker": "CAT",
+          "stance": "avoid",
+          "confidence": 0.6,
+          "note": "CAT's global infrastructure exposure makes it vulnerable to trade-policy disruption; the elevated uncertainty index and widening HY spreads suggest downstream capex could slow.",
+          "sources": [
+            "fred:USEPUINDXD:2025-11-20",
+            "fred:BAMLH0A0HYM2:2025-11-20",
+            "sec8k:CAT:0000018230-25-000043"
+          ]
+        },
+        {
+          "ticker": "PG",
+          "stance": "long",
+          "confidence": 0.55,
+          "note": "Domestic consumer staples offer relative shelter from geopolitical shocks; multiple recent 8-Ks suggest proactive disclosure, and the name's low beta to trade-policy risk is attractive in this regime.",
+          "sources": [
+            "fred:USEPUINDXD:2025-11-20",
+            "sec8k:PG:0000080424-25-000217",
+            "sec8k:PG:0000080424-25-000243",
+            "sec8k:PG:0001193125-25-262609",
+            "sec8k:PG:0001193125-25-264728"
+          ]
+        },
+        {
+          "ticker": "JPM",
+          "stance": "neutral",
+          "confidence": 0.5,
+          "note": "Widening HY spreads and a flat-ish 10y-2y curve at 55 bps limit upside, but JPM's diversified franchise and recent Reg FD disclosures suggest manageable geopolitical exposure.",
+          "sources": [
+            "fred:BAMLH0A0HYM2:2025-11-20",
+            "fred:T10Y2Y:2025-11-20",
+            "sec8k:JPM:0001628280-25-044887",
+            "sec8k:JPM:0001193125-25-246803"
+          ]
+        },
+        {
+          "ticker": "MSFT",
+          "stance": "neutral",
+          "confidence": 0.55,
+          "note": "Cloud and enterprise software have moderate China exposure relative to hardware peers; policy uncertainty is a headwind but less direct than for NVDA or AAPL.",
+          "sources": [
+            "fred:USEPUINDXD:2025-11-20",
+            "sec8k:MSFT:0001193125-25-256310"
+          ]
+        },
+        {
+          "ticker": "GOOGL",
+          "stance": "neutral",
+          "confidence": 0.5,
+          "note": "Antitrust and regulatory risk are the primary geopolitical vectors; the elevated uncertainty index warrants caution but the threat is more regulatory than trade-war driven.",
+          "sources": [
+            "fred:USEPUINDXD:2025-11-20",
+            "sec8k:GOOGL:0001193125-25-269979"
+          ]
+        }
+      ]
+    }
+  ],
+  "abstained_analysts": [],
+  "sources": [
+    {
+      "id": "px:AAPL:2025-11-21",
+      "kind": "price",
+      "title": "AAPL daily prices through 2025-11-21",
+      "date": "2025-11-21",
+      "url": null,
+      "excerpt": "AAPL: close 271.49 (2025-11-21); ret 1w -0.3% 4w +3.3% 12w +16.7% 26w +30.0%; vs 50d mean +4.6%, vs 200d mean +20.0%; RSI14 59.7; drawdown from 52w high -1.4%; ATR14 2.19%; rel strength vs SPY 4w +6.0% 12w +15.2%"
+    },
+    {
+      "id": "px:MSFT:2025-11-21",
+      "kind": "price",
+      "title": "MSFT daily prices through 2025-11-21",
+      "date": "2025-11-21",
+      "url": null,
+      "excerpt": "MSFT: close 472.12 (2025-11-21); ret 1w -7.5% 4w -9.8% 12w -7.4% 26w +2.9%; vs 50d mean -7.9%, vs 200d mean +1.2%; RSI14 28.1; drawdown from 52w high -12.9%; ATR14 2.42%; rel strength vs SPY 4w -7.1% 12w -8.9%"
+    },
+    {
+      "id": "px:NVDA:2025-11-21",
+      "kind": "price",
+      "title": "NVDA daily prices through 2025-11-21",
+      "date": "2025-11-21",
+      "url": null,
+      "excerpt": "NVDA: close 178.88 (2025-11-21); ret 1w -5.9% 4w -4.0% 12w -0.7% 26w +31.9%; vs 50d mean -4.1%, vs 200d mean +17.1%; RSI14 41.5; drawdown from 52w high -13.6%; ATR14 5.18%; rel strength vs SPY 4w -1.3% 12w -2.3%"
+    },
+    {
+      "id": "px:AMZN:2025-11-21",
+      "kind": "price",
+      "title": "AMZN daily prices through 2025-11-21",
+      "date": "2025-11-21",
+      "url": null,
+      "excerpt": "AMZN: close 220.69 (2025-11-21); ret 1w -6.0% 4w -1.6% 12w -4.7% 26w +7.0%; vs 50d mean -3.1%, vs 200d mean +2.8%; RSI14 40.6; drawdown from 52w high -13.1%; ATR14 3.13%; rel strength vs SPY 4w +1.1% 12w -6.3%"
+    },
+    {
+      "id": "px:GOOGL:2025-11-21",
+      "kind": "price",
+      "title": "GOOGL daily prices through 2025-11-21",
+      "date": "2025-11-21",
+      "url": null,
+      "excerpt": "GOOGL: close 299.66 (2025-11-21); ret 1w +8.4% 4w +15.3% 12w +41.6% 26w +79.9%; vs 50d mean +14.2%, vs 200d mean +50.3%; RSI14 68.1; drawdown from 52w high +0.0%; ATR14 3.70%; rel strength vs SPY 4w +18.0% 12w +40.0%"
+    },
+    {
+      "id": "px:JPM:2025-11-21",
+      "kind": "price",
+      "title": "JPM daily prices through 2025-11-21",
+      "date": "2025-11-21",
+      "url": null,
+      "excerpt": "JPM: close 298.02 (2025-11-21); ret 1w -1.8% 4w -0.8% 12w -1.0% 26w +12.5%; vs 50d mean -3.1%, vs 200d mean +7.2%; RSI14 40.4; drawdown from 52w high -7.0%; ATR14 2.42%; rel strength vs SPY 4w +1.9% 12w -2.6%"
+    },
+    {
+      "id": "px:XOM:2025-11-21",
+      "kind": "price",
+      "title": "XOM daily prices through 2025-11-21",
+      "date": "2025-11-21",
+      "url": null,
+      "excerpt": "XOM: close 117.08 (2025-11-21); ret 1w -1.9% 4w +1.5% 12w +3.3% 26w +10.0%; vs 50d mean +2.1%, vs 200d mean +5.8%; RSI14 53.4; drawdown from 52w high -4.0%; ATR14 1.96%; rel strength vs SPY 4w +4.2% 12w +1.7%"
+    },
+    {
+      "id": "px:UNH:2025-11-21",
+      "kind": "price",
+      "title": "UNH daily prices through 2025-11-21",
+      "date": "2025-11-21",
+      "url": null,
+      "excerpt": "UNH: close 319.97 (2025-11-21); ret 1w -0.6% 4w -11.7% 12w +5.8% 26w +1.3%; vs 50d mean -7.2%, vs 200d mean -13.7%; RSI14 41.2; drawdown from 52w high -47.6%; ATR14 3.06%; rel strength vs SPY 4w -9.0% 12w +4.3%"
+    },
+    {
+      "id": "px:PG:2025-11-21",
+      "kind": "price",
+      "title": "PG daily prices through 2025-11-21",
+      "date": "2025-11-21",
+      "url": null,
+      "excerpt": "PG: close 150.92 (2025-11-21); ret 1w +2.2% 4w -1.0% 12w -3.0% 26w -8.4%; vs 50d mean +0.1%, vs 200d mean -5.4%; RSI14 56.7; drawdown from 52w high -16.0%; ATR14 1.53%; rel strength vs SPY 4w +1.7% 12w -4.6%"
+    },
+    {
+      "id": "px:CAT:2025-11-21",
+      "kind": "price",
+      "title": "CAT daily prices through 2025-11-21",
+      "date": "2025-11-21",
+      "url": null,
+      "excerpt": "CAT: close 550.43 (2025-11-21); ret 1w -0.6% 4w +5.3% 12w +26.6% 26w +56.1%; vs 50d mean +6.1%, vs 200d mean +36.4%; RSI14 53.1; drawdown from 52w high -6.0%; ATR14 3.44%; rel strength vs SPY 4w +8.0% 12w +25.0%"
+    },
+    {
+      "id": "sec:AAPL:2025Q4",
+      "kind": "sec",
+      "title": "AAPL 2025Q4 10-K",
+      "date": "2025-10-31",
+      "url": null,
+      "excerpt": "AAPL 2025Q4 (period end 2025-09-27, filed 2025-10-31 on 10-K): revenue $102.47B, net income $27.47B, net margin +26.8%, total debt $90.68B, YoY revenue +7.9%, YoY net income +86.4%"
+    },
+    {
+      "id": "sec:MSFT:2026Q1",
+      "kind": "sec",
+      "title": "MSFT 2026Q1 10-Q",
+      "date": "2025-10-29",
+      "url": null,
+      "excerpt": "MSFT 2026Q1 (period end 2025-09-30, filed 2025-10-29 on 10-Q): revenue $77.67B, net income $27.75B, net margin +35.7%, total debt $43.21B, YoY revenue +18.4%, YoY net income +12.5%"
+    },
+    {
+      "id": "sec:NVDA:2026Q3",
+      "kind": "sec",
+      "title": "NVDA 2026Q3 10-Q",
+      "date": "2025-11-19",
+      "url": null,
+      "excerpt": "NVDA 2026Q3 (period end 2025-10-26, filed 2025-11-19 on 10-Q): revenue $57.01B, net income $31.91B, net margin +56.0%, total debt $8.47B, YoY revenue +62.5%, YoY net income +65.3%"
+    },
+    {
+      "id": "sec:AMZN:2025Q3",
+      "kind": "sec",
+      "title": "AMZN 2025Q3 10-Q",
+      "date": "2025-10-31",
+      "url": null,
+      "excerpt": "AMZN 2025Q3 (period end 2025-09-30, filed 2025-10-31 on 10-Q): revenue $180.17B, net income $21.19B, net margin +11.8%, total debt $55.10B, YoY revenue +13.4%, YoY net income +38.2%"
+    },
+    {
+      "id": "sec:GOOGL:2025Q3",
+      "kind": "sec",
+      "title": "GOOGL 2025Q3 10-Q",
+      "date": "2025-10-30",
+      "url": null,
+      "excerpt": "GOOGL 2025Q3 (period end 2025-09-30, filed 2025-10-30 on 10-Q): revenue $102.35B, net income $34.98B, net margin +34.2%, total debt $14.79B, YoY revenue +15.9%, YoY net income +33.0%"
+    },
+    {
+      "id": "sec:JPM:2025Q3",
+      "kind": "sec",
+      "title": "JPM 2025Q3 10-Q",
+      "date": "2025-11-04",
+      "url": null,
+      "excerpt": "JPM 2025Q3 (period end 2025-09-30, filed 2025-11-04 on 10-Q): revenue $46.43B, net income $14.39B, net margin +31.0%, total debt $427.20B, YoY revenue +8.8%, YoY net income +11.6%"
+    },
+    {
+      "id": "sec:XOM:2025Q3",
+      "kind": "sec",
+      "title": "XOM 2025Q3 10-Q",
+      "date": "2025-11-03",
+      "url": null,
+      "excerpt": "XOM 2025Q3 (period end 2025-09-30, filed 2025-11-03 on 10-Q): revenue $85.29B, net income $7.55B, net margin +8.8%, total debt $32.82B, YoY revenue -5.2%, YoY net income -12.3%"
+    },
+    {
+      "id": "sec:UNH:2025Q3",
+      "kind": "sec",
+      "title": "UNH 2025Q3 10-Q",
+      "date": "2025-10-28",
+      "url": null,
+      "excerpt": "UNH 2025Q3 (period end 2025-09-30, filed 2025-10-28 on 10-Q): revenue $113.16B, net income $2.35B, net margin +2.1%, total debt $80.14B, YoY revenue +12.2%, YoY net income -61.2%"
+    },
+    {
+      "id": "sec:PG:2026Q1",
+      "kind": "sec",
+      "title": "PG 2026Q1 10-Q",
+      "date": "2025-10-24",
+      "url": null,
+      "excerpt": "PG 2026Q1 (period end 2025-09-30, filed 2025-10-24 on 10-Q): revenue $22.39B, net income $4.75B, net margin +21.2%, total debt $24.32B, YoY revenue +3.0%, YoY net income +20.0%"
+    },
+    {
+      "id": "sec:CAT:2025Q3",
+      "kind": "sec",
+      "title": "CAT 2025Q3 10-Q",
+      "date": "2025-11-03",
+      "url": null,
+      "excerpt": "CAT 2025Q3 (period end 2025-09-30, filed 2025-11-03 on 10-Q): revenue $17.64B, net income $2.30B, net margin +13.0%, total debt $31.74B, YoY revenue +9.5%, YoY net income -6.7%"
+    },
+    {
+      "id": "fred:DFEDTARU:2025-11-20",
+      "kind": "fred",
+      "title": "Fed funds target range, upper bound (%, daily)",
+      "date": "2025-11-21",
+      "url": "https://fred.stlouisfed.org/series/DFEDTARU",
+      "excerpt": "Fed funds target range, upper bound (%, daily): 4.00 (obs 2025-11-20, public 2025-11-21); 3m -0.50; 12m -0.75"
+    },
+    {
+      "id": "fred:FEDFUNDS:2025-10-01",
+      "kind": "fred",
+      "title": "Effective fed funds rate (%, monthly average)",
+      "date": "2025-11-04",
+      "url": "https://fred.stlouisfed.org/series/FEDFUNDS",
+      "excerpt": "Effective fed funds rate (%, monthly average): 4.09 (obs 2025-10-01, public 2025-11-04); 3m -0.24; 12m -0.74"
+    },
+    {
+      "id": "fred:CPIAUCSL:2025-09-01",
+      "kind": "fred",
+      "title": "CPI index (all urban consumers)",
+      "date": "2025-10-16",
+      "url": "https://fred.stlouisfed.org/series/CPIAUCSL",
+      "excerpt": "CPI index (all urban consumers): 324.25 (obs 2025-09-01, public 2025-10-16); 3m +0.9%; 12m +3.0%"
+    },
+    {
+      "id": "fred:UNRATE:2025-09-01",
+      "kind": "fred",
+      "title": "Unemployment rate (%)",
+      "date": "2025-10-08",
+      "url": "https://fred.stlouisfed.org/series/UNRATE",
+      "excerpt": "Unemployment rate (%): 4.40 (obs 2025-09-01, public 2025-10-08); 3m +0.30; 12m +0.30"
+    },
+    {
+      "id": "fred:DGS10:2025-11-21",
+      "kind": "fred",
+      "title": "10y Treasury yield (%)",
+      "date": "2025-11-21",
+      "url": "https://fred.stlouisfed.org/series/DGS10",
+      "excerpt": "10y Treasury yield (%): 4.06 (obs 2025-11-21, public 2025-11-21); 3m -0.27; 12m -0.37"
+    },
+    {
+      "id": "fred:T10Y2Y:2025-11-20",
+      "kind": "fred",
+      "title": "10y-2y Treasury spread (pp)",
+      "date": "2025-11-21",
+      "url": "https://fred.stlouisfed.org/series/T10Y2Y",
+      "excerpt": "10y-2y Treasury spread (pp): 0.55 (obs 2025-11-20, public 2025-11-21); 3m +0.00; 12m +0.45"
+    },
+    {
+      "id": "sec8k:AAPL:0000320193-25-000077",
+      "kind": "sec",
+      "title": "AAPL 8-K 2025-10-30",
+      "date": "2025-10-30",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000077/aapl-20251030.htm",
+      "excerpt": "AAPL 8-K filed 2025-10-30: Results of Operations and Financial Condition; Financial Statements and Exhibits (8-K); price reaction 2025-10-30 to 2025-10-31 close -0.4%"
+    },
+    {
+      "id": "sec8k:AMZN:0001018724-25-000121",
+      "kind": "sec",
+      "title": "AMZN 8-K 2025-10-30",
+      "date": "2025-10-30",
+      "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872425000121/amzn-20251030.htm",
+      "excerpt": "AMZN 8-K filed 2025-10-30: Results of Operations and Financial Condition; Financial Statements and Exhibits (8-K); price reaction 2025-10-30 to 2025-10-31 close +9.6%"
+    },
+    {
+      "id": "sec8k:AMZN:0001104659-25-114647",
+      "kind": "sec",
+      "title": "AMZN 8-K 2025-11-20",
+      "date": "2025-11-20",
+      "url": "https://www.sec.gov/Archives/edgar/data/1018724/000110465925114647/tm2530638d3_8k.htm",
+      "excerpt": "AMZN 8-K filed 2025-11-20: Other Events; Financial Statements and Exhibits (FORM 8-K)"
+    },
+    {
+      "id": "sec8k:CAT:0000018230-25-000043",
+      "kind": "sec",
+      "title": "CAT 8-K 2025-10-29",
+      "date": "2025-10-29",
+      "url": "https://www.sec.gov/Archives/edgar/data/18230/000001823025000043/cat-20251029.htm",
+      "excerpt": "CAT 8-K filed 2025-10-29: Results of Operations and Financial Condition; Regulation FD Disclosure; Financial Statements and Exhibits (8-K); price reaction 2025-10-28 to 2025-10-29 close +11.6%"
+    },
+    {
+      "id": "sec8k:JPM:0001628280-25-044845",
+      "kind": "sec",
+      "title": "JPM 8-K 2025-10-14",
+      "date": "2025-10-14",
+      "url": "https://www.sec.gov/Archives/edgar/data/19617/000162828025044845/jpm-20251014.htm",
+      "excerpt": "JPM 8-K filed 2025-10-14: Results of Operations and Financial Condition; Financial Statements and Exhibits (8-K); price reaction 2025-10-13 to 2025-10-14 close -1.9%"
+    },
+    {
+      "id": "sec8k:JPM:0001628280-25-044887",
+      "kind": "sec",
+      "title": "JPM 8-K 2025-10-14",
+      "date": "2025-10-14",
+      "url": "https://www.sec.gov/Archives/edgar/data/19617/000162828025044887/jpm-20251014.htm",
+      "excerpt": "JPM 8-K filed 2025-10-14: Regulation FD Disclosure; Financial Statements and Exhibits (8-K)"
+    },
+    {
+      "id": "sec8k:JPM:0001193125-25-246803",
+      "kind": "sec",
+      "title": "JPM 8-K 2025-10-22",
+      "date": "2025-10-22",
+      "url": "https://www.sec.gov/Archives/edgar/data/19617/000119312525246803/d33741d8k.htm",
+      "excerpt": "JPM 8-K filed 2025-10-22: Other Events; Financial Statements and Exhibits (8-K)"
+    },
+    {
+      "id": "sec8k:MSFT:0001193125-25-225125",
+      "kind": "sec",
+      "title": "MSFT 8-K 2025-09-30",
+      "date": "2025-09-30",
+      "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312525225125/d863209d8k.htm",
+      "excerpt": "MSFT 8-K filed 2025-09-30: Departure/Appointment of Directors or Officers (8-K)"
+    },
+    {
+      "id": "sec8k:MSFT:0001193125-25-256310",
+      "kind": "sec",
+      "title": "MSFT 8-K 2025-10-29",
+      "date": "2025-10-29",
+      "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312525256310/msft-20251028.htm",
+      "excerpt": "MSFT 8-K filed 2025-10-29: Results of Operations and Financial Condition; Regulation FD Disclosure; Financial Statements and Exhibits (8-K); price reaction 2025-10-29 to 2025-10-30 close -2.9%"
+    },
+    {
+      "id": "sec8k:NVDA:0001045810-25-000228",
+      "kind": "sec",
+      "title": "NVDA 8-K 2025-11-19",
+      "date": "2025-11-19",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000228/nvda-20251119.htm",
+      "excerpt": "NVDA 8-K filed 2025-11-19: Results of Operations and Financial Condition; Financial Statements and Exhibits (8-K); price reaction 2025-11-19 to 2025-11-20 close -3.2%"
+    },
+    {
+      "id": "sec8k:PG:0000080424-25-000240",
+      "kind": "sec",
+      "title": "PG 8-K 2025-10-24",
+      "date": "2025-10-24",
+      "url": "https://www.sec.gov/Archives/edgar/data/80424/000008042425000240/pg-20251024.htm",
+      "excerpt": "PG 8-K filed 2025-10-24: Results of Operations and Financial Condition; Financial Statements and Exhibits (FY2526 Q1 JAS 8-K); price reaction 2025-10-23 to 2025-10-24 close +0.2%"
+    },
+    {
+      "id": "sec8k:PG:0001193125-25-262609",
+      "kind": "sec",
+      "title": "PG 8-K 2025-11-03",
+      "date": "2025-11-03",
+      "url": "https://www.sec.gov/Archives/edgar/data/80424/000119312525262609/d35820d8k.htm",
+      "excerpt": "PG 8-K filed 2025-11-03: Other Events; Financial Statements and Exhibits (8-K)"
+    },
+    {
+      "id": "sec8k:PG:0001193125-25-264728",
+      "kind": "sec",
+      "title": "PG 8-K 2025-11-04",
+      "date": "2025-11-04",
+      "url": "https://www.sec.gov/Archives/edgar/data/80424/000119312525264728/d47629d8k.htm",
+      "excerpt": "PG 8-K filed 2025-11-04: Other Events; Financial Statements and Exhibits (8-K)"
+    },
+    {
+      "id": "sec8k:UNH:0000731766-25-000301",
+      "kind": "sec",
+      "title": "UNH 8-K 2025-10-28",
+      "date": "2025-10-28",
+      "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176625000301/unh-20251028.htm",
+      "excerpt": "UNH 8-K filed 2025-10-28: Results of Operations and Financial Condition; Financial Statements and Exhibits (8-K); price reaction 2025-10-27 to 2025-10-28 close +0.5%"
+    },
+    {
+      "id": "sec8k:UNH:0000731766-25-000308",
+      "kind": "sec",
+      "title": "UNH 8-K 2025-11-07",
+      "date": "2025-11-07",
+      "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176625000308/unh-20251107.htm",
+      "excerpt": "UNH 8-K filed 2025-11-07: Regulation FD Disclosure (8-K)"
+    },
+    {
+      "id": "sec8k:UNH:0000731766-25-000310",
+      "kind": "sec",
+      "title": "UNH 8-K 2025-11-13",
+      "date": "2025-11-13",
+      "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176625000310/unh-20251106.htm",
+      "excerpt": "UNH 8-K filed 2025-11-13: Amendments to Articles of Incorporation or Bylaws (8-K)"
+    },
+    {
+      "id": "fred:VIXCLS:2025-11-20",
+      "kind": "fred",
+      "title": "VIX close",
+      "date": "2025-11-21",
+      "url": "https://fred.stlouisfed.org/series/VIXCLS",
+      "excerpt": "VIX close: 26.42 (obs 2025-11-20, public 2025-11-21); 1m +44.9%; 3m +68.4%"
+    },
+    {
+      "id": "fred:USEPUINDXD:2025-11-20",
+      "kind": "fred",
+      "title": "Economic policy uncertainty index (daily)",
+      "date": "2025-11-21",
+      "url": "https://fred.stlouisfed.org/series/USEPUINDXD",
+      "excerpt": "Economic policy uncertainty index (daily): 312.65 (obs 2025-11-20, public 2025-11-21); 1m -7.8%; 3m +75.9%"
+    },
+    {
+      "id": "fred:BAMLH0A0HYM2:2025-11-20",
+      "kind": "fred",
+      "title": "ICE BofA US high-yield OAS (%)",
+      "date": "2025-11-21",
+      "url": "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
+      "excerpt": "ICE BofA US high-yield OAS (%): 3.17 (obs 2025-11-20, public 2025-11-21); 1m +0.18; 3m +0.23"
+    },
+    {
+      "id": "fred:DCOILWTICO:2025-11-20",
+      "kind": "fred",
+      "title": "WTI crude oil ($/bbl)",
+      "date": "2025-11-21",
+      "url": "https://fred.stlouisfed.org/series/DCOILWTICO",
+      "excerpt": "WTI crude oil ($/bbl): 60.07 (obs 2025-11-20, public 2025-11-21); 1m +3.0%; 3m -6.4%"
+    },
+    {
+      "id": "sec8k:GOOGL:0001193125-25-269979",
+      "kind": "sec",
+      "title": "GOOGL 8-K 2025-11-06",
+      "date": "2025-11-06",
+      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312525269979/d56115d8k.htm",
+      "excerpt": "GOOGL 8-K filed 2025-11-06: 8.01 Other Events"
+    },
+    {
+      "id": "sec8k:PG:0000080424-25-000217",
+      "kind": "sec",
+      "title": "PG 8-K 2025-10-14",
+      "date": "2025-10-14",
+      "url": "https://www.sec.gov/Archives/edgar/data/80424/000008042425000217/pg-20251014.htm",
+      "excerpt": "PG 8-K filed 2025-10-14: 7.01 Regulation FD Disclosure"
+    },
+    {
+      "id": "sec8k:PG:0000080424-25-000243",
+      "kind": "sec",
+      "title": "PG 8-K 2025-10-24",
+      "date": "2025-10-24",
+      "url": "https://www.sec.gov/Archives/edgar/data/80424/000008042425000243/pg-20251024.htm",
+      "excerpt": "PG 8-K filed 2025-10-24: 7.01 Regulation FD Disclosure"
+    },
+    {
+      "id": "sec8k:XOM:0000034088-25-000055",
+      "kind": "sec",
+      "title": "XOM 8-K 2025-10-06",
+      "date": "2025-10-06",
+      "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408825000055/xom-20251006.htm",
+      "excerpt": "XOM 8-K filed 2025-10-06: 7.01 Regulation FD Disclosure"
+    },
+    {
+      "id": "sec8k:XOM:0000034088-25-000059",
+      "kind": "sec",
+      "title": "XOM 8-K 2025-10-31",
+      "date": "2025-10-31",
+      "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408825000059/xom-20251031.htm",
+      "excerpt": "XOM 8-K filed 2025-10-31: 7.01 Regulation FD Disclosure"
+    },
+    {
+      "id": "sec8k:XOM:0001193125-25-279379",
+      "kind": "sec",
+      "title": "XOM 8-K 2025-11-13",
+      "date": "2025-11-13",
+      "url": "https://www.sec.gov/Archives/edgar/data/34088/000119312525279379/d82416d8k.htm",
+      "excerpt": "XOM 8-K filed 2025-11-13: 8.01 Other Events"
+    },
+    {
+      "id": "sec8k:XOM:0000034088-25-000074",
+      "kind": "sec",
+      "title": "XOM 8-K 2025-11-18",
+      "date": "2025-11-18",
+      "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408825000074/xom-20251118.htm",
+      "excerpt": "XOM 8-K filed 2025-11-18: 8.01 Other Events"
+    }
+  ],
+  "plan": {
+    "decision_date": "2025-11-21",
+    "strategy_name": "Quality Momentum with Late-Cycle Caution",
+    "summary": "Concentrate in GOOGL (strongest cross-analyst agreement on momentum + fundamentals), maintain moderate positions in AAPL, AMZN, and NVDA where at least two analysts are constructive, and hold elevated cash (~40%) given VIX at 26, rising policy uncertainty, and late-cycle macro signals. Avoid UNH, MSFT, and PG where analyst views are conflicted or structurally negative.",
+    "plans": [
+      {
+        "ticker": "GOOGL",
+        "target_weight": 0.22,
+        "stop_pct": 0.07,
+        "target_pct": 0.1,
+        "horizon_weeks": 4,
+        "conviction": 0.85,
+        "rationale": "Strongest consensus across analysts: Technical (0.80) highlights 52-week highs and dominant relative strength, Fundamentals (0.80) cites 34.2% net margin on 15.9% revenue growth with low debt. Geopolitics analyst is neutral on regulatory risk but not bearish. Best risk/reward in the universe.",
+        "changes_my_mind": "A weekly close below the 50-day mean (~263) or a formal DOJ antitrust remedy announcement targeting ad/search revenue.",
+        "memo_sources": [
+          "px:GOOGL:2025-11-21",
+          "sec:GOOGL:2025Q3",
+          "fred:USEPUINDXD:2025-11-20",
+          "sec8k:GOOGL:0001193125-25-269979"
+        ]
+      },
+      {
+        "ticker": "AAPL",
+        "target_weight": 0.1,
+        "stop_pct": 0.05,
+        "target_pct": 0.07,
+        "horizon_weeks": 4,
+        "conviction": 0.55,
+        "rationale": "Technical analyst (0.75) sees a clean trend near highs with healthy RSI; Macro analyst (0.65) notes falling yields support duration. However, Fundamentals analyst is only neutral (modest growth, high debt), Geopolitics analyst flags China supply-chain risk, and Sentiment sees no edge from flat earnings reaction. Sized down due to conflicting views.",
+        "changes_my_mind": "A close below the 50-day mean (~259) or escalation in US-China tariffs/supply-chain restrictions.",
+        "memo_sources": [
+          "px:AAPL:2025-11-21",
+          "sec:AAPL:2025Q4",
+          "fred:DGS10:2025-11-21",
+          "fred:VIXCLS:2025-11-20"
+        ]
+      },
+      {
+        "ticker": "NVDA",
+        "target_weight": 0.08,
+        "stop_pct": 0.1,
+        "target_pct": 0.12,
+        "horizon_weeks": 4,
+        "conviction": 0.5,
+        "rationale": "Fundamentals analyst has highest conviction in the universe (0.95) on 62.5% revenue growth and 56% net margin; Macro analyst is constructive on falling yields benefiting long-duration growth. However, Technical sees consolidation, Sentiment flags sell-the-news reaction (-3.2%), and Geopolitics warns of export-control overhang. Small position reflects the fundamental quality offset by near-term headwinds.",
+        "changes_my_mind": "A close below 160 (roughly 200-day mean area) or new semiconductor export control announcements targeting AI chips.",
+        "memo_sources": [
+          "sec:NVDA:2026Q3",
+          "px:NVDA:2025-11-21",
+          "sec8k:NVDA:0001045810-25-000228",
+          "fred:VIXCLS:2025-11-20",
+          "fred:DGS10:2025-11-21"
+        ]
+      },
+      {
+        "ticker": "AMZN",
+        "target_weight": 0.1,
+        "stop_pct": 0.08,
+        "target_pct": 0.1,
+        "horizon_weeks": 4,
+        "conviction": 0.55,
+        "rationale": "Fundamentals analyst (0.70) highlights 13.4% revenue growth with margin expansion to 11.8% and 38.2% net income growth; Sentiment analyst (0.65) notes the strongest earnings reaction in the universe (+9.6%). Technical is neutral given the drawdown, but the fundamental and sentiment alignment justifies a moderate position.",
+        "changes_my_mind": "A close below 205 (roughly 200-day mean support) or evidence of AWS growth deceleration below 15% in next quarter guidance.",
+        "memo_sources": [
+          "sec:AMZN:2025Q3",
+          "sec8k:AMZN:0001018724-25-000121",
+          "px:AMZN:2025-11-21"
+        ]
+      },
+      {
+        "ticker": "CAT",
+        "target_weight": 0.07,
+        "stop_pct": 0.08,
+        "target_pct": 0.1,
+        "horizon_weeks": 4,
+        "conviction": 0.45,
+        "rationale": "Technical analyst (0.70) sees massive momentum with +56% 26-week return and room to run; Sentiment (0.55) notes the +11.6% earnings pop. However, Fundamentals flags margin compression, Macro warns of late-cycle cyclical vulnerability, and Geopolitics sees trade-policy risk. Sized small given the 3-vs-2 conflict.",
+        "changes_my_mind": "A close below 520 or widening HY OAS above 3.50% signaling credit stress that would hit cyclical capex.",
+        "memo_sources": [
+          "px:CAT:2025-11-21",
+          "sec8k:CAT:0000018230-25-000043",
+          "sec:CAT:2025Q3",
+          "fred:UNRATE:2025-09-01",
+          "fred:BAMLH0A0HYM2:2025-11-20"
+        ]
+      },
+      {
+        "ticker": "MSFT",
+        "target_weight": 0.05,
+        "stop_pct": 0.06,
+        "target_pct": 0.1,
+        "horizon_weeks": 4,
+        "conviction": 0.4,
+        "rationale": "Fundamentals analyst (0.80) sees elite 35.7% net margin and 18.4% revenue growth; Macro analyst (0.70) notes falling yields benefit duration-sensitive growth. But Technical (avoid, RSI 28 breakdown) and Sentiment (avoid, post-earnings fade) are clearly negative. Tiny position as a mean-reversion option given fundamental quality, but only if it holds near current levels.",
+        "changes_my_mind": "A further close below 450 would confirm the breakdown and I'd exit; conversely, a reclaim above the 50-day mean (~513) would increase conviction.",
+        "memo_sources": [
+          "sec:MSFT:2026Q1",
+          "px:MSFT:2025-11-21",
+          "fred:DGS10:2025-11-21",
+          "sec8k:MSFT:0001193125-25-256310"
+        ]
+      }
+    ]
+  },
+  "execution": {
+    "decision_date": "2025-11-21",
+    "orders": [
+      {
+        "ticker": "GOOGL",
+        "entry": "limit",
+        "limit_offset_atr": 0.4,
+        "skip_if_gap_pct": 0.03,
+        "note": "Largest position; up 8.4% in 1w so extended. Use shallow limit to avoid chasing; gap filter protects against momentum exhaustion gap-up."
+      },
+      {
+        "ticker": "AAPL",
+        "entry": "market_open",
+        "limit_offset_atr": null,
+        "skip_if_gap_pct": 0.04,
+        "note": "Flat 1w return, low avg gap, very liquid. Market open fill is fine; mild gap guard."
+      },
+      {
+        "ticker": "NVDA",
+        "entry": "limit",
+        "limit_offset_atr": 0.35,
+        "skip_if_gap_pct": 0.05,
+        "note": "Down ~6% in 1w with high ATR (~5.2% of price). Limit 0.35 ATR below close (~$175.64) to catch continued weakness; wide gap filter given vol."
+      },
+      {
+        "ticker": "AMZN",
+        "entry": "limit",
+        "limit_offset_atr": 0.3,
+        "skip_if_gap_pct": 0.04,
+        "note": "Down ~6% in 1w; ATR ~3.1% of price. Limit ~$218.62 to buy into continued pullback; gap guard at 4%."
+      },
+      {
+        "ticker": "CAT",
+        "entry": "limit",
+        "limit_offset_atr": 0.5,
+        "skip_if_gap_pct": 0.03,
+        "note": "Smaller weight, lower liquidity (2.7M avg vol), high ATR ($18.9). Limit 0.5 ATR below close (~$541) to get better fill; tight gap guard."
+      },
+      {
+        "ticker": "MSFT",
+        "entry": "limit",
+        "limit_offset_atr": 0.5,
+        "skip_if_gap_pct": 0.03,
+        "note": "Small 5% weight, down 7.5% in 1w, conflicted analyst views per plan. Limit 0.5 ATR below close (~$466.4) to only fill on further weakness."
+      }
+    ],
+    "notes": "VIX at 26 warrants patience; using limit orders on most names to avoid overpaying. GOOGL gets a shallow limit given it's the conviction pick but is extended. AAPL is the only market_open given its stability and flat recent action. Elevated cash (~40%) means no urgency to force fills."
+  },
+  "orders": {
+    "date": "2025-11-21",
+    "intents": [
+      {
+        "ticker": "GOOGL",
+        "target_weight": 0.22,
+        "entry": "limit",
+        "limit_price": 295.2191,
+        "skip_if_gap_pct": 0.03,
+        "stop_price": 278.6838,
+        "target_price": 329.626
+      },
+      {
+        "ticker": "AAPL",
+        "target_weight": 0.1,
+        "entry": "market_open",
+        "limit_price": null,
+        "skip_if_gap_pct": 0.04,
+        "stop_price": 257.9155,
+        "target_price": 290.4943
+      },
+      {
+        "ticker": "NVDA",
+        "target_weight": 0.08,
+        "entry": "limit",
+        "limit_price": 175.6393,
+        "skip_if_gap_pct": 0.05,
+        "stop_price": 160.992,
+        "target_price": 200.3456
+      },
+      {
+        "ticker": "AMZN",
+        "target_weight": 0.1,
+        "entry": "limit",
+        "limit_price": 218.6179,
+        "skip_if_gap_pct": 0.04,
+        "stop_price": 203.0348,
+        "target_price": 242.759
+      },
+      {
+        "ticker": "CAT",
+        "target_weight": 0.07,
+        "entry": "limit",
+        "limit_price": 540.9671,
+        "skip_if_gap_pct": 0.03,
+        "stop_price": 506.3956,
+        "target_price": 605.473
+      },
+      {
+        "ticker": "MSFT",
+        "target_weight": 0.05,
+        "entry": "limit",
+        "limit_price": 466.4014,
+        "skip_if_gap_pct": 0.03,
+        "stop_price": 443.7928,
+        "target_price": 519.332
+      },
+      {
+        "ticker": "JPM",
+        "target_weight": 0.0,
+        "entry": "market_open",
+        "limit_price": null,
+        "skip_if_gap_pct": null,
+        "stop_price": null,
+        "target_price": null
+      },
+      {
+        "ticker": "XOM",
+        "target_weight": 0.0,
+        "entry": "market_open",
+        "limit_price": null,
+        "skip_if_gap_pct": null,
+        "stop_price": null,
+        "target_price": null
+      },
+      {
+        "ticker": "UNH",
+        "target_weight": 0.0,
+        "entry": "market_open",
+        "limit_price": null,
+        "skip_if_gap_pct": null,
+        "stop_price": null,
+        "target_price": null
+      },
+      {
+        "ticker": "PG",
+        "target_weight": 0.0,
+        "entry": "market_open",
+        "limit_price": null,
+        "skip_if_gap_pct": null,
+        "stop_price": null,
+        "target_price": null
+      }
+    ],
+    "contaminated": false
+  },
+  "masked": false,
+  "notes": []
+}

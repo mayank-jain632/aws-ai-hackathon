@@ -1,0 +1,1016 @@
+{
+  "decision_date": "2025-06-27",
+  "contaminated": true,
+  "model_id": "us.anthropic.claude-opus-4-6-v1",
+  "memos": [
+    {
+      "analyst": "technical",
+      "date": "2025-06-27",
+      "headline": "Momentum leaders S10, S04, S06 stretched to overbought; S02 and S08 remain broken downtrends",
+      "body": "I see a clear bifurcation in this universe as of June 27. The strongest relative-strength names—S10 (+43% over 12w, at its 52w high, RSI 76.6), S04 (+30% over 12w, RSI 77, just 0.3% off highs), and S06 (+18% over 12w, RSI 75.6)—are all trading 10–22% above their 50-day means, which historically flags near-term mean-reversion risk even if the intermediate trend is clearly up. On the other side, S02 is in a catastrophic downtrend: -51% from its 52w high, 38% below its 200-day mean, and 12w relative strength vs SPY of -50.5%, making it untouchable until it can reclaim its 50-day average. S08 is similarly weak at -22% from highs and -10% below its 200d mean, though its RSI near 50 suggests the selling has at least paused. I favor S03 and S07 as the best risk/reward longs—both show strong 4w momentum (+8.6% and +9.4%) with RSIs in the mid-to-upper 60s/70s and improving relative strength, but are not as extended as S10 or S04.",
+      "views": [
+        {
+          "ticker": "NVDA",
+          "stance": "neutral",
+          "confidence": 0.6,
+          "note": "At 52w high with RSI 76.6 and 22% above 50d mean—trend is powerful but too extended for fresh entry; would buy a pullback to ~140 (near 50d mean).",
+          "sources": [
+            "px:S10:2025-06-27"
+          ]
+        },
+        {
+          "ticker": "MSFT",
+          "stance": "neutral",
+          "confidence": 0.6,
+          "note": "RSI 77 and 11% above 50d mean near all-time highs; trend is undeniable but risk/reward poor for new longs—a close below 470 would concern me.",
+          "sources": [
+            "px:S04:2025-06-27"
+          ]
+        },
+        {
+          "ticker": "AMZN",
+          "stance": "long",
+          "confidence": 0.7,
+          "note": "Strong 4w +8.6% move with RSI 67.9 not yet overbought, 11% above 50d mean but still 8% off highs—would stop below 200 (near 200d mean).",
+          "sources": [
+            "px:S03:2025-06-27"
+          ]
+        },
+        {
+          "ticker": "CAT",
+          "stance": "long",
+          "confidence": 0.65,
+          "note": "Best 4w return in universe at +9.4% with improving relative strength (+5.1% vs SPY), RSI 75 is elevated but 7.7% off highs leaves room; stop below 360.",
+          "sources": [
+            "px:S07:2025-06-27"
+          ]
+        },
+        {
+          "ticker": "JPM",
+          "stance": "long",
+          "confidence": 0.55,
+          "note": "Near 52w highs with +20.5% 26w return and strong relative strength, but RSI 75.6 and 10% above 50d mean warrant tight stops below 270.",
+          "sources": [
+            "px:S06:2025-06-27"
+          ]
+        },
+        {
+          "ticker": "UNH",
+          "stance": "avoid",
+          "confidence": 0.9,
+          "note": "Down 51% from highs, 38% below 200d mean, 12w relative strength vs SPY -50.5%—this is a broken chart; would reconsider only above 350 (near 50d mean).",
+          "sources": [
+            "px:S02:2025-06-27"
+          ]
+        },
+        {
+          "ticker": "AAPL",
+          "stance": "avoid",
+          "confidence": 0.75,
+          "note": "Persistent downtrend: -22% from highs, 10% below 200d mean, negative relative strength on all timeframes; need a close above 210 to reconsider.",
+          "sources": [
+            "px:S08:2025-06-27"
+          ]
+        },
+        {
+          "ticker": "PG",
+          "stance": "avoid",
+          "confidence": 0.7,
+          "note": "Weak relative strength (-9.4% vs SPY over 4w), below both moving averages, RSI 44—no reason to own until price reclaims 165 area.",
+          "sources": [
+            "px:S01:2025-06-27"
+          ]
+        },
+        {
+          "ticker": "GOOGL",
+          "stance": "neutral",
+          "confidence": 0.5,
+          "note": "RSI 61 and 7.7% above 50d mean look constructive, but flat 4w relative strength vs SPY and -13.5% drawdown from highs leave me unconvinced; watching 170 as support.",
+          "sources": [
+            "px:S05:2025-06-27"
+          ]
+        },
+        {
+          "ticker": "XOM",
+          "stance": "neutral",
+          "confidence": 0.5,
+          "note": "RSI 52.6 and near its 50d mean suggest consolidation; -4.6% last week is a red flag—need to hold 105 or risk resuming the 12w -8% downtrend.",
+          "sources": [
+            "px:S09:2025-06-27"
+          ]
+        }
+      ]
+    },
+    {
+      "analyst": "fundamentals",
+      "date": "2025-06-27",
+      "headline": "S10 and S05 Lead on Margin Expansion; S07 and S09 Show Earnings Compression That Warrants Caution",
+      "body": "I see the clearest durable earnings power in S10 (42.6% net margin, +69.2% YoY revenue, minimal debt at $8.5B) and S05 (38.3% net margin, +46% YoY net income growth on 12% revenue growth with only $14.8B debt). S04 also stands out with 36.9% net margin and +17.7% net income growth on solid 13.3% revenue growth. On the other end, S07 is contracting sharply—revenue down 9.8% YoY and net income down 29.8%—while carrying $31.7B in debt against just $14.3B in quarterly revenue, which signals real cash-flow risk. S09 is essentially flat on revenue (+0.1%) with net income declining 6.2% and a thin 9.3% margin, leaving little cushion. I would need to see a reversal in S07's top-line trajectory and S09's margin trend before getting constructive on either name.",
+      "views": [
+        {
+          "ticker": "NVDA",
+          "stance": "long",
+          "confidence": 0.92,
+          "note": "69% YoY revenue growth, 42.6% net margin, and only $8.5B total debt make this the strongest fundamental profile in the universe.",
+          "sources": [
+            "sec:S10:2026Q1"
+          ]
+        },
+        {
+          "ticker": "GOOGL",
+          "stance": "long",
+          "confidence": 0.88,
+          "note": "38.3% net margin with +46% net income growth and a clean balance sheet ($14.8B debt) signals durable, expanding earnings power.",
+          "sources": [
+            "sec:S05:2025Q1"
+          ]
+        },
+        {
+          "ticker": "MSFT",
+          "stance": "long",
+          "confidence": 0.8,
+          "note": "13.3% revenue growth translating into 17.7% net income growth at a 36.9% margin with manageable $42.9B debt is high-quality compounding.",
+          "sources": [
+            "sec:S04:2025Q3"
+          ]
+        },
+        {
+          "ticker": "AMZN",
+          "stance": "neutral",
+          "confidence": 0.6,
+          "note": "Revenue +8.6% and net income +64.2% look impressive, but the 11% net margin suggests the earnings jump may reflect one-time items rather than structural improvement—need to see margin durability.",
+          "sources": [
+            "sec:S03:2025Q1"
+          ]
+        },
+        {
+          "ticker": "AAPL",
+          "stance": "neutral",
+          "confidence": 0.55,
+          "note": "Solid 26% margin but only +5.1% revenue growth and $92.2B in total debt; earnings power is stable but not accelerating.",
+          "sources": [
+            "sec:S08:2025Q2"
+          ]
+        },
+        {
+          "ticker": "JPM",
+          "stance": "neutral",
+          "confidence": 0.5,
+          "note": "32.3% net margin is attractive but $407B total debt dwarfs quarterly revenue; leverage trajectory is the key variable to watch.",
+          "sources": [
+            "sec:S06:2025Q1"
+          ]
+        },
+        {
+          "ticker": "XOM",
+          "stance": "avoid",
+          "confidence": 0.72,
+          "note": "Flat revenue (+0.1%) and declining net income (-6.2%) at a thin 9.3% margin with $32.8B debt signals cash-flow compression risk.",
+          "sources": [
+            "sec:S09:2025Q1"
+          ]
+        },
+        {
+          "ticker": "CAT",
+          "stance": "avoid",
+          "confidence": 0.82,
+          "note": "Revenue contracting 9.8% and net income down 29.8% with $31.7B debt against $14.3B quarterly revenue is a deteriorating earnings profile I refuse to pay for.",
+          "sources": [
+            "sec:S07:2025Q1"
+          ]
+        },
+        {
+          "ticker": "UNH",
+          "stance": "neutral",
+          "confidence": 0.45,
+          "note": "Revenue +9.8% is decent but 5.7% net margin is the thinnest in the universe and net income YoY is unavailable, making earnings durability hard to assess.",
+          "sources": [
+            "sec:S02:2025Q1"
+          ]
+        },
+        {
+          "ticker": "PG",
+          "stance": "neutral",
+          "confidence": 0.5,
+          "note": "19.1% margin is respectable but revenue is declining 2.1% YoY and net income is essentially flat (+0.4%); need top-line stabilization before turning constructive.",
+          "sources": [
+            "sec:S01:2025Q3"
+          ]
+        }
+      ]
+    },
+    {
+      "analyst": "macro",
+      "date": "2025-06-27",
+      "headline": "Fed on Extended Pause at 4.50% With Softening Labor Market and Benign Inflation — Favor Duration-Sensitive Growth, Lean Into Banks on Steepening Curve",
+      "body": "I see the Fed firmly in pause mode: the upper bound has sat at 4.50% for three months with no change, while CPI is running at just 2.4% y/y and unemployment has drifted up 40bp over the past year to 4.3%. The 10y-2y spread has steepened sharply (+95bp over 12 months to +0.56pp), which is a classic pre-easing signal and a tailwind for bank net interest margins. The 10y yield at 4.29% is flat year-over-year and down 9bp over three months, suggesting the long end is already pricing in a growth slowdown without a panic. My base case is that the next move is a cut — likely in H2 2025 — which favors duration-sensitive growth and banks while making cyclicals and energy more vulnerable. A CPI print re-accelerating above 3% y/y or unemployment dropping back below 4.0% would force me to revisit this easing-bias call.",
+      "views": [
+        {
+          "ticker": "PG",
+          "stance": "long",
+          "confidence": 0.72,
+          "note": "Duration-sensitive growth benefits most from a pause-to-easing transition with 10y yields drifting lower and inflation contained at 2.4% y/y.",
+          "sources": [
+            "fred:DFEDTARU:2025-06-26",
+            "fred:CPIAUCSL:2025-05-01",
+            "fred:DGS10:2025-06-27"
+          ]
+        },
+        {
+          "ticker": "UNH",
+          "stance": "long",
+          "confidence": 0.68,
+          "note": "Banks should benefit from the steepening curve (+56bp 10y-2y spread, up 95bp y/y) which supports NIM expansion even before actual rate cuts arrive.",
+          "sources": [
+            "fred:T10Y2Y:2025-06-26",
+            "fred:DFEDTARU:2025-06-26",
+            "fred:DGS10:2025-06-27"
+          ]
+        },
+        {
+          "ticker": "GOOGL",
+          "stance": "neutral",
+          "confidence": 0.5,
+          "note": "Staples offer defensive positioning but limited upside in a regime where the labor market is softening only gradually and no recession is imminent.",
+          "sources": [
+            "fred:UNRATE:2025-05-01",
+            "fred:CPIAUCSL:2025-05-01"
+          ]
+        },
+        {
+          "ticker": "CAT",
+          "stance": "neutral",
+          "confidence": 0.45,
+          "note": "Cyclicals face headwinds from rising unemployment (+0.4pp y/y) and a slowing economy, but the pause regime limits downside for now.",
+          "sources": [
+            "fred:UNRATE:2025-05-01",
+            "fred:DFEDTARU:2025-06-26"
+          ]
+        },
+        {
+          "ticker": "JPM",
+          "stance": "avoid",
+          "confidence": 0.55,
+          "note": "Energy tends to underperform in late-cycle slowdowns; rising unemployment and an easing-biased Fed suggest demand headwinds ahead.",
+          "sources": [
+            "fred:UNRATE:2025-05-01",
+            "fred:FEDFUNDS:2025-05-01"
+          ]
+        },
+        {
+          "ticker": "NVDA",
+          "stance": "long",
+          "confidence": 0.6,
+          "note": "Rate-sensitive sectors gain as the 10y yield edges lower and the market prices in eventual easing from the current 4.50% hold.",
+          "sources": [
+            "fred:DGS10:2025-06-27",
+            "fred:DFEDTARU:2025-06-26",
+            "fred:T10Y2Y:2025-06-26"
+          ]
+        }
+      ]
+    },
+    {
+      "analyst": "sentiment",
+      "date": "2025-06-27",
+      "headline": "Limited Sentiment Differentiation Across Universe; S10 Earnings Reaction and S02 Leadership Churn Stand Out",
+      "body": "I have very little GDELT-style media tone data to work with this cycle—my evidence set is almost entirely 8-K filings rather than media coverage volume or tone scores. That said, I can extract directional signals from the nature and cadence of disclosures. S10 is the clearest positive: its May 28 earnings 8-K triggered a +3.2% one-day price reaction, suggesting the results surprised to the upside and narrative may still be turning. S02 is the most active filer with four 8-Ks in six weeks, three involving officer departures/appointments, which typically generates negative or uncertain media tone and signals organizational instability. S01 had a Deutsche Bank presentation and a named officer announcement (Arnold) in early June, which could be narrative-positive if the market reads it as strategic refresh, but the signal is ambiguous. S09's earnings reaction was a muted +0.4%, suggesting the result was already priced and media tone likely flat.",
+      "views": [
+        {
+          "ticker": "NVDA",
+          "stance": "long",
+          "confidence": 0.55,
+          "note": "Earnings 8-K drove +3.2% price pop on May 28-29, suggesting positive narrative shift that may not yet be fully reflected.",
+          "sources": [
+            "sec8k:S10:S10-25-000115"
+          ]
+        },
+        {
+          "ticker": "UNH",
+          "stance": "avoid",
+          "confidence": 0.5,
+          "note": "Three officer departure/appointment filings in six weeks signals leadership churn likely generating negative or uncertain media tone.",
+          "sources": [
+            "sec8k:S02:S02-25-000134",
+            "sec8k:S02:S02-25-000150",
+            "sec8k:S02:S02-25-000154",
+            "sec8k:S02:0001193125-25-143717"
+          ]
+        },
+        {
+          "ticker": "PG",
+          "stance": "neutral",
+          "confidence": 0.35,
+          "note": "Deutsche Bank presentation and officer announcement could shift narrative either way; insufficient tone data to take a directional view.",
+          "sources": [
+            "sec8k:S01:S01-25-000050",
+            "sec8k:S01:S01-25-000052"
+          ]
+        },
+        {
+          "ticker": "XOM",
+          "stance": "neutral",
+          "confidence": 0.4,
+          "note": "Earnings reaction of only +0.4% suggests results were in-line and media tone is likely flat—no edge here.",
+          "sources": [
+            "sec8k:S09:S09-25-000022",
+            "sec8k:S09:S09-25-000030"
+          ]
+        },
+        {
+          "ticker": "CAT",
+          "stance": "neutral",
+          "confidence": 0.3,
+          "note": "Two routine filings (Other Events and shareholder vote) with no price reaction data; no discernible sentiment shift.",
+          "sources": [
+            "sec8k:S07:0001104659-25-049132",
+            "sec8k:S07:0001104659-25-058891"
+          ]
+        },
+        {
+          "ticker": "JPM",
+          "stance": "neutral",
+          "confidence": 0.3,
+          "note": "Reg FD disclosure and shareholder vote are standard seasonal filings with no tone signal.",
+          "sources": [
+            "sec8k:S06:S06-25-000483",
+            "sec8k:S06:S06-25-000485"
+          ]
+        }
+      ]
+    },
+    {
+      "analyst": "geopolitics",
+      "date": "2025-06-27",
+      "headline": "Policy Uncertainty Declining Sharply but Still Elevated; Geopolitical Tail Risk Receding for Now",
+      "body": "I note that the Economic Policy Uncertainty Index has fallen 24% over three months to 239.86, and the VIX has dropped nearly 20% in a month to 16.59, signaling that the acute phase of policy-driven volatility (tariffs, export controls, sanctions rhetoric) is fading. HY spreads at 3.04% confirm credit markets are not pricing imminent disruption. WTI at $66.44 is down 5.2% over three months despite a recent monthly bounce, suggesting energy supply-chain stress is contained and OPEC+ discipline is loosening—this is a mild headwind for energy-exposed names but a tailwind for cost-sensitive industrials and consumers. I lack granular GDELT event data on specific sanctions or export-control escalations, so my conviction is moderate; a renewed tariff round or China semiconductor ban would force me to revisit. The 8-K filings across the universe are routine Reg FD and Other Events disclosures with no red flags pointing to sanctions exposure or supply-chain disruption.",
+      "views": [
+        {
+          "ticker": "PG",
+          "stance": "neutral",
+          "confidence": 0.4,
+          "note": "Two Reg FD filings in early June suggest active investor communication but no geopolitical catalyst visible; staying neutral until content is clearer.",
+          "sources": [
+            "sec8k:S01:S01-25-000050",
+            "sec8k:S01:S01-25-000052",
+            "fred:USEPUINDXD:2025-06-26"
+          ]
+        },
+        {
+          "ticker": "UNH",
+          "stance": "neutral",
+          "confidence": 0.4,
+          "note": "Recent 8.01 filing on June 20 and earlier Reg FD disclosure are routine; declining policy uncertainty is mildly supportive but no structural edge.",
+          "sources": [
+            "sec8k:S02:S02-25-000134",
+            "sec8k:S02:0001193125-25-143717",
+            "fred:USEPUINDXD:2025-06-26"
+          ]
+        },
+        {
+          "ticker": "GOOGL",
+          "stance": "long",
+          "confidence": 0.45,
+          "note": "Falling policy uncertainty and contained energy costs reduce geopolitical headwinds; 8.01 filing in May was uneventful, and the macro backdrop is improving.",
+          "sources": [
+            "sec8k:S05:0001193125-25-113864",
+            "fred:USEPUINDXD:2025-06-26",
+            "fred:DCOILWTICO:2025-06-26",
+            "fred:VIXCLS:2025-06-26"
+          ]
+        },
+        {
+          "ticker": "CAT",
+          "stance": "long",
+          "confidence": 0.45,
+          "note": "Active disclosure cadence (two 8-Ks in a month) amid declining VIX and policy uncertainty suggests management is positioning proactively; no sanctions or export-control risk flagged.",
+          "sources": [
+            "sec8k:S07:0001104659-25-049132",
+            "sec8k:S07:0001104659-25-058891",
+            "fred:VIXCLS:2025-06-26",
+            "fred:USEPUINDXD:2025-06-26"
+          ]
+        },
+        {
+          "ticker": "XOM",
+          "stance": "neutral",
+          "confidence": 0.35,
+          "note": "Single early-May Reg FD filing and no subsequent updates leave me with insufficient geopolitical signal; would need clarity on supply-chain or China exposure to take a view.",
+          "sources": [
+            "sec8k:S09:S09-25-000022",
+            "fred:USEPUINDXD:2025-06-26"
+          ]
+        },
+        {
+          "ticker": "JPM",
+          "stance": "neutral",
+          "confidence": 0.35,
+          "note": "Reg FD disclosure in mid-May is stale; declining HY spreads are supportive but I have no evidence of specific geopolitical tailwind or risk.",
+          "sources": [
+            "sec8k:S06:S06-25-000483",
+            "fred:BAMLH0A0HYM2:2025-06-26"
+          ]
+        }
+      ]
+    }
+  ],
+  "abstained_analysts": [],
+  "sources": [
+    {
+      "id": "px:S08:2025-06-27",
+      "kind": "price",
+      "title": "S08 daily prices through 2025-06-27",
+      "date": "2025-06-27",
+      "url": null,
+      "excerpt": "S08: close 201.08 (2025-06-27); ret 1w +0.0% 4w +0.6% 12w -9.9% 26w -20.7%; vs 50d mean -0.8%, vs 200d mean -10.0%; RSI14 49.8; drawdown from 52w high -22.4%; ATR14 1.86%; rel strength vs SPY 4w -3.6% 12w -19.5%"
+    },
+    {
+      "id": "px:S04:2025-06-27",
+      "kind": "price",
+      "title": "S04 daily prices through 2025-06-27",
+      "date": "2025-06-27",
+      "url": null,
+      "excerpt": "S04: close 495.94 (2025-06-27); ret 1w +3.9% 4w +8.1% 12w +29.8% 26w +9.1%; vs 50d mean +11.3%, vs 200d mean +17.2%; RSI14 77.0; drawdown from 52w high -0.3%; ATR14 1.34%; rel strength vs SPY 4w +3.9% 12w +20.1%"
+    },
+    {
+      "id": "px:S10:2025-06-27",
+      "kind": "price",
+      "title": "S10 daily prices through 2025-06-27",
+      "date": "2025-06-27",
+      "url": null,
+      "excerpt": "S10: close 157.75 (2025-06-27); ret 1w +9.7% 4w +13.3% 12w +43.2% 26w +21.0%; vs 50d mean +21.8%, vs 200d mean +22.1%; RSI14 76.6; drawdown from 52w high +0.0%; ATR14 2.16%; rel strength vs SPY 4w +9.1% 12w +33.6%"
+    },
+    {
+      "id": "px:S03:2025-06-27",
+      "kind": "price",
+      "title": "S03 daily prices through 2025-06-27",
+      "date": "2025-06-27",
+      "url": null,
+      "excerpt": "S03: close 223.30 (2025-06-27); ret 1w +6.5% 4w +8.6% 12w +16.2% 26w -3.4%; vs 50d mean +11.1%, vs 200d mean +9.0%; RSI14 67.9; drawdown from 52w high -7.8%; ATR14 2.17%; rel strength vs SPY 4w +4.3% 12w +6.6%"
+    },
+    {
+      "id": "px:S05:2025-06-27",
+      "kind": "price",
+      "title": "S05 daily prices through 2025-06-27",
+      "date": "2025-06-27",
+      "url": null,
+      "excerpt": "S05: close 178.53 (2025-06-27); ret 1w +7.1% 4w +3.9% 12w +13.7% 26w -8.6%; vs 50d mean +7.7%, vs 200d mean +3.7%; RSI14 61.3; drawdown from 52w high -13.5%; ATR14 2.48%; rel strength vs SPY 4w -0.3% 12w +4.0%"
+    },
+    {
+      "id": "px:S06:2025-06-27",
+      "kind": "price",
+      "title": "S06 daily prices through 2025-06-27",
+      "date": "2025-06-27",
+      "url": null,
+      "excerpt": "S06: close 287.11 (2025-06-27); ret 1w +4.4% 4w +8.6% 12w +17.8% 26w +20.5%; vs 50d mean +10.4%, vs 200d mean +17.5%; RSI14 75.6; drawdown from 52w high -0.6%; ATR14 1.61%; rel strength vs SPY 4w +4.4% 12w +8.2%"
+    },
+    {
+      "id": "px:S09:2025-06-27",
+      "kind": "price",
+      "title": "S09 daily prices through 2025-06-27",
+      "date": "2025-06-27",
+      "url": null,
+      "excerpt": "S09: close 109.38 (2025-06-27); ret 1w -4.6% 4w +6.5% 12w -8.1% 26w +1.3%; vs 50d mean +2.3%, vs 200d mean -2.1%; RSI14 52.6; drawdown from 52w high -12.8%; ATR14 2.35%; rel strength vs SPY 4w +2.3% 12w -17.7%"
+    },
+    {
+      "id": "px:S02:2025-06-27",
+      "kind": "price",
+      "title": "S02 daily prices through 2025-06-27",
+      "date": "2025-06-27",
+      "url": null,
+      "excerpt": "S02: close 309.11 (2025-06-27); ret 1w +2.4% 4w +3.7% 12w -40.9% 26w -36.3%; vs 50d mean -10.4%, vs 200d mean -37.7%; RSI14 43.9; drawdown from 52w high -50.6%; ATR14 2.23%; rel strength vs SPY 4w -0.5% 12w -50.5%"
+    },
+    {
+      "id": "px:S01:2025-06-27",
+      "kind": "price",
+      "title": "S01 daily prices through 2025-06-27",
+      "date": "2025-06-27",
+      "url": null,
+      "excerpt": "S01: close 159.86 (2025-06-27); ret 1w +0.5% 4w -5.2% 12w -6.3% 26w -6.1%; vs 50d mean -1.7%, vs 200d mean -4.6%; RSI14 44.3; drawdown from 52w high -11.0%; ATR14 1.19%; rel strength vs SPY 4w -9.4% 12w -15.9%"
+    },
+    {
+      "id": "px:S07:2025-06-27",
+      "kind": "price",
+      "title": "S07 daily prices through 2025-06-27",
+      "date": "2025-06-27",
+      "url": null,
+      "excerpt": "S07: close 384.71 (2025-06-27); ret 1w +6.7% 4w +9.4% 12w +16.4% 26w +2.4%; vs 50d mean +13.2%, vs 200d mean +7.0%; RSI14 75.3; drawdown from 52w high -7.7%; ATR14 1.71%; rel strength vs SPY 4w +5.1% 12w +6.8%"
+    },
+    {
+      "id": "sec:S08:2025Q2",
+      "kind": "sec",
+      "title": "S08 2025Q2 10-Q",
+      "date": "2025-05-02",
+      "url": null,
+      "excerpt": "S08 2025Q2 (period end 2025-03-29, filed 2025-05-02 on 10-Q): revenue $95.36B, net income $24.78B, net margin +26.0%, total debt $92.20B, YoY revenue +5.1%, YoY net income +4.8%"
+    },
+    {
+      "id": "sec:S04:2025Q3",
+      "kind": "sec",
+      "title": "S04 2025Q3 10-Q",
+      "date": "2025-04-30",
+      "url": null,
+      "excerpt": "S04 2025Q3 (period end 2025-03-31, filed 2025-04-30 on 10-Q): revenue $70.07B, net income $25.82B, net margin +36.9%, total debt $42.88B, YoY revenue +13.3%, YoY net income +17.7%"
+    },
+    {
+      "id": "sec:S10:2026Q1",
+      "kind": "sec",
+      "title": "S10 2026Q1 10-Q",
+      "date": "2025-05-28",
+      "url": null,
+      "excerpt": "S10 2026Q1 (period end 2025-04-27, filed 2025-05-28 on 10-Q): revenue $44.06B, net income $18.77B, net margin +42.6%, total debt $8.46B, YoY revenue +69.2%, YoY net income +26.2%"
+    },
+    {
+      "id": "sec:S03:2025Q1",
+      "kind": "sec",
+      "title": "S03 2025Q1 10-Q",
+      "date": "2025-05-02",
+      "url": null,
+      "excerpt": "S03 2025Q1 (period end 2025-03-31, filed 2025-05-02 on 10-Q): revenue $155.67B, net income $17.13B, net margin +11.0%, total debt $58.75B, YoY revenue +8.6%, YoY net income +64.2%"
+    },
+    {
+      "id": "sec:S05:2025Q1",
+      "kind": "sec",
+      "title": "S05 2025Q1 10-Q",
+      "date": "2025-04-25",
+      "url": null,
+      "excerpt": "S05 2025Q1 (period end 2025-03-31, filed 2025-04-25 on 10-Q): revenue $90.23B, net income $34.54B, net margin +38.3%, total debt $14.79B, YoY revenue +12.0%, YoY net income +46.0%"
+    },
+    {
+      "id": "sec:S06:2025Q1",
+      "kind": "sec",
+      "title": "S06 2025Q1 10-Q",
+      "date": "2025-05-01",
+      "url": null,
+      "excerpt": "S06 2025Q1 (period end 2025-03-31, filed 2025-05-01 on 10-Q): revenue $45.31B, net income $14.64B, net margin +32.3%, total debt $407.22B, YoY revenue +8.1%, YoY net income +9.1%"
+    },
+    {
+      "id": "sec:S09:2025Q1",
+      "kind": "sec",
+      "title": "S09 2025Q1 10-Q",
+      "date": "2025-05-05",
+      "url": null,
+      "excerpt": "S09 2025Q1 (period end 2025-03-31, filed 2025-05-05 on 10-Q): revenue $83.13B, net income $7.71B, net margin +9.3%, total debt $32.82B, YoY revenue +0.1%, YoY net income -6.2%"
+    },
+    {
+      "id": "sec:S02:2025Q1",
+      "kind": "sec",
+      "title": "S02 2025Q1 10-Q",
+      "date": "2025-05-07",
+      "url": null,
+      "excerpt": "S02 2025Q1 (period end 2025-03-31, filed 2025-05-07 on 10-Q): revenue $109.58B, net income $6.29B, net margin +5.7%, total debt $81.27B, YoY revenue +9.8%, YoY net income n/a"
+    },
+    {
+      "id": "sec:S01:2025Q3",
+      "kind": "sec",
+      "title": "S01 2025Q3 10-Q",
+      "date": "2025-04-24",
+      "url": null,
+      "excerpt": "S01 2025Q3 (period end 2025-03-31, filed 2025-04-24 on 10-Q): revenue $19.78B, net income $3.77B, net margin +19.1%, total debt $24.25B, YoY revenue -2.1%, YoY net income +0.4%"
+    },
+    {
+      "id": "sec:S07:2025Q1",
+      "kind": "sec",
+      "title": "S07 2025Q1 10-Q",
+      "date": "2025-05-07",
+      "url": null,
+      "excerpt": "S07 2025Q1 (period end 2025-03-31, filed 2025-05-07 on 10-Q): revenue $14.25B, net income $2.00B, net margin +14.1%, total debt $31.74B, YoY revenue -9.8%, YoY net income -29.8%"
+    },
+    {
+      "id": "fred:DFEDTARU:2025-06-26",
+      "kind": "fred",
+      "title": "Fed funds target range, upper bound (%, daily)",
+      "date": "2025-06-27",
+      "url": "https://fred.stlouisfed.org/series/DFEDTARU",
+      "excerpt": "Fed funds target range, upper bound (%, daily): 4.50 (obs 2025-06-26, public 2025-06-27); 3m +0.00; 12m -1.00"
+    },
+    {
+      "id": "fred:FEDFUNDS:2025-05-01",
+      "kind": "fred",
+      "title": "Effective fed funds rate (%, monthly average)",
+      "date": "2025-06-04",
+      "url": "https://fred.stlouisfed.org/series/FEDFUNDS",
+      "excerpt": "Effective fed funds rate (%, monthly average): 4.33 (obs 2025-05-01, public 2025-06-04); 3m +0.00; 12m -1.00"
+    },
+    {
+      "id": "fred:CPIAUCSL:2025-05-01",
+      "kind": "fred",
+      "title": "CPI index (all urban consumers)",
+      "date": "2025-06-16",
+      "url": "https://fred.stlouisfed.org/series/CPIAUCSL",
+      "excerpt": "CPI index (all urban consumers): 320.62 (obs 2025-05-01, public 2025-06-16); 3m +0.3%; 12m +2.4%"
+    },
+    {
+      "id": "fred:UNRATE:2025-05-01",
+      "kind": "fred",
+      "title": "Unemployment rate (%)",
+      "date": "2025-06-08",
+      "url": "https://fred.stlouisfed.org/series/UNRATE",
+      "excerpt": "Unemployment rate (%): 4.30 (obs 2025-05-01, public 2025-06-08); 3m +0.10; 12m +0.40"
+    },
+    {
+      "id": "fred:DGS10:2025-06-27",
+      "kind": "fred",
+      "title": "10y Treasury yield (%)",
+      "date": "2025-06-27",
+      "url": "https://fred.stlouisfed.org/series/DGS10",
+      "excerpt": "10y Treasury yield (%): 4.29 (obs 2025-06-27, public 2025-06-27); 3m -0.09; 12m +0.00"
+    },
+    {
+      "id": "fred:T10Y2Y:2025-06-26",
+      "kind": "fred",
+      "title": "10y-2y Treasury spread (pp)",
+      "date": "2025-06-27",
+      "url": "https://fred.stlouisfed.org/series/T10Y2Y",
+      "excerpt": "10y-2y Treasury spread (pp): 0.56 (obs 2025-06-26, public 2025-06-27); 3m +0.19; 12m +0.95"
+    },
+    {
+      "id": "sec8k:S07:0001104659-25-049132",
+      "kind": "sec",
+      "title": "S07 8-K 2025-05-15",
+      "date": "2025-05-15",
+      "url": "https://www.sec.gov/Archives/edgar/data/18230/000110465925049132/tm2515084d1_8k.htm",
+      "excerpt": "S07 8-K filed 2025-05-15: Other Events; Financial Statements and Exhibits (FORM 8-K)"
+    },
+    {
+      "id": "sec8k:S07:0001104659-25-058891",
+      "kind": "sec",
+      "title": "S07 8-K 2025-06-12",
+      "date": "2025-06-12",
+      "url": "https://www.sec.gov/Archives/edgar/data/18230/000110465925058891/tm2517853d1_8k.htm",
+      "excerpt": "S07 8-K filed 2025-06-12: Submission of Matters to a Vote of Security Holders; Regulation FD Disclosure; Financial Statements and Exhibits (FORM 8-K)"
+    },
+    {
+      "id": "sec8k:S06:S06-25-000483",
+      "kind": "sec",
+      "title": "S06 8-K 2025-05-19",
+      "date": "2025-05-19",
+      "url": "https://www.sec.gov/Archives/edgar/data/19617/000001961725000483/jpm-20250519.htm",
+      "excerpt": "S06 8-K filed 2025-05-19: Regulation FD Disclosure; Financial Statements and Exhibits (8-K)"
+    },
+    {
+      "id": "sec8k:S06:S06-25-000485",
+      "kind": "sec",
+      "title": "S06 8-K 2025-05-22",
+      "date": "2025-05-22",
+      "url": "https://www.sec.gov/Archives/edgar/data/19617/000001961725000485/jpm-20250520.htm",
+      "excerpt": "S06 8-K filed 2025-05-22: Submission of Matters to a Vote of Security Holders; Financial Statements and Exhibits (8-K)"
+    },
+    {
+      "id": "sec8k:S10:S10-25-000115",
+      "kind": "sec",
+      "title": "S10 8-K 2025-05-28",
+      "date": "2025-05-28",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000115/nvda-20250528.htm",
+      "excerpt": "S10 8-K filed 2025-05-28: Results of Operations and Financial Condition; Financial Statements and Exhibits (8-K); price reaction 2025-05-28 to 2025-05-29 close +3.2%"
+    },
+    {
+      "id": "sec8k:S01:S01-25-000050",
+      "kind": "sec",
+      "title": "S01 8-K 2025-06-05",
+      "date": "2025-06-05",
+      "url": "https://www.sec.gov/Archives/edgar/data/80424/000008042425000050/deutschebankpresentation.htm",
+      "excerpt": "S01 8-K filed 2025-06-05: Regulation FD Disclosure; Financial Statements and Exhibits (2025 DEUTSCHE BANK PRESENTATION)"
+    },
+    {
+      "id": "sec8k:S01:S01-25-000052",
+      "kind": "sec",
+      "title": "S01 8-K 2025-06-09",
+      "date": "2025-06-09",
+      "url": "https://www.sec.gov/Archives/edgar/data/80424/000008042425000052/arnoldannouncement.htm",
+      "excerpt": "S01 8-K filed 2025-06-09: Departure/Appointment of Directors or Officers; Regulation FD Disclosure; Financial Statements and Exhibits (ARNOLD ANNOUNCEMENT)"
+    },
+    {
+      "id": "sec8k:S02:S02-25-000134",
+      "kind": "sec",
+      "title": "S02 8-K 2025-05-14",
+      "date": "2025-05-14",
+      "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176625000134/unh-20250512.htm",
+      "excerpt": "S02 8-K filed 2025-05-14: Departure/Appointment of Directors or Officers; Regulation FD Disclosure; Financial Statements and Exhibits (8-K)"
+    },
+    {
+      "id": "sec8k:S02:S02-25-000150",
+      "kind": "sec",
+      "title": "S02 8-K 2025-05-21",
+      "date": "2025-05-21",
+      "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176625000150/unh-20250520.htm",
+      "excerpt": "S02 8-K filed 2025-05-21: Departure/Appointment of Directors or Officers (8-K)"
+    },
+    {
+      "id": "sec8k:S02:S02-25-000154",
+      "kind": "sec",
+      "title": "S02 8-K 2025-06-04",
+      "date": "2025-06-04",
+      "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176625000154/unh-20250602.htm",
+      "excerpt": "S02 8-K filed 2025-06-04: Departure/Appointment of Directors or Officers; Submission of Matters to a Vote of Security Holders (8-K)"
+    },
+    {
+      "id": "sec8k:S02:0001193125-25-143717",
+      "kind": "sec",
+      "title": "S02 8-K 2025-06-20",
+      "date": "2025-06-20",
+      "url": "https://www.sec.gov/Archives/edgar/data/731766/000119312525143717/d947980d8k.htm",
+      "excerpt": "S02 8-K filed 2025-06-20: Other Events; Financial Statements and Exhibits (8-K)"
+    },
+    {
+      "id": "sec8k:S09:S09-25-000022",
+      "kind": "sec",
+      "title": "S09 8-K 2025-05-02",
+      "date": "2025-05-02",
+      "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408825000022/xom-20250502.htm",
+      "excerpt": "S09 8-K filed 2025-05-02: Results of Operations and Financial Condition; Regulation FD Disclosure (FORM 8-K); price reaction 2025-05-01 to 2025-05-02 close +0.4%"
+    },
+    {
+      "id": "sec8k:S09:S09-25-000030",
+      "kind": "sec",
+      "title": "S09 8-K 2025-05-30",
+      "date": "2025-05-30",
+      "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408825000030/xom-20250528.htm",
+      "excerpt": "S09 8-K filed 2025-05-30: Submission of Matters to a Vote of Security Holders (FORM 8-K)"
+    },
+    {
+      "id": "fred:VIXCLS:2025-06-26",
+      "kind": "fred",
+      "title": "VIX close",
+      "date": "2025-06-27",
+      "url": "https://fred.stlouisfed.org/series/VIXCLS",
+      "excerpt": "VIX close: 16.59 (obs 2025-06-26, public 2025-06-27); 1m -19.3%; 3m -9.5%"
+    },
+    {
+      "id": "fred:USEPUINDXD:2025-06-26",
+      "kind": "fred",
+      "title": "Economic policy uncertainty index (daily)",
+      "date": "2025-06-27",
+      "url": "https://fred.stlouisfed.org/series/USEPUINDXD",
+      "excerpt": "Economic policy uncertainty index (daily): 239.86 (obs 2025-06-26, public 2025-06-27); 1m -18.3%; 3m -24.2%"
+    },
+    {
+      "id": "fred:BAMLH0A0HYM2:2025-06-26",
+      "kind": "fred",
+      "title": "ICE BofA US high-yield OAS (%)",
+      "date": "2025-06-27",
+      "url": "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
+      "excerpt": "ICE BofA US high-yield OAS (%): 3.04 (obs 2025-06-26, public 2025-06-27); 1m -0.36; 3m -0.15"
+    },
+    {
+      "id": "fred:DCOILWTICO:2025-06-26",
+      "kind": "fred",
+      "title": "WTI crude oil ($/bbl)",
+      "date": "2025-06-27",
+      "url": "https://fred.stlouisfed.org/series/DCOILWTICO",
+      "excerpt": "WTI crude oil ($/bbl): 66.44 (obs 2025-06-26, public 2025-06-27); 1m +5.6%; 3m -5.2%"
+    },
+    {
+      "id": "sec8k:S05:0001193125-25-113864",
+      "kind": "sec",
+      "title": "S05 8-K 2025-05-06",
+      "date": "2025-05-06",
+      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312525113864/d859422d8k.htm",
+      "excerpt": "S05 8-K filed 2025-05-06: 8.01 Other Events"
+    }
+  ],
+  "plan": {
+    "decision_date": "2025-06-27",
+    "strategy_name": "Quality Growth with Pullback Cushion",
+    "summary": "Overweight the highest-quality fundamental names (S10, S05, S04) while acknowledging their stretched technicals by sizing conservatively and using wide stops. Complement with S03 as a technically constructive mid-cap and keep ~30% cash to exploit any mean-reversion pullback in the momentum leaders.",
+    "plans": [
+      {
+        "ticker": "NVDA",
+        "target_weight": 0.18,
+        "stop_pct": 0.1,
+        "target_pct": 0.15,
+        "horizon_weeks": 4,
+        "conviction": 0.75,
+        "rationale": "Strongest fundamental profile in the universe (69% revenue growth, 42.6% margin, minimal debt) with positive sentiment from earnings surprise. Technical analyst flags overbought RSI 76.6 so sizing below max; Fundamentals (0.92), Sentiment (0.55), and Macro (0.60) all lean long.",
+        "changes_my_mind": "A close below 140 (near 50d mean) or a reversal in revenue growth trajectory in next quarterly update.",
+        "memo_sources": [
+          "sec:S10:2026Q1",
+          "sec8k:S10:S10-25-000115",
+          "px:S10:2025-06-27",
+          "fred:DGS10:2025-06-27"
+        ]
+      },
+      {
+        "ticker": "GOOGL",
+        "target_weight": 0.15,
+        "stop_pct": 0.07,
+        "target_pct": 0.1,
+        "horizon_weeks": 4,
+        "conviction": 0.72,
+        "rationale": "Second-best fundamental profile (38.3% margin, +46% net income growth) with clean balance sheet. Technicals are constructive (RSI 61, above 50d mean) though not a momentum leader. Geopolitics analyst mildly supportive on falling policy uncertainty. Fundamentals (0.88) and Geopolitics (0.45) agree on long.",
+        "changes_my_mind": "A break below 170 support level identified by Technical analyst, or CPI re-accelerating above 3% removing the benign inflation backdrop.",
+        "memo_sources": [
+          "sec:S05:2025Q1",
+          "px:S05:2025-06-27",
+          "sec8k:S05:0001193125-25-113864",
+          "fred:USEPUINDXD:2025-06-26"
+        ]
+      },
+      {
+        "ticker": "MSFT",
+        "target_weight": 0.13,
+        "stop_pct": 0.06,
+        "target_pct": 0.08,
+        "horizon_weeks": 4,
+        "conviction": 0.68,
+        "rationale": "High-quality compounder (36.9% margin, 17.7% net income growth) with undeniable uptrend per Technical analyst, though RSI 77 and 11% above 50d mean limit fresh entry sizing. Fundamentals (0.80) and Technical (0.60 neutral) broadly agree on quality but caution on entry.",
+        "changes_my_mind": "A close below 470 would break the technical structure; deterioration in margin below 34% in next filing.",
+        "memo_sources": [
+          "sec:S04:2025Q3",
+          "px:S04:2025-06-27"
+        ]
+      },
+      {
+        "ticker": "AMZN",
+        "target_weight": 0.12,
+        "stop_pct": 0.08,
+        "target_pct": 0.1,
+        "horizon_weeks": 4,
+        "conviction": 0.62,
+        "rationale": "Best technical risk/reward per Technical analyst (RSI 67.9, strong 4w momentum +8.6%, 8% off highs). Fundamentals are mixed—64% net income growth but only 11% margin raises durability questions. Sizing reflects the fundamental uncertainty.",
+        "changes_my_mind": "A close below 200 (near 200d mean) or evidence that the 64% earnings jump was driven by one-time items.",
+        "memo_sources": [
+          "px:S03:2025-06-27",
+          "sec:S03:2025Q1"
+        ]
+      },
+      {
+        "ticker": "JPM",
+        "target_weight": 0.07,
+        "stop_pct": 0.06,
+        "target_pct": 0.08,
+        "horizon_weeks": 3,
+        "conviction": 0.45,
+        "rationale": "Near 52w highs with decent 32.3% margin, but massive $407B debt load and Macro analyst's energy-sector caution limit conviction. Technical analyst gives a tepid long (0.55). Small position with tight stop.",
+        "changes_my_mind": "A close below 270 or WTI crude dropping below $60 signaling demand destruction; also any leverage increase in next filing.",
+        "memo_sources": [
+          "px:S06:2025-06-27",
+          "sec:S06:2025Q1",
+          "fred:UNRATE:2025-05-01"
+        ]
+      },
+      {
+        "ticker": "PG",
+        "target_weight": 0.05,
+        "stop_pct": 0.05,
+        "target_pct": 0.08,
+        "horizon_weeks": 4,
+        "conviction": 0.4,
+        "rationale": "Macro analyst favors S01 as duration-sensitive growth benefiting from pause-to-easing transition (0.72 conviction), but Technical analyst says avoid until 165 reclaimed and Fundamentals show declining revenue. Tiny position as a macro hedge.",
+        "changes_my_mind": "Failure to reclaim 165 within two weeks or a hawkish Fed pivot signaling no cuts in 2025.",
+        "memo_sources": [
+          "fred:DFEDTARU:2025-06-26",
+          "fred:CPIAUCSL:2025-05-01",
+          "px:S01:2025-06-27",
+          "sec:S01:2025Q3"
+        ]
+      }
+    ]
+  },
+  "execution": {
+    "decision_date": "2025-06-27",
+    "orders": [
+      {
+        "ticker": "NVDA",
+        "entry": "limit",
+        "limit_offset_atr": 0.75,
+        "skip_if_gap_pct": 0.03,
+        "note": "Up ~9.7% in 1w with large avg gap (1.85%); use limit 0.75 ATR below close to avoid chasing; skip if gaps up >3%"
+      },
+      {
+        "ticker": "GOOGL",
+        "entry": "limit",
+        "limit_offset_atr": 0.5,
+        "skip_if_gap_pct": 0.03,
+        "note": "Strong 7.1% 1w move; moderate gap risk; limit 0.5 ATR below close gives a small pullback entry; skip on >3% gap"
+      },
+      {
+        "ticker": "MSFT",
+        "entry": "market_open",
+        "limit_offset_atr": null,
+        "skip_if_gap_pct": 0.02,
+        "note": "Smallest 1w return of the top 3 (3.9%), low avg gap (0.87%), high liquidity; comfortable entering at open unless gap >2%"
+      },
+      {
+        "ticker": "AMZN",
+        "entry": "limit",
+        "limit_offset_atr": 0.5,
+        "skip_if_gap_pct": 0.03,
+        "note": "Up 6.5% in 1w with 1.6% avg gap; technically constructive but extended; limit 0.5 ATR below close for better fill"
+      },
+      {
+        "ticker": "JPM",
+        "entry": "market_open",
+        "limit_offset_atr": null,
+        "skip_if_gap_pct": 0.02,
+        "note": "Moderate 1w return (4.4%), small weight (7%), low avg gap; market open entry is fine; skip if >2% gap"
+      },
+      {
+        "ticker": "PG",
+        "entry": "market_open",
+        "limit_offset_atr": null,
+        "skip_if_gap_pct": null,
+        "note": "Smallest weight (5%), very low volatility (ATR/price ~1.2%), tiny avg gap (0.42%), near-flat 1w return; no execution risk, market open"
+      }
+    ],
+    "notes": "S10 and S05 are the most stretched; using limit orders to avoid chasing momentum. S04 and S06 get market_open with gap guards. S01 is low-vol and small-weight, straightforward market_open. ~30% cash reserve maintained per plan."
+  },
+  "orders": {
+    "date": "2025-06-27",
+    "intents": [
+      {
+        "ticker": "NVDA",
+        "target_weight": 0.18,
+        "entry": "limit",
+        "limit_price": 155.1952,
+        "skip_if_gap_pct": 0.03,
+        "stop_price": 141.975,
+        "target_price": 181.4125
+      },
+      {
+        "ticker": "GOOGL",
+        "target_weight": 0.15,
+        "entry": "limit",
+        "limit_price": 176.3186,
+        "skip_if_gap_pct": 0.03,
+        "stop_price": 166.0329,
+        "target_price": 196.383
+      },
+      {
+        "ticker": "MSFT",
+        "target_weight": 0.13,
+        "entry": "market_open",
+        "limit_price": null,
+        "skip_if_gap_pct": 0.02,
+        "stop_price": 466.1836,
+        "target_price": 535.6152
+      },
+      {
+        "ticker": "AMZN",
+        "target_weight": 0.12,
+        "entry": "limit",
+        "limit_price": 220.8811,
+        "skip_if_gap_pct": 0.03,
+        "stop_price": 205.436,
+        "target_price": 245.63
+      },
+      {
+        "ticker": "JPM",
+        "target_weight": 0.07,
+        "entry": "market_open",
+        "limit_price": null,
+        "skip_if_gap_pct": 0.02,
+        "stop_price": 269.8834,
+        "target_price": 310.0788
+      },
+      {
+        "ticker": "PG",
+        "target_weight": 0.05,
+        "entry": "market_open",
+        "limit_price": null,
+        "skip_if_gap_pct": null,
+        "stop_price": 151.867,
+        "target_price": 172.6488
+      },
+      {
+        "ticker": "AAPL",
+        "target_weight": 0.0,
+        "entry": "market_open",
+        "limit_price": null,
+        "skip_if_gap_pct": null,
+        "stop_price": null,
+        "target_price": null
+      },
+      {
+        "ticker": "XOM",
+        "target_weight": 0.0,
+        "entry": "market_open",
+        "limit_price": null,
+        "skip_if_gap_pct": null,
+        "stop_price": null,
+        "target_price": null
+      },
+      {
+        "ticker": "UNH",
+        "target_weight": 0.0,
+        "entry": "market_open",
+        "limit_price": null,
+        "skip_if_gap_pct": null,
+        "stop_price": null,
+        "target_price": null
+      },
+      {
+        "ticker": "CAT",
+        "target_weight": 0.0,
+        "entry": "market_open",
+        "limit_price": null,
+        "skip_if_gap_pct": null,
+        "stop_price": null,
+        "target_price": null
+      }
+    ],
+    "contaminated": true
+  },
+  "masked": true,
+  "notes": []
+}
