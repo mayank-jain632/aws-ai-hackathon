@@ -51,7 +51,7 @@ def main() -> None:
     for key in ("runtime_arn", "log_group", "bucket", "role_name"):
         print(f"Delete {key}: {inv[key]}")
     if args.restore_transaction_search:
-        print(f"Restore X-Ray destination: {inv['transaction_search_previous']}")
+        print(f"Restore X-Ray destination: {inv['transaction_search_previous']}, indexing {inv.get('trace_indexing_previous', 'unchanged')}%")
     if not args.apply:
         print("Preview only. Add --apply to delete.")
         return
@@ -93,8 +93,12 @@ def main() -> None:
         for policy in policies:
             iam.delete_role_policy(RoleName=inv["role_name"], PolicyName=policy)
         iam.delete_role(RoleName=inv["role_name"])
-    if args.restore_transaction_search and inv["transaction_search_previous"] != "CloudWatchLogs":
-        session.client("xray").update_trace_segment_destination(Destination=inv["transaction_search_previous"])
+    if args.restore_transaction_search:
+        xray = session.client("xray")
+        if "trace_indexing_previous" in inv:
+            xray.update_indexing_rule(Name="Default", Rule={"Probabilistic": {"DesiredSamplingPercentage": inv["trace_indexing_previous"]}})
+        if inv["transaction_search_previous"] != "CloudWatchLogs":
+            xray.update_trace_segment_destination(Destination=inv["transaction_search_previous"])
     inv["cleanup_complete"] = True
     INVENTORY.write_text(json.dumps(inv, indent=2) + "\n")
     print("AgentCore watchdog resources removed. Nothing else in the account was changed.")

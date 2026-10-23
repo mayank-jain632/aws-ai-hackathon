@@ -173,6 +173,17 @@ def enable_transaction_search(session, account: str, region: str) -> str:
     return previous
 
 
+def index_every_trace(session) -> float:
+    """Index all spans as trace summaries so each invocation opens on the X-Ray trace page
+    (the default indexes 1%). Returns the previous percentage."""
+    xray = session.client("xray")
+    rule = next(r for r in xray.get_indexing_rules()["IndexingRules"] if r["Name"] == "Default")
+    previous = rule["Rule"]["Probabilistic"]["DesiredSamplingPercentage"]
+    if previous < 100:
+        xray.update_indexing_rule(Name="Default", Rule={"Probabilistic": {"DesiredSamplingPercentage": 100}})
+    return previous
+
+
 def find_runtime(control) -> dict | None:
     for page in control.get_paginator("list_agent_runtimes").paginate():
         for runtime in page.get("agentRuntimes", []):
@@ -224,7 +235,7 @@ def main() -> None:
         sys.exit(f"Signed in to {identity['Account']}, expected {args.account}. Nothing changed.")
     bucket = f"aaron-agentcore-watchdog-{args.account}"
     print(f"Account {args.account} as {identity['Arn'].split('/')[-2]}, region {args.region}")
-    for line in [f"IAM role {ROLE}", f"S3 bucket {bucket}", f"AgentCore Runtime {RUNTIME} ({MODEL})", "CloudWatch Transaction Search on"]:
+    for line in [f"IAM role {ROLE}", f"S3 bucket {bucket}", f"AgentCore Runtime {RUNTIME} ({MODEL})", "CloudWatch Transaction Search on, 100% trace indexing"]:
         print(f"  create or update: {line}")
     if not args.apply:
         print("Preview only. Add --apply to deploy.")
@@ -239,6 +250,7 @@ def main() -> None:
     s3.upload_file(str(archive), bucket, key)
     role_arn = ensure_role(session.client("iam"), args.account, args.region, role_policy(session, args.account, args.region, bucket))
     previous = enable_transaction_search(session, args.account, args.region)
+    indexing = index_every_trace(session)
     runtime = deploy_runtime(session.client("bedrock-agentcore-control"), role_arn, bucket, key, args.region)
     inventory.update(
         {
@@ -255,6 +267,7 @@ def main() -> None:
             "runtime_version": runtime.get("agentRuntimeVersion"),
             "log_group": f"/aws/bedrock-agentcore/runtimes/{runtime['agentRuntimeId']}-DEFAULT",
             "transaction_search_previous": inventory.get("transaction_search_previous", previous),
+            "trace_indexing_previous": inventory.get("trace_indexing_previous", indexing),
             "updated": datetime.now(UTC).isoformat(timespec="seconds"),
         }
     )

@@ -90,6 +90,21 @@ def test_bad_reply_or_aws_error_falls_back(hosted, fake):
     assert agentcore.recent()[-1]["ok"] is False
 
 
+def test_status_route_is_people_only(hosted, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from backend.app.main import app
+
+    hosted(FakeRuntime({"opinion": OPINION, "model": "us.openai.gpt-5.6-luna"}))
+    agentcore.second_opinion(opinion.SYSTEM, CONTEXT, opinion.SecondOpinion, "Calder Family Trust")
+    monkeypatch.delenv("APP_ACCESS_PASSWORD", raising=False)
+    with TestClient(app, base_url="http://localhost") as http:
+        body = http.get("/api/agentcore").json()
+        assert body["enabled"] and body["runtime_arn"] == ARN and body["invocations"][-1]["ok"]
+        assert "aaron_watchdog_opinion-AbC123" in body["links"]["runtime"]
+        assert http.get("/api/agentcore", headers={"x-agent-token": "TOKEN"}).status_code == 403
+
+
 def test_opinion_prefers_runtime_then_local_bedrock(hosted, monkeypatch):
     monkeypatch.setattr(opinion, "context_for", lambda desk, entry: CONTEXT)
     monkeypatch.setattr(opinion.store, "fund_label", lambda desk: "Calder Family Trust")

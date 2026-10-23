@@ -30,6 +30,10 @@ Cleanup previews by default, checks the account and every ownership tag, and the
 AWS_PROFILE=team4-toolkit uv run python scripts/agentcore_cleanup.py --apply
 ```
 
+## Roadmap, not built: AgentCore Gateway
+
+Expose the desk and watchdog APIs as MCP tools through an AgentCore Gateway, so agents outside the canvas (or a hosted orchestrator) call `POST /api/watchdog/review` (dry-run verdict), `GET /api/funds/{id}/watchdog` (stop state, lessons) and the desk's strategy and test records through one authenticated MCP endpoint. Targets would be an OpenAPI spec of those routes with outbound auth through the existing worker tokens; the gate stays deterministic and in the backend. Nothing here is deployed.
+
 ## Limits
 
 - The resources are in Aaron's participant account, not the hosting account. The hosted app has no `AGENTCORE_OPINION_ARN` and keeps the in-process path. Adopting it there means rerunning the deploy in the hosting account and granting `team4-agent-canvas` `bedrock-agentcore:InvokeAgentRuntime` on the runtime ARN (D25, D28).
