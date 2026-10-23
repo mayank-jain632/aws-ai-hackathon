@@ -104,7 +104,10 @@ def position_events(desk, snapshot: dict) -> list[tuple[str, ModeratorEvent]]:
     equity = float(snapshot["account"]["equity"])
     capital = min(mandate.capital, equity) if mandate.capital else equity
     found = []
+    traded = {o["symbol"] for o in desk.state["orders"].values()}
     for p in snapshot.get("positions", []):
+        if p["symbol"] not in traded:
+            continue  # another fund's holding in the shared paper account
         symbol, value, qty = p["symbol"], float(p["market_value"]), float(p["qty"])
         if qty < 0:
             found.append(
@@ -160,7 +163,9 @@ def guardrail_events(desk, seen: set[str]) -> list[tuple[str, ModeratorEvent]]:
     """Screen each new strategy's rationale and memos with the Bedrock guardrail, once."""
     workspace = store.workspace_dir(desk).parent.resolve()
     found = []
-    for strategy in desk.state["strategies"].values():
+    with desk.lock:
+        strategies = list(desk.state["strategies"].values())
+    for strategy in strategies:
         key = f"guard:{strategy['id']}"
         if key in seen:
             continue

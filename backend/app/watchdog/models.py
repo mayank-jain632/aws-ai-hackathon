@@ -79,6 +79,9 @@ class WatchPortfolio(BaseModel):
     equity: float
     cash: float
     positions: dict[str, float] = Field(default_factory=dict, description="symbol -> market value")
+    own_positions: dict[str, float] | None = Field(
+        default=None, description="symbol -> market value this fund itself filled; caps its sells"
+    )
     peak_equity: float | None = None
     last_close: dict[str, float] = Field(default_factory=dict)
     recent_orders: list[PastOrder] = Field(default_factory=list)

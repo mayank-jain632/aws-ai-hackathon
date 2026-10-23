@@ -167,6 +167,7 @@ def submit(desk, body):
             check_allocation({symbol: value / capital for symbol, value in projected.items()}, fund)
         # Recheck immediately before the broker call, then persist intent before I/O.
         desk.execution_checks(body.strategy_id)
+        watchdog_gate.recheck_halt(desk)
         record = {
             **body.model_dump(),
             "request_hash": request_hash,

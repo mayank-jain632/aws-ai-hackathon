@@ -1,6 +1,6 @@
 # Aaron · Lane 4 (moderator half): watchdog and moderator
 
-Updated 14:14 by Claude Code (watchdog and scores sessions share this file)
+Updated 14:44 by Claude Code (watchdog and scores sessions share this file)
 
 **Shipped** (on `main`, locally checked, broker mocked; reference in `docs/watchdog.md`)
 - Pre-trade gate `backend/app/watchdog/` (D17, D19): 17 deterministic rules (16 checks plus a market-hours note), no LLM in the path. Emergency stop, trading permission, client universe, ticker exists in our data, backend PASS (buys), quantity/cash/no-short sanity, per-order size, position size, top-three concentration, account and tested drawdown, price band vs last close, rapid fire, duplicate under a new id, same-day wash trade, daily turnover, daily order count. The most serious block leads the reason
@@ -47,6 +47,15 @@ What "not produced yet" means on screen: a dashed ring with "?", the reason, and
 - Local (no AWS, broker stubbed): `MOCK_AGENTS=1 uv run python scripts/watchdog_demo.py`, Enter between steps. Shows the $40,000 MSFT buy for the conservative Calder Family Trust blocked on position size, an $8,000 buy allowed, the firm-wide stop refusing orders in two funds, and the lessons file
 - Hosted (Guardrail, Memory, metrics; after Lane 5 runs `hosting_watchdog.py` and redeploys): the gate ran on the real $1 AAPL paper order (D24); the scores view's Watchdog gate ring shows that verdict in fund `fdf64d8751a448ea`. `GET /api/funds/{id}/watchdog` returns verdicts, lessons and `fund_memory`
 - Aaron's account (adds EventBridge and the alarm; say "Aaron's participant account, not hosted"): `AWS_PROFILE=team4-toolkit WATCHDOG_AWS=1 uv run python scripts/watchdog_demo.py --fast` for a real `gpt-5.6-luna` second opinion on the blocked order. Then in the console: CloudWatch `Team4/Watchdog` (OrdersBlocked by rule, FirmWideHalt) and alarm `aaron-watchdog-firm-wide-halt`; log group `/aws/events/aaron-watchdog` (Order blocked, Firm-wide stop changed); AgentCore Memory `aaron_watchdog_lessons` long-term record. Run this demo once about five minutes before showing it: Memory now reads only the fund's own namespace (`/watchdog/funds/fund-<id>/lessons/`, Lane 5's 8533f38), and the 14:03 record sits in the old shared namespace, which is deliberately ignored. A fund-scoped write was confirmed at 14:13. `AWS_PROFILE=team4-toolkit uv run python scripts/watchdog_aws.py --verify` prints seven PASS lines, including the Guardrail flagging an injected memo
+
+**Known issues** (watchdog, from the lead orchestrator's stress test on cefe910; P2, not fixed before the freeze)
+- Day boundaries (wash trade, turnover, daily orders) use the UTC date, not the market's trading day
+- NaN or infinite numbers in some request bodies return a 500 instead of a 422; `notional: true` is coerced to 1
+- Dry-run review compares a lowercase symbol differently from the live gate
+- Monitor de-duplication keys are kept up to 2,000 and never expire; a fund with long history can drop old keys
+- A second opinion can be written twice for the same entry under concurrent audits
+- LESSONS.md is rebuilt from the whole feedback log on every block or near miss; cost grows with history
+- Invited fund members (sharing) can reach the firm-wide stop route, which is human-only but not owner-only
 
 **Interface for execution and strategy owners**
 - Nothing to call if you go through `paper.submit`; the gate already runs there

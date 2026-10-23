@@ -69,6 +69,31 @@ def past_orders(desk) -> list[PastOrder]:
     ]
 
 
+def own_holdings(desk, snapshot: dict) -> dict[str, float]:
+    """Market value of what this fund itself bought and still holds, from its own filled orders."""
+    qty, fill_price = {}, {}
+    for o in list(desk.state["orders"].values()):
+        filled = float(o.get("filled_qty") or 0)
+        if filled <= 0:
+            continue
+        qty[o["symbol"]] = qty.get(o["symbol"], 0.0) + (filled if o["side"] == "buy" else -filled)
+        if o.get("filled_avg_price"):
+            fill_price[o["symbol"]] = float(o["filled_avg_price"])
+    mark = {
+        p["symbol"]: float(p["market_value"]) / float(p["qty"])
+        for p in snapshot.get("positions", [])
+        if float(p.get("qty") or 0) > 0
+    }
+    return {s: q * mark.get(s, fill_price.get(s, 0.0)) for s, q in qty.items() if q > 0}
+
+
+def recheck_halt(desk) -> None:
+    """Last check before the broker call: the firm-wide stop may have been set mid-review."""
+    reason = halt_reason(desk)
+    if reason:
+        raise ValueError(f"Watchdog blocked this order: {reason}. No orders go out until a person clears it.")
+
+
 def live_market(symbols: list[str]):
     """Live venue data unless turned off (tests set WATCHDOG_LIVE_DATA=0)."""
     if os.getenv("WATCHDOG_LIVE_DATA", "1") == "0":
@@ -98,6 +123,7 @@ def portfolio_for(desk, strategy_id: str | None, snapshot: dict, symbol: str | N
         equity=equity,
         cash=float(account["cash"]),
         positions=positions,
+        own_positions=own_holdings(desk, snapshot),
         peak_equity=state["peak_equity"],
         last_close=last_close,
         recent_orders=past_orders(desk),

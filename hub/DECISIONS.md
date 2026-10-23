@@ -244,3 +244,8 @@ AGENTCORE_OPINION_ARN=arn:aws:bedrock-agentcore:us-east-1:556200168424:runtime/a
 **Decision:** Replace Vite's default bolt with the Folio favicon, an ivory serif F on the fund UI burgundy tile, picked from a three-option proof at 16 to 48 px.
 **Why:** The tab should carry the Fund desk identity instead of the Vite placeholder; Folio was the only option that read cleanly at 16 px on light and dark tab bars.
 **Affects:** Kushagra's frontend lane, icon files only: `frontend/public/favicon.svg`, new `frontend/public/favicon-32.png` and `frontend/public/apple-touch-icon.png`, and the icon `<link>` lines in `frontend/index.html`. The `<title>` is unchanged; Aaron's session suggests `Fund desk` for Kushagra to consider.
+
+### D34 · Proposed · 14:44 · Aaron (logged by Claude Code)
+**Decision:** `paper.submit` rechecks the firm-wide emergency stop with one line, `watchdog_gate.recheck_halt(desk)`, immediately after its final `desk.execution_checks` and before the broker call, raising the same "Watchdog blocked this order: Firm-wide emergency stop..." error. Separately, the watchdog caps a sell at the fund's own filled position from its own recorded orders, not the shared Alpaca account's holdings.
+**Why:** A stress test showed an order could reach Alpaca after the firm-wide stop was set during review, because the last recheck covered only the fund's desk stop; and because every fund shares one paper account, one fund could sell shares only another fund had bought.
+**Affects:** Lane 5 `backend/app/paper.py` (one line, beside the D19 hook) and Lane 4 `backend/app/watchdog/`. No change to desk stops, policy, or order flow when no stop is set and a fund sells only what it holds.

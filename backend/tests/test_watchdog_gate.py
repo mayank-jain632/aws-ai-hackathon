@@ -111,7 +111,7 @@ def test_clean_order_passes_watchdog_and_reaches_broker(approved, monkeypatch):
 
 def test_same_day_wash_trade_is_blocked_before_broker(approved, monkeypatch):
     desk, sid = approved
-    calls = stub_broker(monkeypatch)
+    calls = filled_broker(monkeypatch)
     monkeypatch.setattr(paper, "account_snapshot", account)
     paper.submit(desk, order(sid))
     held = [{"symbol": "AAPL", "qty": "1", "market_value": "100"}]
@@ -254,3 +254,62 @@ def test_monitor_loop_starts_with_the_app(tmp_path, monkeypatch):
     monkeypatch.setattr(monitor, "sweep", lambda _app: swept.set() or {})
     with TestClient(app, base_url="http://localhost"):
         assert swept.wait(5)
+
+
+def filled_broker(monkeypatch, price=100.0):
+    calls = []
+
+    def fake(method, path, body):
+        calls.append(body)
+        qty = float(body["notional"]) / price
+        return {"id": f"broker-{len(calls)}", "status": "filled", "filled_qty": str(qty), "filled_avg_price": str(price)}
+
+    monkeypatch.setattr(paper, "broker", fake)
+    return calls
+
+
+def test_one_fund_cannot_sell_another_funds_shares(tmp_path, monkeypatch):
+    alpha, alpha_sid = approved_desk(SimpleNamespace(registry=tmp_path / "alpha" / "agents.json", paused=False))
+    beta, beta_sid = approved_desk(SimpleNamespace(registry=tmp_path / "beta" / "agents.json", paused=False))
+    calls = filled_broker(monkeypatch)
+    monkeypatch.setattr(paper, "account_snapshot", account)
+    paper.submit(alpha, order(alpha_sid, symbol="MSFT", notional=900, client_order_id="alpha-msft-001"))
+    shared = [{"symbol": "MSFT", "qty": "9", "market_value": "900"}]
+    monkeypatch.setattr(paper, "account_snapshot", lambda: account(shared, cash="9100"))
+    with pytest.raises(ValueError, match="by this fund would open a short or sell another fund's shares"):
+        paper.submit(beta, order(beta_sid, symbol="MSFT", side="sell", notional=900, client_order_id="beta-msft-001"))
+    assert len(calls) == 1
+    # The fund that bought it can still sell its own shares (on a later day, so no wash trade).
+    for o in alpha.state["orders"].values():
+        o["time"] = "2026-10-22T15:00:00+00:00"
+    assert paper.submit(alpha, order(alpha_sid, symbol="MSFT", side="sell", notional=900, client_order_id="alpha-msft-002"))["status"] == "filled"
+
+
+def test_firm_wide_stop_set_mid_review_blocks_before_broker(approved, monkeypatch):
+    desk, sid = approved
+    monkeypatch.setattr(paper, "account_snapshot", account)
+    calls = stub_broker(monkeypatch)
+    real_enforce = gate.enforce
+
+    def enforce_then_halt(*args, **kwargs):
+        verdict = real_enforce(*args, **kwargs)
+        SWITCH.trip("Halted while the order was in review", "Aaron")
+        return verdict
+
+    monkeypatch.setattr(paper.watchdog_gate, "enforce", enforce_then_halt)
+    with pytest.raises(ValueError, match="Watchdog blocked this order: Firm-wide emergency stop"):
+        paper.submit(desk, order(sid))
+    assert calls == []
+    assert order(sid).client_order_id not in desk.state["orders"]
+    SWITCH.reset("Clear", "Aaron")
+
+
+def test_monitor_ignores_other_funds_holdings(approved):
+    from backend.app.watchdog import monitor
+
+    desk, _ = approved
+    snapshot = {
+        "account": {"equity": "10000", "cash": "1000"},
+        "positions": [{"symbol": "XOM", "qty": "-5", "market_value": "-500"}, {"symbol": "MSFT", "qty": "90", "market_value": "9000"}],
+    }
+    assert [e for e in monitor.audit(desk, snapshot, opinions=False) if e.kind == "position"] == []

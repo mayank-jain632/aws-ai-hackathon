@@ -176,6 +176,17 @@ def prepare(http, manager):
     ).raise_for_status()
     manager.agents["backtester"].state["strategy_id"] = sid
     test = http.post("/api/internal/desk/backtest", json={"strategy_id": sid}, headers=as_agent(manager, "backtester")).json()
+    # Lane 1 requires a final adversarial review of the actual evaluation before approval.
+    http.post(
+        "/api/internal/desk/review",
+        json={
+            "strategy_id": sid,
+            "verdict": "APPROVE",
+            "critique": "Reviewed the recorded evaluation: metrics, window and limitations match the frozen strategy.",
+            "evaluation_id": test["evaluation_id"],
+        },
+        headers=as_agent(manager, "adversarial"),
+    ).raise_for_status()
     http.post(f"/api/desk/strategies/{sid}/approve").raise_for_status()
     http.put("/api/desk/stop", json={"stopped": False, "reason": "Analyst cleared the desk for trading"}).raise_for_status()
     return sid, test

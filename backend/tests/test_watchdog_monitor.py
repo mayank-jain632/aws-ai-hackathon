@@ -104,6 +104,12 @@ def test_events_are_mirrored_to_workspace_and_desk(desk):
 
 
 def test_position_drift_short_and_outside_universe(desk):
+    # Only symbols this fund traded count; the paper account is shared with other funds.
+    for symbol in ["AAPL", "MSFT", "XOM"]:
+        desk.state["orders"][f"own-{symbol}"] = {
+            "time": "2026-10-20T15:00:00+00:00", "symbol": symbol, "side": "buy",
+            "notional": 100, "client_order_id": f"own-{symbol}", "status": "filled",
+        }
     snapshot = {
         "account": {"equity": "10000", "cash": "2000"},
         "positions": [

@@ -191,7 +191,9 @@ def rule_quantity_sanity(order: WatchOrder, portfolio: WatchPortfolio) -> RuleRe
                     "quantity_sanity",
                     f"{order.qty:g} shares at ${order.price:,.2f} is {money(implied)}, not the stated {money(order.notional)}.",
                 )
-    held = portfolio.positions.get(order.symbol, 0.0)
+    # The paper account is shared across funds, so a sell is capped at what this fund itself holds.
+    own = portfolio.own_positions is not None
+    held = (portfolio.own_positions if own else portfolio.positions).get(order.symbol, 0.0)
     if order.side == "buy":
         if order.notional > portfolio.cash:
             return block(
@@ -204,7 +206,8 @@ def rule_quantity_sanity(order: WatchOrder, portfolio: WatchPortfolio) -> RuleRe
     if order.notional > held + 0.01:
         return block(
             "quantity_sanity",
-            f"Selling {money(order.notional)} of {order.symbol} with only {money(held)} held would open a short.",
+            f"Selling {money(order.notional)} of {order.symbol} with only {money(held)} held"
+            + (" by this fund would open a short or sell another fund's shares." if own else " would open a short."),
             order.notional,
             held,
         )
