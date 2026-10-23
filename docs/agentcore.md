@@ -34,7 +34,7 @@ AWS_PROFILE=team4-toolkit uv run python scripts/agentcore_cleanup.py --apply --r
 
 The hosted app runs as `team4-agent-canvas` in the hosting account and calls the runtime in Aaron's participant account. Three pieces, all required by AWS for a cross-account `InvokeAgentRuntime` (AgentCore Developer Guide, "Resource-based policies", hierarchical authorization):
 
-1. Aaron's account: a resource-based policy on the runtime and another on its `runtime-endpoint/DEFAULT`, each allowing only `bedrock-agentcore:InvokeAgentRuntime` for the `team4-agent-canvas` role ARN. Each policy's `Resource` must be the exact ARN it is attached to.
+1. Aaron's account (applied 14:24, D32): a resource-based policy on the runtime and another on its `runtime-endpoint/DEFAULT`, each allowing only `bedrock-agentcore:InvokeAgentRuntime`, for the `team4-agent-canvas` role ARN and for Aaron's own account (so his own callers keep access). Each policy's `Resource` must be the exact ARN it is attached to. `aws bedrock-agentcore-control delete-resource-policy` on each ARN undoes it.
 2. Hosting account: the role's identity policy allows the same action on both ARNs (statement in D32; `scripts/agentcore_deploy.py --policy` prints it).
 3. Hosted environment: `AGENTCORE_OPINION_ARN` set to the runtime ARN (value in D32), then a redeploy.
 

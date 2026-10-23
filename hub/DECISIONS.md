@@ -209,7 +209,7 @@ _Drafted as D15 before `main` took D15 to D20; renumbered on this branch to avoi
 
 ### D32 · Proposed · 14:12 · Aaron (logged by Claude Code), for Kushagra's deployment owner
 **Decision:** At the redeploy, the hosted watchdog second opinion calls AgentCore Runtime `aaron_watchdog_opinion` in Aaron's participant account across accounts, so it works for every teammate and judge on the hosted app (Aaron's call, relayed by his lead orchestrator). No code change: the client shipped with D28.
-**Status:** pending Aaron's resource policies. AWS requires a resource-based policy on both the runtime and its `runtime-endpoint/DEFAULT` for a cross-account caller (AgentCore Developer Guide, "Resource-based policies", hierarchical authorization). Aaron applies both in his account, each allowing only `bedrock-agentcore:InvokeAgentRuntime` for `arn:aws:iam::709515537151:role/team4-agent-canvas`.
+**Status:** Aaron's side applied. Aaron ran both resource policies himself; read back at 14:24. Each has two statements on its exact ARN (the runtime, and its `runtime-endpoint/DEFAULT`): `bedrock-agentcore:InvokeAgentRuntime` for `arn:aws:iam::709515537151:role/team4-agent-canvas`, and the same action for Aaron's own account root, so his laptop calls keep working under either reading of AWS's "must allow (if a policy exists)" rule. A real call from Aaron's account at 14:25 still succeeds (X-Ray trace `1-6adbb4ab-4300092ed8eceae37c30d26d`). Remaining: the deployment owner's statement and setting below, then a redeploy. Undo on Aaron's side: `aws bedrock-agentcore-control delete-resource-policy` on each of the two ARNs.
 **Deployment owner adds** this statement to the `team4-agent-canvas` role's inline `app` policy in `scripts/hosting.py`:
 ```json
 {
