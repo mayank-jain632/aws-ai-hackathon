@@ -428,6 +428,9 @@ systemctl enable --now agent-canvas
             DocumentName="AWS-RunShellScript",
             Parameters={
                 "commands": [
+                    "set -eu",
+                    f"aws ecr get-login-password --region {REGION} | docker login --username AWS --password-stdin {state['repository'].split('/')[0]}",
+                    f"docker pull {image}",
                     f"sed -i 's|{previous_image}|{image}|g' /opt/agent-canvas/start.sh",
                     "systemctl restart agent-canvas",
                 ]
