@@ -449,7 +449,11 @@ class AgentManager:
             caller.pending_delegations -= 1
             if caller.pending_delegations == 0 and self.worker_alive(caller):
                 await self.slots.acquire()
-                if self.worker_alive(caller) and caller.pending_delegations == 0:
+                if (
+                    self.worker_alive(caller)
+                    and caller.pending_delegations == 0
+                    and not caller.holds_slot
+                ):
                     caller.holds_slot = True
                 else:
                     self.slots.release()

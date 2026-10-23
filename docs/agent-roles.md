@@ -57,4 +57,4 @@ Verification covers API role denials, delegation escalation, fund isolation, fro
 bun --tsconfig-override /app/vendor/dexter/tsconfig.json /app/backend/worker/run.ts --list-tools
 ```
 
-The server sets `LOCAL_AGENT_ROLE` and `AGENT_ALLOWED_TOOLS`; standalone diagnostics with no permissions return an empty registry. Local verification does not establish a hosted rollout or a real Alpaca/Bedrock execution of this workflow.
+The server sets `LOCAL_AGENT_ROLE` and `AGENT_ALLOWED_TOOLS`; standalone diagnostics with no permissions return an empty registry. A real Bedrock orchestrator → research → strategy → adversarial handoff wrote and verified a shared file in an ephemeral test container, without orders or market-data calls. This verifies recursive role/file wiring, not a complete investment run, hosted rollout, or real Alpaca execution.

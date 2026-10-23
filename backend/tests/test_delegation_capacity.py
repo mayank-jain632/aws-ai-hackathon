@@ -214,3 +214,48 @@ def test_cancel_before_worker_coroutine_starts_has_result(controlled_board):
         assert manager.slots._value == 4
 
     asyncio.run(exercise())
+
+
+def test_late_parallel_requests_reacquire_parent_only_once(controlled_board):
+    manager, processes, _ = controlled_board
+
+    async def exercise():
+        root = manager.agents["dexter"]
+        await root.start("Coordinate")
+        await until(lambda: "dexter" in processes)
+        # Three independent workers fill the remaining capacity.
+        for _ in range(3):
+            await manager.slots.acquire()
+
+        async def first_request():
+            async with manager.delegating(root):
+                # A queued worker takes the slot released by this parent.
+                await manager.slots.acquire()
+
+        first = asyncio.create_task(first_request())
+        await until(
+            lambda: (
+                root.pending_delegations == 0
+                and not root.holds_slot
+                and manager.slots._value == 0
+            )
+        )
+
+        async def late_request():
+            async with manager.delegating(root):
+                pass
+
+        late = asyncio.create_task(late_request())
+        await asyncio.sleep(0)
+        manager.slots.release()
+        manager.slots.release()
+        await asyncio.gather(first, late)
+        assert root.holds_slot
+        assert manager.slots._value == 1
+        processes["dexter"].finish()
+        await root.task
+        manager.slots.release()
+        manager.slots.release()
+        assert manager.slots._value == 4
+
+    asyncio.run(exercise())
