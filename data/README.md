@@ -59,9 +59,11 @@ average tone for the same subjects. `raw/<subject>.csv` are the API responses.
   the same XBRL facts, with the same `filed` dates, per company. It is published by
   the same SEC office.
 - **GDELT curated events.** The DOC API throttles an address for minutes after a
-  handful of requests, so the daily tone pull is slow and was unreliable during the
-  build. The curated table is what agents cite; it is marked as hand-written and the
-  script documents how to regenerate `tone.csv`.
+  handful of requests and, after several retries on 2026-10-23, stopped accepting
+  connections at all, so `tone.csv` is **not** in this snapshot. The curated table is
+  what agents cite; it is marked as hand-written. Run `python data/fetch_gdelt.py`
+  from a fresh address to produce `tone.csv`; the loader `tone()` picks it up
+  automatically and `events()` is unaffected.
 - **FRED availability dates.** Added so a monthly value is not visible before it was
   released. This is stricter than the plan's "dated <= cutoff" wording.
 
