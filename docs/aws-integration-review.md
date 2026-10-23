@@ -25,9 +25,9 @@ Written 2026-10-23 by the watchdog session for Aaron. It maps where each lane ca
 
 ## Model findings (fix first)
 
-1. **The canvas defaults are not on the allowed list.** `backend/model-catalog.json` sets `us.openai.gpt-6.1-sol` as the default and `us.anthropic.claude-opus-5-5` as the alternate (D20). Neither appears in the event's model list, and Lane 5 recorded that workshop IAM explicitly denies both. Hosted agents on those models fail before they use a tool, which is the one failure the demo cannot absorb.
+1. **The canvas defaults are not on the published list.** `backend/model-catalog.json` sets `us.openai.gpt-6.1-sol` as the default and `us.anthropic.claude-opus-5-5` as the alternate (D20). Neither appears in the event's model list. After account-level activation the hosted EC2 role does run Sol 6.1 (D24, eight role agents verified at 13:28), but workshop participant credentials are still denied both, so local runs and any laptop demo need an allowed model. The remaining risk is a judge asking why the demo uses a model outside the published list.
 2. **Allowed replacements.** OpenAI GPT-5.4, GPT-5.5, GPT-5.6 Luna, Sol and Terra; Claude Sonnet 5, Opus 5, Fable 5, Opus 4.8, 4.7, 4.6, Sonnet 4.6, Opus 4.5, Sonnet 4.5, Haiku 4.5; Amazon Nova; Meta Llama; Mistral; DeepSeek-R1.
-3. **Recommendation.** GPT-5.6 Sol as the default, Claude Opus 4.8 as the alternate, Opus 4.6 stays the pinned evaluator. Resolve the exact profile IDs with `get_inference_profile` the way `hosting.py` already does, update the catalog, and rerun hosting so the IAM policy follows. `backend/app/models.py` hardcodes the error text "Choose Claude Opus 5.5 or GPT-6.1 Sol"; change it with the catalog.
+3. **Recommendation.** Keep Sol 6.1 on the hosted role if the team accepts that risk; otherwise GPT-5.6 Sol as the default, Claude Opus 4.8 as the alternate, Opus 4.6 stays the pinned evaluator. Resolve the exact profile IDs with `get_inference_profile` the way `hosting.py` already does, update the catalog, and rerun hosting so the IAM policy follows. `backend/app/models.py` hardcodes the error text "Choose Claude Opus 5.5 or GPT-6.1 Sol"; change it with the catalog.
 4. **Data retention.** GPT-5.4, 5.5, 5.6 Luna, Sol, Terra and Claude Fable 5 need the account's Bedrock data retention set to Default. If a GPT call fails with a retention error, open the Bedrock Playground, send one prompt to that model, and accept Default when asked.
 5. **Q11, one model or several.** A deliberate mix shows more of Bedrock at no extra build cost: GPT-5.6 Sol for orchestration, Opus 4.6 for blind evaluation (already pinned, cutoff May 2025), Luna for the watchdog's second opinion, and Nova Micro or Haiku 4.5 for cheap classification. Record the choice as a decision so it stops moving.
 6. **Sentiment runs off AWS.** `analyze_sentiment` uses Jev through OpenRouter only. Amazon Comprehend `DetectSentiment` and `DetectTargetedSentiment` would add an AWS-native second reading on the same excerpts with no resource to create, just one IAM action.
@@ -102,8 +102,8 @@ The code below is on main with stubbed tests. None of it has run against AWS or 
 
 ## Next 75 minutes, ranked
 
-1. **Switch the canvas to allowed models** (Lane 5 with Lane 1, Kushagra). Every hosted agent run depends on it, and it is a catalog edit plus a hosting rerun.
-2. **Provision and verify the watchdog's AWS wiring** (Lane 4, Aaron). Four AWS services in the order path and the monitor, each visible in the console, all already authorized.
+1. **Decide on the published model list** (Lane 5 with Lane 1, Kushagra). Hosted agents run on Sol 6.1 now (D24), so this is a judging and laptop-access question, not an outage; switching is a catalog edit plus a hosting rerun.
+2. **Apply D26 and redeploy** (Lane 5). The watchdog's Guardrail, Memory, CloudWatch and EventBridge resources exist and passed live checks at 13:52; the hosted role needs D26 for the hosted watchdog to use them.
 3. **Add Comprehend sentiment** (Lane 3). No resource, one IAM action, and it turns sentiment from an OpenRouter-only input into an AWS AI input.
 4. **Give the existing AgentCore sample runtime one real job** (Lane 5 with Lane 4) if items 1 to 3 land early. Redeploying `backend/agent.py` as the watchdog's second-opinion endpoint and calling it from the app gives PRD item 8 a real AgentCore invocation and trace without moving the canvas.
 
