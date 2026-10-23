@@ -16,6 +16,8 @@ dependencies = [
   "pydantic",
   "fastapi[standard]>=0.161.1",
   "python-dotenv>=1.2.4",
+  "websockets",
+  "requests",
 ]
 
 [dependency-groups]

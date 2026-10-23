@@ -25,3 +25,9 @@ resources.json
 # Local agent files and conversation history
 .local/
 .dexter/
+
+# Project-local caches
+backend/.cache/
+data/sec/raw/
+.claude/
+data/gdelt/raw/
