@@ -16,6 +16,8 @@ Native finance tools use `FINANCIAL_DATASETS_API_KEY`. Exa web search and X sear
 
 The model's tool list is filtered from server-owned permissions, and backend tool routes check the authenticated agent's role. Non-blind agents may request other role types, including an executor or another orchestrator, while retaining their own role identity and direct tool restrictions. Children do not inherit the parent's tool set. Parent-child ownership and fund token lookup remain enforced. Old root agents become orchestrators; old specialists default to research. Roles survive roster reloads.
 
+The human's written role and tool requirements take priority over the supplied flow diagram. The roster stays flexible: one root can create additional orchestrators and task-focused research agents. The diagram's five research groups, separate order-planner box and significance box are context, not a fixed roster or proof those extra capabilities exist.
+
 ## Handoffs
 
 1. Give the orchestrator a concrete task and evidence/date context. It creates research specialists for the needed data families. Research and strategy instructions require adversarial challenges.
