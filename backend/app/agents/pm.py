@@ -115,6 +115,6 @@ def run(memos: list[Memo], universe: list[str], cutoff: str) -> list[Weight]:
     try:
         book = base.run_structured(SYSTEM, user_prompt, _Book)
         return _normalise(book.weights, universe)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 deliberate fallback to fixture/mock
         log.error("PM Bedrock call failed (%s); serving mock book", exc)
         return _mock_book(memos, universe)

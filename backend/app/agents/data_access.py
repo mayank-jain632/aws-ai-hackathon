@@ -26,7 +26,7 @@ FIXTURE = ROOT / "data" / "fixtures" / "run_2023-01-01.json"
 
 try:  # Lane B's module, may not exist yet
     from backend.app import data as real_data  # type: ignore
-except Exception:  # ImportError, or a half-written module
+except Exception:  # noqa: BLE001 ImportError or half-written module
     real_data = None
 
 
@@ -109,7 +109,7 @@ def _load(kind: SourceKind, loader_name: str, cutoff: str, universe: list[str]) 
             digest = _to_text(obj)
             sources = _real_sources(obj, kind, cutoff) or fixture_sources(kind, cutoff, universe)
             return digest, sources
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 deliberate fallback to fixture/mock
             log.warning("backend.app.data.%s failed (%s); using fixture", loader_name, exc)
     sources = fixture_sources(kind, cutoff, universe)
     digest = "\n".join(f"[{s.id}] {s.date} {s.title}: {s.excerpt}" for s in sources)

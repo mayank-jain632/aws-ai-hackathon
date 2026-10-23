@@ -109,4 +109,4 @@ def backtest(
     return equity, run_metrics
 
 
-__all__ = ["backtest", "rebalanced_curve", "metrics"]
+__all__ = ["backtest", "metrics", "rebalanced_curve"]

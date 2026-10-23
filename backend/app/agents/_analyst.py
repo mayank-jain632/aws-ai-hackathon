@@ -6,7 +6,7 @@ look-ahead guard, and shapes the result into a `Memo`.
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from collections.abc import Callable
 
 from pydantic import BaseModel, Field
 
@@ -54,7 +54,7 @@ def run_analyst(analyst: Analyst, persona: str, slicer: Slicer, universe: list[s
     )
     try:
         draft = base.run_structured(HOUSE_STYLE + "\n\n" + persona, user_prompt, _MemoDraft)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 deliberate fallback to fixture/mock
         log.error("%s analyst Bedrock call failed (%s); serving mock memo", analyst, exc)
         memo = _mock_memo(analyst, universe, cutoff, sources)
         return memo, _cited(memo, sources)

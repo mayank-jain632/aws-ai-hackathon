@@ -13,6 +13,7 @@ All CSVs are produced by the data/fetch_*.py scripts (see data/README.md).
 from __future__ import annotations
 
 import importlib.util
+import math
 from functools import lru_cache
 from pathlib import Path
 
@@ -92,7 +93,7 @@ def last_close() -> dict[str, dict[str, float | str]]:
         out[t] = {
             "date": s.index[-1].strftime("%Y-%m-%d"),
             "close": round(last, 4),
-            "change_pct": round((last / prev - 1) * 100, 4) if prev == prev else 0.0,
+            "change_pct": round((last / prev - 1) * 100, 4) if not math.isnan(prev) else 0.0,
         }
     return out
 
@@ -205,16 +206,16 @@ def tone(cutoff: str, subjects: list[str] | None = None) -> pd.DataFrame:
 
 
 __all__ = [
-    "UNIVERSE",
-    "REFERENCE",
     "ALL_TICKERS",
-    "prices",
-    "ohlcv",
-    "prices_full",
-    "last_close",
-    "fundamentals",
-    "macro",
-    "fedfunds_at",
+    "REFERENCE",
+    "UNIVERSE",
     "events",
+    "fedfunds_at",
+    "fundamentals",
+    "last_close",
+    "macro",
+    "ohlcv",
+    "prices",
+    "prices_full",
     "tone",
 ]

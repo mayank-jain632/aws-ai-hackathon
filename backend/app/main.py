@@ -23,10 +23,25 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from backend.app.agents import fundamentals, geopolitics, macro, pm, sentiment, technical
+from backend.app.agents import (
+    fundamentals,
+    geopolitics,
+    macro,
+    pm,
+    sentiment,
+    technical,
+)
 from backend.app.agents.base import assert_no_lookahead, mock_mode
 from backend.app.agents.data_access import fixture
-from backend.app.schema import Equity, Memo, RunMetrics, RunRequest, RunResponse, Source, Weight
+from backend.app.schema import (
+    Equity,
+    Memo,
+    RunMetrics,
+    RunRequest,
+    RunResponse,
+    Source,
+    Weight,
+)
 
 log = logging.getLogger("desk.api")
 
@@ -43,7 +58,7 @@ ANALYSTS = (technical, fundamentals, macro, sentiment, geopolitics)
 
 try:  # Lane B's backtest; stubbed from the fixture until it lands
     from backend.app.backtest import backtest as _real_backtest  # type: ignore
-except Exception:
+except Exception:  # noqa: BLE001 deliberate fallback to fixture/mock
     _real_backtest = None
 
 
@@ -98,7 +113,7 @@ def _backtest(weights: list[Weight], cutoff: str) -> tuple[Equity, RunMetrics]:
     if _real_backtest is not None:
         try:
             return _real_backtest(weights, cutoff)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 deliberate fallback to fixture/mock
             log.warning("backend.app.backtest failed (%s); using fixture equity", exc)
     return _fixture_backtest(weights, cutoff)
 
@@ -137,7 +152,7 @@ async def run(req: RunRequest, refresh: bool = Query(False, description="Ignore 
     if path.exists() and not refresh:
         try:
             return RunResponse.model_validate_json(path.read_text(encoding="utf-8"))
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 deliberate fallback to fixture/mock
             log.warning("cache %s unreadable (%s); recomputing", path.name, exc)
     try:
         resp = await _run_pipeline(req)

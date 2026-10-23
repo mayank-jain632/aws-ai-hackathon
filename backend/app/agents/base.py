@@ -16,7 +16,6 @@ import json
 import logging
 import os
 import re
-from typing import TypeVar
 
 from pydantic import BaseModel, ValidationError
 
@@ -24,7 +23,6 @@ from backend.app.schema import Source
 
 log = logging.getLogger("desk.agents")
 
-T = TypeVar("T", bound=BaseModel)
 
 DEFAULT_MODEL_ID = "us.openai.gpt-5.6-luna"
 
@@ -51,7 +49,7 @@ def mock_mode() -> bool:
         import boto3
 
         creds = boto3.Session().get_credentials()
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 deliberate fallback to fixture/mock
         log.warning("boto3 credential lookup failed (%s); falling back to mock agents", exc)
         return True
     if creds is None:
@@ -98,7 +96,7 @@ def _format_instructions(model_cls: type[BaseModel]) -> str:
     )
 
 
-def run_structured(system_prompt: str, user_prompt: str, model_cls: type[T]) -> T:
+def run_structured[T: BaseModel](system_prompt: str, user_prompt: str, model_cls: type[T]) -> T:
     """Ask for JSON matching `model_cls`, validate, retry once with the error. Sync."""
     messages = [{"role": "user", "content": [{"text": user_prompt + _format_instructions(model_cls)}]}]
     last_err: Exception | None = None
