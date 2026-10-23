@@ -16,5 +16,6 @@ async function bridge(action: string, input?: unknown, signal?: AbortSignal) {
 export function createWatchdogTools() {
   return [
     new DynamicStructuredTool({ name: 'watchdog_lessons', description: 'Read the watchdog lessons for this fund: which order limits keep tripping, recent blocked orders with reasons, close calls, and moderator events. Read it before proposing a strategy or submitting orders, and adjust to it. Also reports whether an emergency stop is on.', schema: z.object({}), func: async (_, _m, c) => bridge('lessons', undefined, c?.signal) }),
+    new DynamicStructuredTool({ name: 'watchdog_audit', description: 'Run the watchdog audit for this fund now: runaway order bursts, agents retrying blocked orders, orders with unknown broker outcomes, holdings past the mandate, and strategy memos that cite missing files or dates after the cutoff. Returns new moderator events and refreshed lessons. A runaway trips the firm-wide stop; only a person clears it.', schema: z.object({}), func: async (_, _m, c) => bridge('audit', {}, c?.signal) }),
   ];
 }

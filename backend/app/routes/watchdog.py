@@ -1,4 +1,12 @@
-"""Watchdog routes: firm-wide stop, status, dry-run review, and agent-facing tools."""
+"""Watchdog routes: firm-wide stop, status, dry-run review, audits, and agent tools.
+
+The router's lifespan starts the background monitor. WATCHDOG_INTERVAL_SECONDS sets
+the sweep period (default 60); 0 turns the loop off.
+"""
+
+import asyncio
+import os
+from contextlib import asynccontextmanager, suppress
 
 import httpx
 from fastapi import APIRouter, HTTPException, Request
@@ -7,11 +15,23 @@ from pydantic import Field
 from backend.app.desk import StrictModel, desk_for
 from backend.app.paper import account_snapshot
 from backend.app.routes.desk import current_manager, human, worker
-from backend.app.watchdog import SWITCH, feedback, gate, halt_reason, store
+from backend.app.watchdog import SWITCH, feedback, gate, halt_reason, monitor, store
 from backend.app.watchdog.models import WatchOrder, WatchPortfolio
 from backend.app.watchdog.rules import review_order
 
-router = APIRouter(tags=["watchdog"])
+
+@asynccontextmanager
+async def lifespan(app):
+    interval = float(os.getenv("WATCHDOG_INTERVAL_SECONDS", "60"))
+    task = asyncio.create_task(monitor.run_forever(app, interval)) if interval > 0 else None
+    yield
+    if task:
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
+
+
+router = APIRouter(tags=["watchdog"], lifespan=lifespan)
 
 
 def status(desk) -> dict:
@@ -84,3 +104,27 @@ def dry_run(body: ReviewInput, request: Request, fund_id: str | None = None) -> 
 def lessons_for_agent(request: Request) -> dict:
     _, desk = worker(request, "watchdog_lessons")
     return {"lessons": feedback.lessons(desk), "halted_reason": halt_reason(desk)}
+
+
+def run_audit(desk) -> dict:
+    snapshot = monitor.account_or_none() if desk.state["orders"] else None
+    events = monitor.audit(desk, snapshot)
+    return {
+        "new_events": [e.model_dump() for e in events],
+        "account_checked": snapshot is not None,
+        "halted_reason": halt_reason(desk),
+        "lessons": feedback.lessons(desk),
+    }
+
+
+@router.post("/api/watchdog/audit")
+@router.post("/api/funds/{fund_id}/watchdog/audit")
+def audit_now(request: Request, fund_id: str | None = None) -> dict:
+    human(request)
+    return run_audit(desk_for(current_manager(request, fund_id)))
+
+
+@router.post("/api/internal/watchdog/audit")
+def audit_for_agent(request: Request) -> dict:
+    _, desk = worker(request, "watchdog_audit")
+    return run_audit(desk)

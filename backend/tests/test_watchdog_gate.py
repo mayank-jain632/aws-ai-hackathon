@@ -237,3 +237,20 @@ def test_lessons_tool_respects_roles(client):
     research = {"X-Agent-Token": "TOKEN", "X-Agent-ID": "research"}
     assert "Watchdog lessons" in http.get("/api/internal/watchdog/lessons", headers=executor).json()["lessons"]
     assert http.get("/api/internal/watchdog/lessons", headers=research).status_code == 403
+
+
+def test_monitor_loop_starts_with_the_app(tmp_path, monkeypatch):
+    import threading
+
+    from backend.app import funds
+    from backend.app.watchdog import monitor
+
+    monkeypatch.setattr(runtime, "ROOT", tmp_path)
+    monkeypatch.setattr(runtime, "LOCAL", tmp_path / ".local/agent")
+    monkeypatch.setattr(funds, "ROOT", tmp_path)
+    monkeypatch.setenv("WATCHDOG_INTERVAL_SECONDS", "0.05")
+    monkeypatch.delenv("APP_ACCESS_PASSWORD", raising=False)
+    swept = threading.Event()
+    monkeypatch.setattr(monitor, "sweep", lambda _app: swept.set() or {})
+    with TestClient(app, base_url="http://localhost"):
+        assert swept.wait(5)
