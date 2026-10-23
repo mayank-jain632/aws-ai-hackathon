@@ -34,7 +34,7 @@ def make_client(region: str = REGION):
     import boto3
     from botocore.config import Config
 
-    cfg = Config(retries={"max_attempts": 10, "mode": "adaptive"}, read_timeout=300)
+    cfg = Config(retries={"max_attempts": 10, "mode": "adaptive"}, read_timeout=300, max_pool_connections=64)
     return boto3.client("bedrock-runtime", region_name=region, config=cfg)
 
 

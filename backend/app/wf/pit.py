@@ -25,12 +25,13 @@ SENTIMENT_WEEKS = 8
 REFERENCE = "SPY"
 HORIZONS = {"1w": 5, "4w": 20, "12w": 60, "26w": 130}
 ATR_N = 14
-CORE_MACRO = ["FEDFUNDS", "CPIAUCSL", "UNRATE", "DGS10", "T10Y2Y"]
+CORE_MACRO = ["DFEDTARU", "FEDFUNDS", "CPIAUCSL", "UNRATE", "DGS10", "T10Y2Y"]
 PCT_CHANGE_SERIES = {"CPIAUCSL", "USEPUINDXD", "DCOILWTICO", "VIXCLS"}
 GEO_SERIES = ["VIXCLS", "USEPUINDXD", "BAMLH0A0HYM2", "T10Y2Y", "DCOILWTICO"]
 GEO_ITEMS = {"1.05", "7.01", "8.01"}
 SERIES_LABEL = {
-    "FEDFUNDS": "Effective fed funds rate (%)",
+    "DFEDTARU": "Fed funds target range, upper bound (%, daily)",
+    "FEDFUNDS": "Effective fed funds rate (%, monthly average)",
     "CPIAUCSL": "CPI index (all urban consumers)",
     "UNRATE": "Unemployment rate (%)",
     "DGS10": "10y Treasury yield (%)",

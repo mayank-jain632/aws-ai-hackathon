@@ -35,7 +35,7 @@ K8_START = "2025-01-01"
 BROWSER_HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
 
 MONTHLY_LAG = {"FEDFUNDS": 3, "UNRATE": 7, "CPIAUCSL": 15}  # same rules as data/fetch_fred.py
-DAILY_SERIES = ["DGS10", "T10Y2Y", "VIXCLS", "BAMLH0A0HYM2", "USEPUINDXD", "DCOILWTICO"]
+DAILY_SERIES = ["DGS10", "T10Y2Y", "VIXCLS", "BAMLH0A0HYM2", "USEPUINDXD", "DCOILWTICO", "DFEDTARU"]
 FRED_ALL = ["FEDFUNDS", "CPIAUCSL", "UNRATE", *DAILY_SERIES]
 DAILY_LAG_DAYS = {"DGS10": 0}  # DGS10 keeps data/fetch_fred.py's same-day rule; other daily series +1 day
 
