@@ -1,4 +1,4 @@
-"""Persistent fund mandates and per-fund canvas runtimes. No simulated returns."""
+"""Persistent fund mandates, canvas runtimes, and separate display snapshots."""
 
 import asyncio
 import json
@@ -10,6 +10,7 @@ from uuid import uuid4
 from pydantic import BaseModel, Field, field_validator
 
 from backend.app.agent import ROOT, AgentManager
+from backend.app.presentation import fund_presentation
 
 
 class Mandate(BaseModel):
@@ -204,6 +205,7 @@ class FundStore:
             reverse=True,
         )
         capital = self.records[fund_id]["capital"]
+        presentation = fund_presentation(self.root, fund_id, capital)
         return {
             **self.records[fund_id],
             "id": fund_id,
@@ -218,7 +220,9 @@ class FundStore:
                 "working": sum(a["status"] == "running" for a in agents),
                 "files": len(runtime.agents["dexter"].files()),
                 "runs": sum(e["label"] == "Run started" for e in activity),
+                **presentation.get("metrics", {}),
             },
+            "metrics_source": presentation.get("source", "fund_record"),
             "portfolio_status": "unfunded" if not capital else "cash_only",
             "holdings": [],
             "history": [],
