@@ -1,6 +1,6 @@
 # Aaron · Lane 4 (moderator half): watchdog and moderator
 
-Updated 13:33 by Claude Code
+Updated 13:50 by Claude Code
 
 **Shipped** (on `main`, locally checked, broker mocked; reference in `docs/watchdog.md`)
 - Pre-trade gate `backend/app/watchdog/` (D17, D19): 16 deterministic rules, no LLM in the path. Emergency stop, trading permission, client universe, ticker exists in our data, backend PASS (buys), quantity/cash/no-short sanity, per-order size, position size, top-three concentration, account and tested drawdown, price band vs last close, rapid fire, duplicate under a new id, same-day wash trade, daily turnover, daily order count. The most serious block leads the reason
@@ -19,10 +19,11 @@ Updated 13:33 by Claude Code
 - Fractions are 0..1. Risk-band guardrails (concentration, turnover, order share of equity, price band) are in `rules.GUARDRAILS`; a mandate field overrides them
 
 **In flight**
-- Scores and reasoning view (D23), branch `aaron/scores-ui`, pushed straight to `main` per slice. `GET /api/funds/{fund_id}/scores` returns one read-only scorecard: rings for mandate fit, trade confidence, strategy, backtest, significance, execution, watchdog gate and sensitivity. Click a ring for factors (value, weight, producing agent and role); click a factor for the recorded reasoning text and provenance (cited sources, file or record, time). A ring with no data says "not produced yet" and names the owning lane. Checkpoints 14:10 endpoint and rings, 14:40 both drilldowns, 15:00 synthesis and walk-forward wiring plus demo path
+- Scores and reasoning view (D23), shipped to `main` with both click levels; locally checked against a labeled fixture fund and Mayank's real walk-forward output (from his branch, mounted with `SCORES_WF_DIR`). Not yet seen on the hosted canvas. `GET /api/funds/{fund_id}/scores` (fund members only, through the sharing middleware; workers get 403) returns one read-only scorecard. Eight rings: mandate fit, trade confidence, strategy, backtest, significance, execution, watchdog gate, sensitivity. Each scored ring carries its raw metric, formula, source record and owner. Click a ring for factors (value, weight, pass or fail, producing agent and role); click a factor for recorded reasoning (critique, rationale, memo text, analyst views) and provenance (record, file, time, cited sources with kind, title, date, URL, excerpt). The panel also lists every data source with its status and every tool call in the fund's agent activity logs. Rings with no data say "not produced yet" and name the owning lane. Fund records fill fund rings; walk-forward output fills empty rings only and is tagged firm-wide. Synthesis (`synthesis.json` beside the desk) is coded against Chaithu's shapes and switches on when it exists
 - Nothing else in the 15:00 freeze scope. If time allows: run the demo on the hosted canvas once Lane 5 deploys this commit
 
 **Blocked, or need from someone**
+- Lane 5: the image copies only `backend`, `data` and `frontend`, so `reports/wf/` will not reach the hosted container after Mayank's merge. Add `reports` to the Dockerfile COPY and `.dockerignore`, or set `SCORES_WF_DIR` to a mounted copy
 - Lane 1: `roles.py` now lists `watchdog_lessons` for strategy, executor and moderator and `watchdog_audit` for moderator, plus one sentence each in the strategy and executor instructions. Say if you want them placed differently
 - Lane 5: hosted deploy of this commit to see the gate on the real Alpaca paper account
 - Not verified: a live Bedrock second opinion (no workshop credentials on this machine; the call is exercised with a stub), the built-container registry listing, a real Alpaca order through the gate, hosted rollout. AgentCore Memory (PRD P1) not built; it needs an accepted decision for the new resource
