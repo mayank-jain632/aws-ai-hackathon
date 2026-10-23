@@ -42,6 +42,8 @@ The canvas uses Dexter's existing tool implementations directly alongside its sh
 
 Set provider keys in `.env` or `.env.local` for local workers. The finance tools are registered even without a key; successful provider access requires valid credentials. Their internal routing and the URL fetcher's model calls use Bedrock. The separate sentiment tool uses OpenRouter Decisions with `~typesafe/jev-latest`, currently Jev 1.14. Research-capable roles get the broader data tools; the blind backtester still has only `run_backtest`. See [data sources](docs/data-sources.md) for exact coverage and verification.
 
+Financial Datasets credentials are configured locally and in the hosted AWS secret. A real hosted Dexter `get_income_statements` call returned an AAPL annual statement and source URL on 2026-10-23. X bearer credentials are also configured locally and on AWS; the deployed native search tool retrieved real posts with source URLs after credits were added. Full agent verification on the newly selected Sol/Opus models awaits their Bedrock activation.
+
 There is no custom research API or conversation mode/cutoff lock. The Desk's cached data loaders and backtest remain separate modules. Live search and finance responses are not point-in-time-safe backtest inputs; historical decisions must still use cutoff-aware loaders.
 
 Native tool registration is in the hosted fund image. The expanded data/sentiment tools need a new image rollout. FRED, native Exa and Jev were exercised live; Apify responses were tested with mocks. See `hub/status/kushagra.md` for the latest provider and deployment checks. Rebuild locally with `npm run dev`, or deploy the updated image with the commands below.
