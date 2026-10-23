@@ -94,7 +94,7 @@ def test_scored_rings_show_raw_formula_source_and_recorded_reasoning(tmp_path):
     test = desk.state["tests"][sid]
     assert backtest.status == "scored"
     assert backtest.value == 100 * sum(test["checks"].values()) / 4
-    assert backtest.raw.startswith(test["verdict"]) and "÷ 4" in backtest.formula
+    assert backtest.raw.startswith(test["verdict"]) and "four gate checks" in backtest.formula
     assert backtest.source.location.endswith("desk.json")
     assert backtest.factors[0].reasoning == test["limitations"]
 

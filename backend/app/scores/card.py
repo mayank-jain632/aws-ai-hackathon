@@ -504,8 +504,8 @@ def backtest_score(ctx: Context) -> Score:
     value, passed, total = checklist(factors)
     return scored(
         key, label, question, factors,
-        raw=f"{test['verdict']}: {passed} of {total} gate checks",
-        formula="100 × gate checks passed ÷ 4 (drawdown, Sharpe, excess return over SPY, mandate)",
+        raw=f"{test['verdict']}: {passed} of {total} checks" + (" (test is stale)" if total > 4 else ""),
+        formula="100 × checks passed ÷ checks evaluated: the four gate checks (drawdown, Sharpe, excess return over SPY, mandate), plus a fifth that counts as failed when the test no longer matches the current policy, frozen strategy and engine version",
         source=desk_source(ctx, "Backend backtest record"),
         owner=OWNERS["desk"], value=value, contributors=bound + [GATE],
     )
