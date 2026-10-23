@@ -15,6 +15,12 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.app.access import HostedAccess
 from backend.app.agent import AgentManager
+from backend.app.roles import Role, allow_child, require_tool
+from backend.app.routes.desk import router as desk_router
+from backend.app.routes.funds import router as funds_router
+from backend.app.routes.models import router as models_router
+from backend.app.routes.sharing import router as sharing_router
+from backend.app.routes.watchdog import router as watchdog_router
 
 
 @asynccontextmanager
@@ -45,9 +51,16 @@ class AgentTask(BaseModel):
     name: str = Field(default="Researcher", min_length=1, max_length=60)
     task: str = Field(min_length=1, max_length=12000)
     agent_id: str = Field(default="", max_length=60)
+    role: Role = "research"
+    strategy_id: str | None = Field(default=None, max_length=64)
+    model: str | None = Field(default=None, max_length=100)
 
 
 def manager(request: Request) -> AgentManager:
+    if hasattr(request.state, "fund_manager"):
+        return request.state.fund_manager
+    if request.headers.get("x-agent-token") and hasattr(request.app.state, "funds"):
+        return request.app.state.funds.by_token(request.headers["x-agent-token"])
     return request.app.state.manager
 
 
@@ -133,13 +146,26 @@ async def events(request: Request) -> AsyncIterable[ServerSentEvent]:
     queue = asyncio.Queue(maxsize=8)
     current.subscribers.add(queue)
     current.publish()
+
+    def permitted():
+        sharing = getattr(request.app.state, "sharing", None)
+        fund_id = getattr(request.state, "fund_id", "general")
+        email = getattr(request.state, "user", "local")
+        return not sharing or sharing.can_access(fund_id, email)
+
     try:
+        if not permitted():
+            yield ServerSentEvent(event="access_revoked", data={})
+            return
         yield ServerSentEvent(data=current.snapshot())
         while True:
             try:
                 snapshot = await asyncio.wait_for(queue.get(), timeout=10)
             except TimeoutError:
                 snapshot = current.snapshot()
+            if not permitted():
+                yield ServerSentEvent(event="access_revoked", data={})
+                break
             yield ServerSentEvent(data=snapshot)
     finally:
         current.subscribers.discard(queue)
@@ -177,13 +203,21 @@ def authenticate_worker(request: Request):
 @app.get("/api/internal/agents")
 def list_workers(request: Request) -> dict:
     caller = authenticate_worker(request)
+    try:
+        require_tool(caller, "list_agents")
+    except PermissionError as error:
+        raise HTTPException(403, str(error)) from error
     current = manager(request)
     return {
         "agents": [
             {
                 "id": a.id,
-                "name": a.name,
+                "name": "Historical evaluator"
+                if caller.role == "backtester"
+                else a.name,
                 "parentId": a.parent_id,
+                "role": a.role,
+                "model": a.model,
                 "status": a.state["status"],
             }
             for a in current.agents.values()
@@ -199,19 +233,51 @@ async def delegate(action: str, body: AgentTask, request: Request) -> dict:
     if not body.task.strip() or not body.name.strip():
         raise HTTPException(422, "Name and task cannot be blank")
     try:
-        if action == "create":
-            child = await current.create(caller.id, body.name, body.task)
-        elif action == "message":
-            child = get_agent(request, body.agent_id)
-            if child.id == caller.id or caller.id not in current.ancestors(child.id):
-                raise ValueError("An agent can delegate only to its own descendants.")
-            await child.start(body.task, caller.name)
-        else:
+        if action not in {"create", "message"}:
             raise HTTPException(404, "Unknown action")
-        return await current.result(child)
+        require_tool(caller, "create_agent" if action == "create" else "message_agent")
+        async with current.delegating(caller):
+            if action == "create":
+                child = await current.create(
+                    caller.id,
+                    body.name,
+                    body.task,
+                    body.role,
+                    body.strategy_id,
+                    body.model,
+                )
+            else:
+                child = get_agent(request, body.agent_id)
+                if child.id == caller.id or caller.id not in current.ancestors(
+                    child.id
+                ):
+                    raise ValueError(
+                        "An agent can delegate only to its own descendants."
+                    )
+                allow_child(caller, child.role)
+                if caller.role == "backtester" and child.state.get(
+                    "strategy_id"
+                ) != caller.state.get("strategy_id"):
+                    raise PermissionError(
+                        "Blind delegates must evaluate the parent's frozen strategy"
+                    )
+                await child.start(body.task, caller.name)
+            result = await current.result(child)
+            if caller.role == "backtester":
+                result["files"] = []
+                result["name"] = "Historical evaluator"
+            return result
+    except PermissionError as error:
+        raise HTTPException(403, str(error)) from error
     except ValueError as error:
         raise HTTPException(409, str(error)) from error
 
+
+app.include_router(funds_router)
+app.include_router(desk_router)
+app.include_router(models_router)
+app.include_router(sharing_router)
+app.include_router(watchdog_router)
 
 # The same server serves the built React app and API inside the single container.
 frontend = Path(__file__).resolve().parents[2] / "frontend/dist"

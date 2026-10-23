@@ -1,6 +1,8 @@
 *
 !backend/
 !backend/**
+!data/
+!data/**
 !frontend/
 !frontend/**
 !package.json

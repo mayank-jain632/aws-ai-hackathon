@@ -1,0 +1,18 @@
+{
+  "default": "us.openai.gpt-6.1-sol",
+  "backtester": "us.anthropic.claude-opus-4-6-v1",
+  "main": [
+    {
+      "id": "us.openai.gpt-6.1-sol",
+      "name": "GPT-6.1 Sol"
+    },
+    {
+      "id": "us.anthropic.claude-opus-5-5",
+      "name": "Claude Opus 5.5"
+    }
+  ],
+  "evaluation": {
+    "id": "us.anthropic.claude-opus-4-6-v1",
+    "name": "Claude Opus 4.6"
+  }
+}

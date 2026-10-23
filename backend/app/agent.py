@@ -7,11 +7,15 @@ import platform
 import secrets
 import shutil
 import signal
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
 from dotenv import dotenv_values
+
+from backend.app.models import choices, select_model
+from backend.app.roles import PROFILES, allow_child
 
 ROOT = Path(__file__).resolve().parents[2]
 LOCAL = ROOT / ".local/agent"
@@ -78,15 +82,28 @@ def bun_binary():
 
 
 class LocalAgent:
-    def __init__(self, manager, agent_id="dexter", name="Dexter", parent_id=None):
+    def __init__(
+        self,
+        manager,
+        agent_id="dexter",
+        name="Dexter",
+        parent_id=None,
+        role=None,
+        model=None,
+    ):
         self.manager = manager
         self.id = agent_id
         self.name = name
         self.parent_id = parent_id
+        self.role = role or ("orchestrator" if agent_id == "dexter" else "research")
+        if self.role not in PROFILES:
+            raise ValueError("Unknown agent role")
         self.local = (
-            LOCAL if agent_id == "dexter" else ROOT / ".local/agents" / agent_id
+            manager.root / "agent"
+            if agent_id == "dexter"
+            else manager.root / "agents" / agent_id
         )
-        self.workspace = ROOT / ".local/workspace"
+        self.workspace = manager.root / "workspace"
         self.state_path = self.local / "state.json"
         self.workspace.mkdir(parents=True, exist_ok=True)
         self.local.mkdir(parents=True, exist_ok=True)
@@ -97,6 +114,16 @@ class LocalAgent:
             if self.state_path.exists()
             else {"messages": [], "activity": []}
         )
+        # Older releases did not persist a choice. Migrate their Luna default.
+        saved_model = self.state.get("model")
+        if saved_model == "us.openai.gpt-5.6-luna":
+            saved_model = None
+        self.model = select_model(
+            self.role,
+            requested=model,
+            inherited=saved_model or environment().get("MAIN_AGENT_MODEL"),
+        )
+        self.state["model"] = self.model
         if self.state.get("status") == "running":
             self.state["status"] = "stopped"
         self.state.setdefault("status", "idle")
@@ -104,6 +131,8 @@ class LocalAgent:
         self.task = None
         self.lock = asyncio.Lock()
         self.cancelled = False
+        self.holds_slot = False
+        self.pending_delegations = 0
 
     def migrate_workspace(self):
         legacy = self.local / "workspace"
@@ -138,13 +167,22 @@ class LocalAgent:
         return {
             "id": self.id,
             "parentId": self.parent_id,
+            "role": self.role,
+            "waitingForAgents": self.pending_delegations > 0,
+            "queued": self.state["status"] == "running"
+            and not self.holds_slot
+            and not self.pending_delegations,
+            "tools": PROFILES[self.role]["tools"],
             "name": self.name,
             "status": self.state["status"],
-            "model": "us.openai.gpt-5.6-luna",
+            "model": self.model,
+            "modelChoices": choices(self.role),
             "messages": self.state["messages"],
             "activity": self.state["activity"],
             "files": self.files(),
-            "workspace": str(self.workspace.relative_to(ROOT)),
+            "workspace": str(self.workspace.relative_to(ROOT))
+            if self.workspace.is_relative_to(ROOT)
+            else "workspace",
         }
 
     def publish(self):
@@ -165,31 +203,56 @@ class LocalAgent:
         )
         self.state["activity"] = self.state["activity"][-100:]
 
+    async def set_model(self, model):
+        async with self.lock:
+            if self.task and not self.task.done():
+                raise ValueError("Stop the agent before changing its model")
+            self.model = select_model(self.role, requested=model)
+            self.state["model"] = self.model
+            self.activity("Model selected", self.model)
+            self.publish()
+
     async def start(self, prompt, source="You"):
         async with self.lock:
             if self.task and not self.task.done():
                 raise ValueError(
                     f"{self.name} is already running. Stop it before sending another message."
                 )
-            if (
-                sum(
-                    a.state["status"] == "running" for a in self.manager.agents.values()
-                )
-                >= 4
-            ):
+            if self.manager.paused:
                 raise ValueError(
-                    "Four agents are already running. Wait for one to finish."
+                    "This fund is paused. Resume it before starting agents."
                 )
             bun_binary()
             if not (DEXTER_SOURCE / ".revision").exists():
                 raise RuntimeError("Dexter source is missing. Run npm run setup:agent.")
+            if self.role == "backtester":
+                from backend.app.desk import desk_for
+
+                record = desk_for(self.manager).strategy(
+                    self.state.get("strategy_id", "")
+                )
+                prompt = (
+                    "Call run_backtest and report its exact result. Frozen numeric strategy: "
+                    + json.dumps(
+                        {
+                            "strategy_id": record["id"],
+                            "weights": record["weights"],
+                            "cutoff": record["cutoff"],
+                            "end": record["end"],
+                        }
+                    )
+                )
             history = []
             for message in self.state["messages"]:
                 if message["role"] == "user":
                     history.append({"query": message["text"], "answer": ""})
                 elif history and message["role"] == "assistant":
                     history[-1]["answer"] = message["text"]
-            history = [turn for turn in history if turn["answer"]][-8:]
+            history = (
+                [turn for turn in history if turn["answer"]][-8:]
+                if self.role != "backtester"
+                else []
+            )
             self.state["messages"].append(
                 {"id": uuid4().hex, "role": "user", "text": prompt, "source": source}
             )
@@ -202,6 +265,14 @@ class LocalAgent:
     async def run(self, prompt, history):
         completed = False
         try:
+            if self.manager.slots.locked():
+                self.activity("Queued for a worker slot")
+                self.publish()
+            await self.manager.slots.acquire()
+            self.holds_slot = True
+            if self.cancelled:
+                self.state["status"] = "stopped"
+                return
             self.process = await asyncio.create_subprocess_exec(
                 bun_binary(),
                 "--tsconfig-override",
@@ -212,7 +283,13 @@ class LocalAgent:
                     **environment(),
                     "AGENT_CONTROL_TOKEN": self.manager.token,
                     "LOCAL_AGENT_ID": self.id,
-                    "LOCAL_AGENT_NAME": self.name,
+                    "LOCAL_AGENT_NAME": "Historical evaluator"
+                    if self.role == "backtester"
+                    else self.name,
+                    "LOCAL_AGENT_ROLE": self.role,
+                    "LOCAL_AGENT_MODEL": self.model,
+                    "AGENT_ALLOWED_TOOLS": json.dumps(PROFILES[self.role]["tools"]),
+                    "AGENT_ROLE_INSTRUCTIONS": PROFILES[self.role]["instructions"],
                     "DEXTER_STATE_DIR": str(self.local / ".dexter"),
                 },
                 stdin=asyncio.subprocess.PIPE,
@@ -224,7 +301,14 @@ class LocalAgent:
             if self.cancelled:
                 os.killpg(self.process.pid, signal.SIGTERM)
             payload = json.dumps(
-                {"prompt": prompt, "history": history, "files": self.files()}
+                {
+                    "prompt": prompt,
+                    "history": history,
+                    "files": [] if self.role == "backtester" else self.files(),
+                    "context": ""
+                    if self.role == "backtester"
+                    else self.manager.context,
+                }
             ).encode()
             self.process.stdin.write(payload)
             await self.process.stdin.drain()
@@ -263,6 +347,8 @@ class LocalAgent:
                     answer = event.get("answer", "")
                     if answer.startswith("Error:"):
                         raise RuntimeError(answer)
+                    if answer.startswith("Reached maximum iterations"):
+                        raise RuntimeError(answer)
                     if answer:
                         self.state["messages"].append(
                             {"id": uuid4().hex, "role": "assistant", "text": answer}
@@ -287,6 +373,9 @@ class LocalAgent:
                 self.activity("Run stopped")
             elif not completed:
                 self.activity("Run ended without a result", kind="error")
+        except asyncio.CancelledError:
+            self.state["status"] = "stopped"
+            self.activity("Run stopped")
         except (OSError, RuntimeError, ValueError) as error:
             self.state["status"] = "stopped" if self.cancelled else "error"
             self.activity(
@@ -297,6 +386,9 @@ class LocalAgent:
                 os.killpg(self.process.pid, signal.SIGKILL)
                 await self.process.wait()
             self.process = None
+            if self.holds_slot:
+                self.holds_slot = False
+                self.manager.slots.release()
             self.publish()
 
     async def stop(self):
@@ -304,8 +396,13 @@ class LocalAgent:
         if self.process and self.process.returncode is None:
             os.killpg(self.process.pid, signal.SIGTERM)
         if self.task and not self.task.done():
+            if self.process is None and not self.holds_slot:
+                self.task.cancel()
             try:
                 await asyncio.wait_for(asyncio.shield(self.task), timeout=3)
+            except asyncio.CancelledError:
+                self.state["status"] = "stopped"
+                self.publish()
             except TimeoutError:
                 if self.process and self.process.returncode is None:
                     os.killpg(self.process.pid, signal.SIGKILL)
@@ -315,12 +412,16 @@ class LocalAgent:
 class AgentManager:
     """Local workers share a workspace and keep separate conversations."""
 
-    def __init__(self):
+    def __init__(self, root=None):
+        self.root = Path(root) if root else ROOT / ".local"
+        self.context = ""
+        self.paused = False
         self.token = secrets.token_urlsafe(32)
         self.subscribers = set()
         self.lock = asyncio.Lock()
-        self.registry = ROOT / ".local/agents.json"
-        self.layout_file = ROOT / ".local/layout.json"
+        self.slots = asyncio.Semaphore(4)
+        self.registry = self.root / "agents.json"
+        self.layout_file = self.root / "layout.json"
         self.layout = (
             json.loads(self.layout_file.read_text())
             if self.layout_file.exists()
@@ -330,8 +431,12 @@ class AgentManager:
         if self.registry.exists():
             for item in json.loads(self.registry.read_text()):
                 self.agents[item["id"]] = LocalAgent(
-                    self, item["id"], item["name"], item["parentId"]
+                    self, item["id"], item["name"], item["parentId"], item.get("role")
                 )
+
+        from backend.app.desk import Desk
+
+        self.desk = Desk(self)
 
     def snapshot(self):
         return {
@@ -354,11 +459,81 @@ class AgentManager:
             agent_id = self.agents[agent_id].parent_id
         return found
 
-    async def create(self, parent_id, name, task):
+    @asynccontextmanager
+    async def delegating(self, caller):
+        """Yield the parent's active slot while Dexter waits for delegated tools.
+
+        Multiple tool calls from one model turn share one suspended parent. Only
+        the final returning request reacquires its slot before the next model call.
+        """
+        caller.pending_delegations += 1
+        if caller.holds_slot:
+            caller.holds_slot = False
+            self.slots.release()
+        caller.publish()
+        try:
+            yield
+        finally:
+            caller.pending_delegations -= 1
+            if caller.pending_delegations == 0 and self.worker_alive(caller):
+                await self.slots.acquire()
+                if (
+                    self.worker_alive(caller)
+                    and caller.pending_delegations == 0
+                    and not caller.holds_slot
+                ):
+                    caller.holds_slot = True
+                else:
+                    self.slots.release()
+            caller.publish()
+
+    @staticmethod
+    def worker_alive(agent):
+        return (
+            not agent.cancelled
+            and agent.process is not None
+            and agent.process.returncode is None
+        )
+
+    async def create(
+        self, parent_id, name, task, role="research", strategy_id=None, model=None
+    ):
         async with self.lock:
-            if len(self.agents) >= 6:
-                raise ValueError("This local board supports up to six agents.")
-            child = LocalAgent(self, uuid4().hex[:12], name.strip(), parent_id)
+            parent = self.agents[parent_id]
+            allow_child(parent, role)
+            if parent.role == "backtester":
+                bound = parent.state.get("strategy_id")
+                if strategy_id not in (None, bound):
+                    raise PermissionError(
+                        "Blind delegates must evaluate the parent's frozen strategy"
+                    )
+                strategy_id = bound
+            if len(self.agents) >= 16:
+                raise ValueError(
+                    "This board supports up to sixteen agents; reuse idle specialists."
+                )
+            if role == "backtester":
+                from backend.app.desk import desk_for
+
+                desk = desk_for(self)
+                desk.strategy(strategy_id)
+                if (
+                    desk.state["reviews"].get(strategy_id, {}).get("verdict")
+                    != "APPROVE"
+                ):
+                    raise ValueError(
+                        "Create an adversarial reviewer and obtain approval before blind evaluation"
+                    )
+            child = LocalAgent(
+                self,
+                uuid4().hex[:12],
+                name.strip(),
+                parent_id,
+                role,
+                select_model(role, requested=model, inherited=parent.model),
+            )
+            if role == "backtester":
+                child.state["strategy_id"] = strategy_id
             self.agents[child.id] = child
             try:
                 await child.start(task, self.agents[parent_id].name)
@@ -369,7 +544,12 @@ class AgentManager:
             temporary.write_text(
                 json.dumps(
                     [
-                        {"id": a.id, "name": a.name, "parentId": a.parent_id}
+                        {
+                            "id": a.id,
+                            "name": a.name,
+                            "parentId": a.parent_id,
+                            "role": a.role,
+                        }
                         for a in self.agents.values()
                         if a.id != "dexter"
                     ]
@@ -384,7 +564,11 @@ class AgentManager:
 
     async def result(self, child):
         if child.task:
-            await asyncio.shield(child.task)
+            try:
+                await asyncio.shield(child.task)
+            except asyncio.CancelledError:
+                if not child.cancelled:
+                    raise
         answer = ""
         for message in reversed(child.state["messages"]):
             if message["role"] == "user":
@@ -396,6 +580,7 @@ class AgentManager:
             "id": child.id,
             "name": child.name,
             "status": child.state["status"],
+            "model": child.model,
             "answer": answer,
             "files": child.files(),
         }

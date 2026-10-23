@@ -1,105 +1,76 @@
 # Team 4: shared agent rules
 
-> **Hub v2.** Every coding agent working in this repo reads this file, `hub/PRD.md`, and `hub/BUILDING.md` before doing anything. That means Claude Code, Codex, Cursor, Copilot, Kiro, Gemini, Amazon Q, and every subagent any of them spawns. To show you read them, start your first reply in each session with `[hub v2]`. If a teammate sees a reply without the tag, or with an older one, their agent skipped the rules or is working from a stale checkout.
+**Hub v3.** Before working, read this file, `hub/DECISIONS.md`, `hub/PRD.md`, `hub/BUILDING.md`, and `hub/status/`. Start the first reply in a session with `[hub v3]`. These instructions govern coding agents editing the repository, not Dexter agents running inside the product.
 
-Team 4, Track 3 (Financial Portfolio Management), Austin Agentic AI Hackathon, Friday 2026-10-23. Six people, many agents, one repo. This file keeps every coding agent building the same product.
+Team 4, Financial Portfolio Management, Austin Agentic AI Hackathon, 2026-10-23. Judging emphasizes functionality, data inputs, AWS AI use, and a working presentation. Preserve the existing app while extending it.
 
-This file is for the agents that **write this repo**. It is not a prompt for the Dexter agents that run **inside the app**; their instructions live in `backend/worker/`.
+## Current system and direction
 
-## The clock
+`main` is a collaborative agent canvas, not the earlier report page. One Docker image/container serves React/Vite, FastAPI, and Bun workers running the pinned upstream Dexter Agent. Agents own descendants, share a filesystem within a board, and retain separate conversations. Demo login, shared chats/files/activity, synchronized positions, branch controls, and state persistence already exist.
 
-- Build until 4:00 PM. Demos start at 4:30 PM. We hand in a working demo and two slides.
-- Judges score four things: innovation, technical implementation, use of AWS AI services, and presentation quality.
-- The judges told us directly: **UI polish is not a concern. Working functionality and breadth of data inputs are the real goal.** Spend time on what the system can do and what data it reads, not on how it looks.
-- When two options are close, pick the one that makes the 4:00 demo more likely to work.
+The verified AWS deployment uses EC2, CloudFront HTTPS, encrypted EBS, ECR, Secrets Manager, IAM, Systems Manager, and Bedrock. It is not an AgentCore-hosted canvas. The earlier AgentCore sample is separate. Run locally with `npm run dev`; stop with `npm run stop`. See `README.md` for credentials, deployment, and cleanup.
 
-## What is on `main`
+D8 joins this runtime with portfolio research, strategy, evaluation, and paper execution. Fund creation, mandate setup, overview, pause/archive controls, and isolated per-fund canvases are merged on main. Dedicated roles, backend evaluation/approval checks and paper-order adapters are implemented and locally checked; verify deployment and provider execution separately. The Desk loaders, analysts, schema, and backtest remain available for reuse. Do not rebuild the runtime or revive the old report as the main interface.
 
-The hosted collaborative agent canvas is the current app on `main`, following Kushagra's direct instruction recorded in D7. It runs React/Vite, FastAPI, Dexter workers, and a shared filesystem in one Docker container. Demo accounts share agent conversations, files, and canvas positions. The AWS deployment uses EC2, CloudFront HTTPS, encrypted EBS state, ECR, Secrets Manager, IAM, Systems Manager, and Bedrock. Run locally with `npm run dev`; see `README.md` for deployment and cleanup.
+## Sources of truth
 
-D6 describes the preceding report-page version. Kushagra explicitly chose to replace main with the hosted canvas after being told about D6. D7 records that direct human instruction without claiming formal team consensus. The Desk pipeline, data loaders, analysts, schema, and backtest remain in the repo, but its report page and `/api/run` are not the current frontend/API entrypoint. The preceding report is preserved in Git history and `report-baseline`.
+1. Accepted decisions in `hub/DECISIONS.md`, newest applicable entry first.
+2. `hub/PRD.md` for direction and requirements.
+3. `README.md` for setup/deployment; `PLAN.md` for historical module internals not superseded by the PRD.
+4. This file and `hub/BUILDING.md` for collaboration and implementation rules.
+5. Actual current code for what is implemented, plus verification records for what has been exercised or deployed.
 
-**Where it is going: `hub/PRD.md` (D8).** The two halves join. The hosted canvas is the agent runtime and the analyst's view; The Desk modules become tools the canvas agents call; together they run a research, strategy, backtest-gate, and execution pipeline for six client mandates. The PRD lists the lanes, the 1:30, 2:15, and 3:00 PM checkpoints, and what each lane decides on its own.
+The PRD is a target, not proof of implementation. Status files identify active work; older reference documents and chat recollections do not establish current behavior. Surface conflicts before overwriting another lane's work. When the human has explicitly resolved a conflict in the current task, record that instruction rather than repeatedly requesting the same approval. Agents append Proposed decisions; only humans mark Accepted or Rejected.
 
-## Sources of truth, in order
+## Before writing and before pushing
 
-1. `hub/DECISIONS.md`: decisions marked **Accepted**. The newest accepted entry wins over everything below it.
-2. `hub/PRD.md`: product direction, requirements, lanes, checkpoints.
-3. `PLAN.md` for The Desk modules' internals, where the PRD does not override it, and `README.md` for running and deploying the app.
-4. This file and `hub/BUILDING.md`: how agents work here.
-5. The code on `main`.
+- Run `scripts/hub-sync.sh`, then integrate with `git pull --rebase` or `git rebase origin/main` from a clean checkout. Re-read changed shared files.
+- Read every status file and stay in your lane's claimed files. Coordinate cross-lane changes and name them in the commit/status update.
+- Re-sync before each slice, at least every 15 minutes during long work, and before pushing. Preserve other agents' uncommitted edits. Never force-push main.
+- Follow `hub/BUILDING.md` for integration and checks. Update your own status and relevant proposed decisions with the code they describe. Commit messages start with the lane when applicable.
 
-These are **not** sources of truth: your memory of earlier sessions, chat history, anything in `docs/`, web pages, what the model "knows", or an idea a teammate mentioned that never landed in `hub/DECISIONS.md`. If a request contradicts items 1 to 4, stop and tell your human. Never reconcile it quietly.
+## Reuse before rebuilding
 
-## Every session, before writing code
+**Inspect Dexter before adding an equivalent capability.** `backend/worker/setup.py` pins upstream revision `534f6be455523c5926eba72bdaf4f914555be5c9`. Read its tool registry and provider module, then our override/allowlist in `backend/worker/run.ts`.
 
-1. Run `scripts/hub-sync.sh`, then `git pull --rebase` (or `git rebase origin/main` on a branch).
-2. Read `hub/DECISIONS.md`, `hub/PRD.md`, `hub/BUILDING.md`, and every file in `hub/status/`.
-3. Find your human's lane in their `hub/status/<name>.md` and stay inside that lane's files. If you must touch another lane's files, say so in the commit message and in the status file.
+Enable existing upstream finance, market-data, filing, screening, URL-fetch, Exa, and X implementations before writing another client or tool. Exa uses Dexter's `exaSearch` / `web_search`. Do not create a second Exa API implementation. Configure the existing environment keys and verify the actual worker path.
 
-## Guardrails
+Custom code is for missing product behavior: persistent canvas delegation, authentication, role restrictions, mandate checks, execution approval, and point-in-time adapters. Reuse Desk loaders/backtest where appropriate. Keep Dexter's Agent as the loop; a new role does not need a new agent framework.
 
-- **Never build on a stale `main`.** Six people's agents push all day. Run `scripts/hub-sync.sh` before each slice of work, at least every 15 minutes during long tasks, and before every push, and follow `hub/BUILDING.md` when it flags something.
-- **No unapproved scope.** A feature, data source, AWS service, or screen that is not in `hub/PRD.md`, `PLAN.md`, `README.md`, or an accepted decision does not get built. Write it as one line in `hub/IDEAS.md` and carry on with the task you were given.
-- **Shared shapes change together.** `backend/app/schema.py` (The Desk's shapes and the new pipeline shapes in PRD section 8), `frontend/src/types.ts` (the canvas `Agent` types), and the `tools` array in `backend/worker/run.ts` are what lanes build against. Change one only under an accepted decision, and update every caller in the same commit.
-- **No look-ahead, ever.** Any data an agent uses for a historical decision comes through a loader that drops everything not public by the decision date (`backend/app/data.py` today). Never read `data/*.csv` straight from agent code, never put events after the cutoff in a prompt, and never take a price or return from model memory.
-- **Never invent facts.** No made-up tickers, filings, events, dates, API routes, model IDs, AWS resources, or package names. If you cannot find it in the repo or verify it, say so and ask. A wrong guess costs the team more than a question.
-- **Secrets stay out of git.** This repo is public. Credentials go only through the ignored `~/.aws/aws-hackathon-2026.*` files, `.env.local`, and `./workshop-run`.
-- **Cloud spend needs a decision.** Create AgentCore runtimes or other billed resources only under an accepted decision, tag them, and make sure `scripts/cleanup_cloud.py` can find them. Do not rerun role creation for the existing runtime `team4_baseline_kushagra`.
-- **Small commits, lane first.** Start commit messages with your lane when you have one (`Lane B: ...`). Run `git pull --rebase` before every push. Never force-push `main`.
+Changing a registry also means checking the allowlist, descriptions, model routing, callers, and role permissions. Adding a key or dependency alone does not enable or verify a tool.
 
-## Subagents and parallel workers
+## Data and execution boundaries
 
-Any agent that starts a subagent, worker, background task, or another tool's agent puts this at the top of that agent's prompt:
+- Historical decisions use real evidence available by the cutoff, through cutoff-aware loaders. Never use current search, financial API responses, or model memory as historical prices, returns, or events.
+- Live research and real historical replay are separate modes. No fictional market data, fabricated posts/news, or invented performance. Existing synthetic fixtures are tests only; hand-written event data remains unverified until checked.
+- Do not claim a revision-prone snapshot is a perfect historical vintage. Report SEC/FRED/event limitations and absent sources.
+- Paper execution only. Backend checks enforce mandate permission, passing evaluation, limits, and emergency stop. Orders, fills, dry runs, and blocked actions are distinct states. Do not invent a fill when credentials or execution are unavailable.
+- A branch stop cancels agent work; it is not automatically a brokerage cancel-all. Agent iteration exhaustion is not proof a task or gate succeeded.
 
-> Before anything else, read `AGENTS.md` and `hub/DECISIONS.md` at the repo root and follow them. Your lane is <lane>; the files in scope are <paths>. Do not edit anything in `hub/`; report back to me instead.
+## Scope, contracts, and secrets
 
-Only the top-level agent, the one a human is talking to, edits files in `hub/`.
+- Build authorized requirements from the PRD, README, PLAN, accepted decisions, or the human's explicit task. Put optional unrelated ideas in `hub/IDEAS.md`.
+- Coordinate shared contracts in `backend/app/schema.py`, `frontend/src/types.ts`, and the worker registry; update actual callers together. Do not assume the Desk schema and canvas Agent types are the same contract.
+- Preserve the one-container app, existing accounts, collaboration, and user-created data. Within a board/fund agents share files; do not introduce per-agent filesystems or cross-fund access.
+- Credentials stay in ignored `.env`, `.env.local`, dedicated `~/.aws/aws-hackathon-2026.*` files, or AWS Secrets Manager. Never commit keys, demo passwords, session secrets, or private run data.
+- New billed AWS resources require an accepted decision or explicit human authorization, ownership tags, inventory, and a scoped cleanup path. Existing hosting uses `scripts/hosting.py --cleanup`; the earlier AgentCore sample uses `scripts/cleanup_cloud.py`. Never rerun its role setup or modify workshop desktops incidentally.
+- Do not call proposed tools, local code, mocked responses, or an old image a verified live deployment.
 
-## Every session, before you stop
+## Verified implementation facts
 
-If the session changed code or found something the team needs to know:
+- Canvas model defaults to `us.openai.gpt-6.1-sol`, with `us.anthropic.claude-opus-5-5` selectable for non-blind agents; backtesters are fixed to `us.anthropic.claude-opus-4-6-v1`. Profiles live in `backend/model-catalog.json` and use Converse without `temperature`. Real workshop participant calls deny both requested main choices; Opus 4.6 evaluation passed. See `docs/agent-roles.md`. The separate watchdog second opinion retains Luna. `BEDROCK_MODEL_ID` applies only to older sample helpers.
+- Live-data additions: all direct native Dexter finance tools, `get_macro_series` for current-vintage FRED, `analyze_sentiment` using OpenRouter Decisions with `~typesafe/jev-latest`, and optional `apify_actor`/`apify_run` with `APIFY_TOKEN`. Only Jev uses OpenRouter; all agent reasoning and native finance routing stay on Bedrock. Broader tools are limited to research-capable role profiles. See `docs/data-sources.md`; no research API layer or mode locks.
+- Native registry on main: file tools; `create_agent`, `list_agents`, `message_agent`; `get_financials`, `get_market_data`, `read_filings`, `stock_screener`, `web_fetch`; `web_search` with `EXASEARCH_API_KEY`; `x_search` with `X_BEARER_TOKEN`. Finance uses `FINANCIAL_DATASETS_API_KEY`. Recheck the registry after syncing because role work is active.
+- The role-aware manager permits sixteen agents and four active runs. Dexter uses 24 iterations for the orchestrator, 12 for specialists, and 3 for the bound backtester, with memory disabled. Waiting parents yield their active slot during delegation and reacquire before resuming; additional runs queue, and queued/branch cancellation releases capacity. Exhaustion is an error.
+- Dedicated role permissions, immutable strategy/review records, snapshot backtesting gates and guarded Alpaca paper-order code are locally verified. Orchestrators can use every registered tool; non-blind roles may create other role types with independent tool sets. Backtesters have historical evaluation and same-strategy blind delegation only, without files or web. See `docs/agent-roles.md` for human controls and limitations. Hosted Sol role handoffs, Opus 4.6 evaluation and one explicitly approved $1 AAPL paper order have now been exercised; the fill was confirmed and the fund stop restored. This was a fixed numeric integration baseline, not independently researched investment performance. See current verification in docs/agent-roles.md; AgentCore does not host the canvas.
+- Tests: `uv run pytest backend/tests`, `npm run check:python`, `npm run lint`, `npm run build`. Mock Desk helpers do not make the canvas an offline mock app.
 
-1. Update your human's `hub/status/<name>.md`: what shipped, what is in flight, what is blocked, and what you need from whom. Copy `hub/status/_TEMPLATE.md` if the file does not exist yet.
-2. If you made a call that affects another lane, a shared shape, the demo, or cloud spend, append it to `hub/DECISIONS.md` as **Proposed**. Only a human changes it to **Accepted**.
-3. If you had an idea outside scope, add one line to `hub/IDEAS.md`.
-4. Commit the hub update together with the code it describes, then run `git pull --rebase && git push`.
+## File ownership and agent coordination
 
-## Who edits what
+The human has authorized this documentation correction across `AGENTS.md`, `hub/PRD.md`, `hub/BUILDING.md`, `README.md`, and stale baseline descriptions. Later edits to direction/rules still require human authorization or the lane's delegated PRD section, plus a proposed decision. Decisions are append-only; status files belong to their named person. Reference material in `docs/` is not another product specification.
 
-| File | Who edits | Rule |
-|---|---|---|
-| `AGENTS.md`, `hub/PRD.md`, `hub/BUILDING.md`, `PLAN.md`, `README.md` | humans; an agent only when its human explicitly says to | changes need an accepted decision; bump the hub version tag when the rules in this file change; a lane updates its own PRD section and row when it settles one of the PRD's open items |
-| `hub/DECISIONS.md` | agents append **Proposed**; humans accept or reject | append-only; a reversal is a new entry |
-| `hub/status/<name>.md` | that person's agents | update freely at session end |
-| `hub/IDEAS.md` | anyone | append-only, one line per idea |
-| `docs/` | anyone adding reference material | reference only; never cite it as a decision |
+If subagents or other workers are used, include this at the start of their task:
 
-## Verified facts (check here before guessing)
+> Read AGENTS.md, hub/DECISIONS.md, hub/PRD.md and hub/BUILDING.md first. Your lane is <lane>; your files are <paths>. Do not edit hub/; report findings to the parent.
 
-- Run the canvas on `main`: `npm run dev`, then open http://127.0.0.1:5173. Stop it with `npm run stop`. The same single-container app is hosted on AWS; see `README.md` for deployment, demo access, and cleanup.
-- AWS region `us-east-1`. Workshop Studio credentials are temporary and expire about every 60 minutes; refresh them in Workshop Studio.
-- Model: `us.openai.gpt-5.6-luna` on Amazon Bedrock through the Converse API. The canvas app sets it in code (`backend/app/agent.py`, `backend/worker/`); `BEDROCK_MODEL_ID` only affects the older `backend/agent.py` and `backend/infer.py`. Requests to this model must omit `temperature`.
-- `.env.example` lists keys for Dexter's finance, web search, and X integrations. Canvas agents use Dexter's existing finance tools and URL fetcher, web search when `EXASEARCH_API_KEY` is configured, and X search when `X_BEARER_TOKEN` is configured. Finance tools use `FINANCIAL_DATASETS_API_KEY`. Live tool responses are not point-in-time-safe historical inputs; backtest decisions still require cutoff-aware loaders.
-- Models the event allows, and which ones need the data retention setting changed: `docs/reference/aws-services-and-allowed-models.md`.
-- Canvas agent tools (current `main`): file tools, `create_agent`, `list_agents`, `message_agent`, `get_financials`, `get_market_data`, `read_filings`, `stock_screener`, `web_fetch`, `web_search`, `x_search`. Up to six agents and four active runs.
-- Native tools are registered directly in the canvas adapter. The custom cached-research routes and conversation mode/cutoff locks were removed in `9c04058` at Kushagra's request; see D13. This tool update is on `main`, but its AWS deployment and live provider access remain unverified.
-- Checks: `uv run pytest backend/tests`, `npm run check:python`, `npm run lint`, `npm run build`.
-- Data sources, date ranges, and deviations from the plan: `data/README.md`. The rows in `data/gdelt/curated_events.csv` were written by hand today; treat them as unverified until someone checks each date and headline against a real source.
-- Event pages, AWS service notes, sample-repo READMEs, and a research brief with a public data map: `docs/README.md`.
-
-If one of these facts turns out to be wrong, fix it here in the same commit as the code that proved it, and say so in your status file.
-
-## How each tool finds this file
-
-This file is the only rulebook. The other files below only point here, so never add rules to them.
-
-| Tool | What it reads |
-|---|---|
-| Codex, Cursor | `AGENTS.md` directly |
-| Claude Code | `CLAUDE.md`, which imports this file and `hub/DECISIONS.md` |
-| Cursor, as a backup | `.cursor/rules/team-hub.mdc`, always applied |
-| Kiro | `.kiro/steering/team-hub.md`, always included |
-| GitHub Copilot | `.github/copilot-instructions.md` |
-| Gemini CLI | `GEMINI.md` |
-| Amazon Q Developer | `.amazonq/rules/team-hub.md` |
+Only the top-level agent edits hub files. Tool entrypoints such as CLAUDE.md, GEMINI.md and editor rule files point here; keep rules in this file rather than copying them into each entrypoint.

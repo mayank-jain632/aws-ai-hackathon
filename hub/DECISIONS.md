@@ -13,7 +13,7 @@ Entry format:
 
 ## Open questions (need a human call)
 
-When the team answers one, delete it here and log the answer below as a decision. Questions that one lane can settle on its own live in `hub/PRD.md` section 12 instead.
+When the team answers one, delete it here and log the answer below as a decision. Lane responsibilities and remaining implementation work are in `hub/PRD.md`; older log entries retain the section numbers from the PRD version they described.
 
 - **Q11. One model or several?** Every call uses `gpt-5.6-luna` today. Mixing model families across agents shows more of Bedrock. See `docs/reference/aws-services-and-allowed-models.md` for what the event allows.
 
@@ -91,6 +91,48 @@ When the team answers one, delete it here and log the answer below as a decision
 **Instruction:** Update the Markdown files to match the native Dexter tools and removal of the extra research layer and mode locks.
 **Implementation:** Correct README setup/tool documentation, AGENTS verified facts, and PRD descriptions of shipped live tools versus the planned historical pipeline. Preserve prior decision entries as history, including D11 and its reversal in D13. Provider checks used mocked responses; AWS deployment of the tool update remains unverified.
 **Affects:** Documentation only, including Lane 1 integration descriptions in the PRD. No runtime, rule, experiment, or deployment changes.
+
+
+### D15 · Proposed · Kushagra, direct documentation and coordination correction
+**Instruction:** Keep the product direction, remove bloated or incorrect implementation context, include features already built, and make reuse of existing Dexter tools the default before adding equivalent tools. Send the corrections to breath of data, different agents, and kinda mina chat.
+**Implementation:** Shorten AGENTS/PRD/BUILDING; bump the rules marker to Hub v3 for the reuse-first rule. Record existing login, collaboration, persistent shared files, native tools and AWS hosting, the newly merged fund dashboard, and separate deployed/locally-verified/in-flight states. Correct the stale baseline status and snapshot provenance language. D13 already records the native-tool correction; this pass changes documentation only and preserves the decision log.
+**Affects:** Cross-lane documentation and integration guidance; no runtime, provider, experiment, infrastructure, or live-deployment changes. The human explicitly authorized these documentation edits.
+
+### D16 · Proposed · Kushagra, direct data-breadth instruction recorded by Codex
+**Instruction:** Enable broad data access, sentiment with the latest Jev decision model through OpenRouter only for that model, native Exa live search, and Apify where useful.
+**Implementation scope:** Reuse all upstream Dexter finance tools, Exa and X; add only capabilities absent upstream: Jev sentiment via the OpenRouter Decisions API, current FRED macro, and bounded Apify data collection. OpenRouter's verified latest alias is `~typesafe/jev-latest`, currently Jev 1.14; preserve returned version/probabilities. All existing agents and finance routing remain on Bedrock. No research API layer or mode locks, historical experiment changes, brokerage changes, or new AWS resources.
+**Affects:** Lane 3 live-data tools and Lane 1 native registry/allowlist, Lane 5 provider-secret forwarding. Local provider credentials are empty; wiring and mocked checks must not be described as live-provider verification.
+
+### D17 · Proposed · 13:02 · Aaron (logged by Claude Code)
+**Decision:** Aaron owns the moderator/watchdog half of PRD lane 4 ("Execution / moderator"); the two execution owners keep the Alpaca adapter and order state. The watchdog adds a deterministic pre-trade gate, claim checks, a firm-wide emergency stop over the existing per-fund desk stop, a background monitor, an LLM second opinion on flagged trades, and a feedback and lessons loop.
+**Why:** PRD section 4 items 5 to 7 need someone watching every order and agent claim, and lane 4 had execution owners but no moderator owner.
+**Affects:** new files under `backend/app/watchdog/`, `backend/app/routes/watchdog.py` and `backend/tests/test_watchdog_*.py`; one-line hooks in `backend/app/main.py`, `backend/app/paper.py` and `backend/worker/run.ts`. No change to `schema.py`, the desk policy model, or the existing stop semantics (a person still clears a stop).
+
+
+### D18 · Proposed · Kushagra, direct recursive-role follow-up recorded by Codex
+**Instruction:** Agents can spin up other types with their own tools/access, and the orchestrator can use all capabilities; finish the current workflow before configuring Alpaca and other environment values.
+**Implementation:** Give orchestrators all registered tools, permit cross-role descendants for non-blind agents, and restrict blind descendants to the same immutable strategy. Preserve backend mandate, review, evaluation, human approval and emergency-stop checks. Queue runs with four active worker slots; suspended parents yield and reacquire capacity safely across siblings, nested calls and cancellation.
+**Affects:** Lane 1 runtime, role profiles, authenticated handoff routes and registry; Agent snapshot waiting/queued metadata and environment template. No new panels, providers, accounting model, experiment definition, deployed image or billed infrastructure in this slice. Real Bedrock role/file handoff is verified separately from broker mocks.
+
+### D19 · Proposed · 13:15 · Aaron (logged by Claude Code)
+**Decision:** Every paper order passes the watchdog gate `review_order` inside `paper.submit`, and a firm-wide emergency stop (people trip and clear it at `PUT /api/watchdog/halt`; the watchdog can trip it) sits above each fund's desk stop. Watchdog types (`WatchOrder`, `WatchMandate`, `WatchPortfolio`, `Verdict`, `ModeratorEvent`) stay in `backend/app/watchdog/models.py` and are proposed for `schema.py` when Lane 1 adopts shared order and fill shapes.
+**Why:** The PRD needs moderator checks before every order; keeping the gate deterministic and outside the model makes a block explainable and impossible for an agent to talk past.
+**Affects:** Lane 4 execution (`paper.submit` now raises "Watchdog blocked this order: ..." on a block), Lane 1 (`roles.py` tool lists, `run.ts` registry entry). Risk-band guardrails in `watchdog/rules.py` (top-three concentration 50/65/85%, daily turnover 35/60/100%, one order 10/20/35% of equity, price band 3/5/8%) are operational order-flow limits, not evaluation thresholds; a human can override them per mandate.
+
+### D20 · Proposed · Kushagra, direct model-selection instruction recorded by Codex
+**Instruction:** Offer Claude Opus 5.5 or GPT-6.1 Sol for main agents and use Claude Opus 4.6 for backtesters. After the access check, Kushagra selected Sol 6.1 as the default.
+**Implementation:** Shared verified Bedrock profile catalog, per-agent persisted model selection, parent inheritance with explicit child override, fixed Opus 4.6 evaluators, and model selector in the existing agent panel. Keep Dexter's loop and all role/mandate/evaluation/order checks. Deployment policy includes the profiles and retains Luna for the existing watchdog second opinion. No automatic fallback.
+**Affects:** Runtime/worker, human model route, frontend Agent contract and panel, environment template, deployment IAM. Catalog listing is not inference access: actual participant-role calls explicitly deny both new main choices; real Opus 4.6 evaluation passed. AWS records Opus 4.6's cutoff as May 2025, so this model pin does not remove historical leakage. No hosted rollout, IAM restriction bypass, new infrastructure or experiment change.
+
+### D23 · Proposed · 13:33 · Aaron (logged by Claude Code)
+**Decision:** Aaron adds a read-only scores and reasoning view per fund desk, in new files, mounted from the fund overview by one link.
+**Why:** The track asks teams to show which sources influenced the portfolio and the agents' reasoning; today that evidence is spread across desk records, mandate, watchdog logs and shared files.
+**Affects:** new `backend/app/scores/`, `backend/app/routes/scores.py` (`GET /api/funds/{fund_id}/scores`, one `include_router` line in `main.py`), new `frontend/src/scores/`, and one mount element plus its import in `frontend/src/funds/FundOverview.tsx`. Reads desk, mandate, watchdog, workspace files, and, once merged, `synthesis.json` and `reports/wf/`; writes nothing. Each ring shows its raw metric, formula and source, or "not produced yet" with the owning lane.
+
+### D24 · Proposed · Kushagra, hosted flow and explicit one-dollar paper approval
+**Instruction:** Test Sol 6.1 through the hosted EC2 role and complete the agent flow, keeping Opus 4.6 backtesting. The human then approved exactly one $1 AAPL PAPER test order, a $1/one-order cap and restoring its fund stop afterward.
+**Implementation/evidence:** Eight real hosted role identities completed the research/challenge/strategy/review/blind-test/executor/moderator handoffs. The frozen numeric integration baseline passed; the policy permission/cap update caused a fresh Opus 4.6 evaluation before recording human strategy approval. Sol's executor submitted once and its moderator restored the stop. Actual Alpaca lookup confirmed filled. Initial pending_new receipts exposed a missing agent capability, so add read-only alpaca_paper_order reconciliation for a recorded fund order, including uncertain outcomes by stable ID, without any POST/retry or gate bypass.
+**Affects:** Paper adapter, existing desk router/tool module and executor/moderator profiles; runtime tool contract and verification docs. No new framework, investment claim, performance threshold, account policy mutation by this role task, extra order, infrastructure or financial-data source. Hosted activation and rollout remain coordinated with deployment.
 
 ### D21 · Proposed · 12:55 · Mayank (logged by Claude Code)
 _Drafted as D15 before `main` took D15 to D20; renumbered on this branch to avoid a collision. Code comments and `data/wf/README.md` written before the renumbering still say "hub D15"; they mean this entry._

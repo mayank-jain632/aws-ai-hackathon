@@ -97,3 +97,5 @@
 .request-error { color:var(--danger); font-size:11px; line-height:1.6; padding:0 20px 12px; }
 @media (max-width:800px) { .agent-panel { position:absolute; top:0; bottom:0; right:0; width:min(390px,calc(100vw - 38px)); box-shadow:-12px 0 40px #1d223012; } .topbar { padding:0 18px; height:64px; } .board-hint { display:none; } .tools { left:24px; transform:none; } }
 @media (prefers-reduced-motion:reduce) { .pulse { animation:none; } }
+
+.model-row select { max-width: 220px; border: 0; background: transparent; color: inherit; font: inherit; padding: 3px; }

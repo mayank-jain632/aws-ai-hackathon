@@ -1,0 +1,28 @@
+import { DynamicStructuredTool } from '@langchain/core/tools';
+import { z } from 'zod';
+
+async function bridge(action: string, input?: unknown, signal?: AbortSignal) {
+  const response = await fetch(`http://127.0.0.1:8000/api/internal/desk/${action}`, {
+    method: input ? 'POST' : 'GET',
+    headers: { 'Content-Type': 'application/json', 'X-Agent-Token': process.env.AGENT_CONTROL_TOKEN || '', 'X-Agent-ID': process.env.LOCAL_AGENT_ID || '' },
+    body: input ? JSON.stringify(input) : undefined,
+    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(90000)]) : AbortSignal.timeout(90000),
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(JSON.stringify(result.detail || 'Desk request failed'));
+  return JSON.stringify(result);
+}
+
+const id = { strategy_id: z.string().min(1) };
+export function createDeskTools() {
+  return [
+    new DynamicStructuredTool({ name: 'inspect_desk', description: 'Read human mandate, immutable strategies, adversarial reviews, backend test gates, paper-order audit, and emergency stop. No live prices.', schema: z.object({}), func: async (_, _m, c) => bridge('inspect', undefined, c?.signal) }),
+    new DynamicStructuredTool({ name: 'register_strategy', description: 'Freeze a dated long-only target-weight strategy for blind historical evaluation. Weights sum to one. Returns immutable strategy_id. Requires a human-configured desk policy. Never include test outcomes in research.', schema: z.object({ name: z.string().min(1), weights: z.record(z.string(), z.number().positive().max(1)), cutoff: z.string(), end: z.string(), rationale: z.string().min(1), memo_paths: z.array(z.string()).min(1), changes_my_mind: z.string().min(1) }), func: async (input, _m, c) => bridge('strategy', input, c?.signal) }),
+    new DynamicStructuredTool({ name: 'review_strategy', description: 'Record independent adversarial approval or required changes for an immutable strategy. A critique is required. Changes require a new strategy ID.', schema: z.object({ ...id, verdict: z.enum(['APPROVE', 'CHANGES_REQUESTED']), critique: z.string().min(20) }), func: async (input, _m, c) => bridge('review', input, c?.signal) }),
+    new DynamicStructuredTool({ name: 'run_backtest', description: 'Evaluate only your bound frozen strategy against SPY with existing historical engine and human gate thresholds. Backend computes PASS/FAIL. No web, file or research input. Cannot change strategy parameters.', schema: z.object(id), func: async (input, _m, c) => bridge('backtest', input, c?.signal) }),
+    new DynamicStructuredTool({ name: 'alpaca_paper_account', description: 'Read real Alpaca PAPER account, positions, and pending orders. Missing credentials fail explicitly. Account is a shared paper account, not live money.', schema: z.object({}), func: async (_, _m, c) => bridge('account', undefined, c?.signal) }),
+    new DynamicStructuredTool({ name: 'alpaca_paper_order', description: 'Read the actual broker status/fill of an order already recorded in this fund, using its stable client_order_id. Reconciles the audit; works while stopped. GET only, never submits or retries. Use after submission or an uncertain response. An unavailable lookup does not mean it is safe to resubmit.', schema: z.object({ client_order_id: z.string().regex(/^[a-zA-Z0-9_-]{8,48}$/) }), func: async (input, _m, c) => bridge('orders/' + encodeURIComponent(input.client_order_id), undefined, c?.signal) }),
+    new DynamicStructuredTool({ name: 'submit_paper_order', description: 'Submit one market/day notional order to Alpaca PAPER only. Requires backend PASS, adversarial approval, human permission/approval, cleared stop and order/position limits. Use a stable unique client_order_id. Unknown outcome must not be retried with a new ID. Submitted does not mean filled.', schema: z.object({ ...id, symbol: z.string(), side: z.enum(['buy', 'sell']), notional: z.number().positive(), client_order_id: z.string().min(8).max(48) }), func: async (input, _m, c) => bridge('order', input, c?.signal) }),
+    new DynamicStructuredTool({ name: 'emergency_stop', description: 'Engage the paper-order emergency stop. Only a person can clear it. Does not cancel orders already accepted by the broker.', schema: z.object({ reason: z.string().min(1) }), func: async (input, _m, c) => bridge('stop', input, c?.signal) }),
+  ];
+}

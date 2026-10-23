@@ -1,8 +1,6 @@
 # data/ — committed snapshots for The Desk
 
-Everything the agents and the backtest read lives here so the demo never depends on
-the network. All files were downloaded on **2026-10-23** by the `fetch_*.py` scripts in
-this folder. Re-run any script to refresh; each is idempotent.
+These are the historical baseline snapshots, not every data source used by the current app. Dexter's live finance, web, and X tools use external APIs and require network access and appropriate keys. Snapshots were prepared on **2026-10-23**; the curated events were hand-written and fixtures are synthetic tests, not downloaded evidence. Re-run the relevant `fetch_*.py` script to refresh a provider snapshot.
 
 Loaders in `backend/app/data.py` take a `cutoff` and drop anything not public by that
 date before an agent sees it (the no-look-ahead rule). Agents must never read these
@@ -44,7 +42,7 @@ untouched API response. JPMorgan's revenue is net revenue
 **gdelt/** — `curated_events.csv` with `date,subject,kind,tone,headline`: 83 dated,
 well-known public events for the ten companies and three themes (ukraine_energy,
 china_reopening, chip_export_controls), each with a tone score on the GDELT scale
-(-10 bad .. +10 good). The headlines are our own one-line paraphrases, not quotes.
+(-10 bad .. +10 good). The headlines and tone scores were written by hand and have not been source-verified. Do not present them as authentic provider output or verified historical evidence. Verify dates and claims or exclude these rows from an evaluated strategy.
 `tone.csv` (`date,subject,kind,tone`), when present, is the GDELT DOC API daily
 average tone for the same subjects. `raw/<subject>.csv` are the API responses.
 
