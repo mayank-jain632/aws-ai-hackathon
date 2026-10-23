@@ -1,6 +1,6 @@
 # Data access and sentiment
 
-Data tools run inside the existing Dexter worker. There is no extra research API, agent loop, or conversation mode lock. `backend/app/roles.py` gives orchestrator, research, adversarial and strategy roles the broader data access. The backtester retains only `run_backtest`; executor and moderator permissions remain unchanged.
+Data tools run inside the existing Dexter worker. There is no extra research API, agent loop, or conversation mode lock. `backend/app/roles.py` gives orchestrator, research, adversarial and strategy roles the broader data access. The blind backtester has no live-data or sentiment tools; other role restrictions still apply.
 
 | Input family | Tools/provider | Credentials |
 |---|---|---|
@@ -38,6 +38,23 @@ Runs are asynchronous, capped at 180 seconds and $1 per run, with a default $0.5
 
 These additions are for live research. FRED observation dates are not publication dates, and current-vintage values can include revisions. Scraper retrieval times are not publication times. Live providers, scraped records and sentiment must not become evidence for a historical decision without a cutoff-aware provenance adapter. The existing Desk evaluation method is unchanged.
 
-Checks cover provider schemas, missing keys, rate errors, invalid probabilities, duplicate evidence IDs, cancellation, response limits, Apify budgets/status/results, and actual role-filtered registry contents for all seven roles. FRED VIX observations and native Exa search were exercised live. Jev also passed a real OpenRouter Decisions call on repository README text, returning `typesafe/jev-1.14-20261014`. Apify responses remain mocked; its token is now configured but a live collection check is still pending. Financial Datasets is configured locally and on AWS. A real hosted Dexter `get_income_statements` call returned AAPL FY2025 revenue/net income with the provider URL on 2026-10-23; this verifies that endpoint, not every financial dataset. X bearer credentials are configured locally and on AWS. After the account was credited, the deployed native `x_search` tool retrieved actual AAPL posts with timestamps and source URLs on image `1792779772`. At 13:28 CDT on 2026-10-23, after activation became available, an authenticated hosted Sol/Dexter run called `x_search` once and `get_income_statements` once and completed in three model turns. It returned three actual post URLs/timestamps and AAPL FY2025 revenue 416161000000/net income 112010000000 with the provider source URL. Tool activity records confirmed both results and the idle completion on image `1792779772`. This proves the exercised tool paths, not every dataset, investment quality or historical provenance. Exa verification and AWS rollout status are recorded in `hub/status/kushagra.md`.
+## Hosted verification, 2026-10-23
 
-Alpaca paper account reads are also verified in the deployed app as of 2026-10-23. The AWS-Hack account (`PA33F249I`) returned ACTIVE/USD, $100,000 cash/equity, zero positions and zero open orders through both the deployed backend and the real Dexter account tool. No order or fill was tested. See [agent roles](agent-roles.md#alpaca-deployment-verification).
+All configured provider integrations below were exercised through the actual hosted Sol/Dexter agent, not just by calling their APIs from a laptop. The app used image `1792779772`, digest `sha256:d5abadad95b3d9613c26112e3f997a590de42cf5f629e22d728b06270d8038e2`, with credentials from the existing AWS Secrets Manager environment. Checks ran in verification fund `2fc7e21bf457417e` between 13:28 and 13:31 CDT and finished idle. No orders, strategies, policy changes or new AWS resources were created.
+
+| Integration | Actual hosted path and observed result |
+|---|---|
+| Financial Datasets | `get_income_statements`, AAPL annual limit 1: FY2025 report period 2025-09-27, revenue 416161000000 and net income 112010000000, with provider source URL. |
+| X | `x_search`: real AAPL posts with text, timestamps and source URLs; subsequent agent passed two exact returned excerpts into Jev. |
+| Exa | `web_search`: found the official Federal Reserve FOMC page with source URLs. |
+| Page content / Bedrock | `web_fetch`: fetched and summarized the actual FOMC page, HTTP 200. |
+| FRED | `get_macro_series`, UNRATE limit 1: observation 2026-09-01, value 4.2, with FRED source URL. Current vintage, potentially revised. |
+| Alpaca paper | `alpaca_paper_account`: ACTIVE/USD, $100,000 cash, zero positions and open orders. Read-only; no order/fill verified. |
+| Apify | `apify_actor` inspected the official crawler schema and started a bounded one-page run; `apify_run` checked SUCCEEDED and retrieved one actual Federal Reserve page item with HTTP 200. |
+| Jev / OpenRouter | `analyze_sentiment`: classified exact retrieved X excerpts and, separately, a real Apify page excerpt; returned labels, normalized probabilities, confidence, source metadata, usage and request IDs. Resolved model `typesafe/jev-1.14-20261014`; reasoning stayed on Bedrock. |
+
+The completed Apify run is `49xh2c1N0o7aBAOqn`, dataset `RK8Q1ADMRu4WgC0ZV`, Actor `apify/website-content-crawler` build `0.3.101`. It collected only `https://www.federalreserve.gov/monetarypolicy/fomc.htm`, with `crawlerType: cheerio`, `maxCrawlDepth: 0`, `maxCrawlPages: 1`, `maxConcurrency: 1`, no sitemap/llms crawling, robots respected, and Apify Proxy enabled. Run limits were $0.50 and one billed item; final reported cost was $0.0015505566246559223. The first input with proxy disabled was rejected before a run existed; this Actor requires a proxy. Inspect each Actor's schema and validation requirements rather than copying this configuration to unrelated Actors.
+
+The X sample sentiment request was `gen-dec-1792780276-Bt1f6h0RAKDHzBWS2pGc`. The Apify-page request was `gen-dec-1792780307-mvVbrdPjmgKRvFg3RfC5`, returning neutral with score 0. The page's crawl/update time was not asserted as a publication timestamp. Exact sentiment inputs were compared with source text/URLs, and X timestamps were compared with returned post metadata. Large activity previews truncate dataset JSON, so the complete Apify dataset was also checked independently.
+
+This verifies each configured integration's exercised path. It does not prove access to every native financial endpoint, every ticker/date, Reddit/transcript Actors, historical publication vintages, representative market sentiment, or trading performance. Automated tests separately cover provider schemas, missing keys, rate errors, invalid probabilities, duplicate evidence IDs, cancellation, response limits, Apify budgets/status/results, and role filtering. See [role and paper-account controls](agent-roles.md).
