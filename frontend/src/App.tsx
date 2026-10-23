@@ -1,64 +1,58 @@
-import { useCallback, useState } from "react";
-import { Tape } from "./components/Tape";
-import { Analysts } from "./components/Analysts";
-import { Book } from "./components/Book";
-import { Performance } from "./components/Performance";
-import { CutoffBar } from "./components/CutoffBar";
-import { EvidenceDrawer } from "./components/EvidenceDrawer";
+import { useState } from "react";
+import { Results } from "./components/Results";
+import { Allocation } from "./components/Allocation";
+import { Memos } from "./components/Memos";
 import { UNIVERSE, useRun } from "./lib/useRun";
-import { useTape } from "./lib/useTape";
+import { monthRange } from "./lib/format";
+
+const CUTOFFS = monthRange("2022-01", "2024-06");
 
 export default function App() {
   const [cutoff, setCutoff] = useState("2023-01-01");
-  const [selected, setSelected] = useState<string | null>(null);
   const run = useRun(cutoff);
-  const tape = useTape(UNIVERSE);
-  const close = useCallback(() => setSelected(null), []);
-
   const data = run.data?.data;
 
   return (
-    <div className="grid h-full grid-rows-[28px_44px_1fr_44px] overflow-hidden">
-      <Tape tape={tape} tickers={UNIVERSE} />
-
-      <header className="grid grid-cols-[1fr_auto] items-center border-b border-line px-3">
-        <div className="flex items-baseline gap-4">
-          <h1 className="serif text-[22px] leading-none text-ink">The Desk</h1>
-          <span className="text-[11px] text-muted">
-            Five analyst agents, one portfolio manager, one cutoff date. A historical experiment, not advice.
-          </span>
-        </div>
-        <dl className="flex items-baseline gap-6 text-[11px]">
-          <div className="flex gap-2">
-            <dt className="label">Universe</dt>
-            <dd className="text-ink">{UNIVERSE.join(" ")}</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="label">Baseline</dt>
-            <dd className="text-ink">Equal weight</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="label">Rebalance</dt>
-            <dd className="text-ink">Monthly</dd>
-          </div>
+    <div className="mx-auto max-w-[860px] px-5 py-10">
+      <header className="border-b border-ink pb-4">
+        <h1 className="text-[26px] leading-tight">Multi-signal portfolio experiment</h1>
+        <p className="mt-2 text-muted">
+          Five analyst agents read price, fundamentals, macro, sentiment and geopolitical data
+          dated on or before a cutoff. A portfolio-manager agent sets weights. The result is
+          backtested forward against an equal-weight baseline. Historical experiment, not advice.
+        </p>
+        <dl className="mt-4 grid grid-cols-[120px_1fr] gap-y-1 text-[14px]">
+          <dt className="text-muted">Universe</dt>
+          <dd className="num">{UNIVERSE.join("  ")}</dd>
+          <dt className="text-muted">Cutoff</dt>
+          <dd>
+            <select value={cutoff} onChange={(e) => setCutoff(e.target.value)} className="num">
+              {CUTOFFS.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <span className="ml-3 text-[13px] text-faint">
+              {run.isFetching ? "running agents…" : run.data?.origin === "fixture" ? "fixture data" : ""}
+            </span>
+          </dd>
+          <dt className="text-muted">Baseline</dt>
+          <dd>Equal weight, monthly rebalance, no costs</dd>
+          <dt className="text-muted">Window</dt>
+          <dd className="num">{cutoff} to 2025-06-30</dd>
         </dl>
       </header>
 
       {data ? (
-        <main className="grid min-h-0 grid-cols-[300px_1fr_440px]">
-          <Analysts memos={data.memos} />
-          <Book weights={data.weights} selected={selected} onSelect={setSelected} />
-          <Performance equity={data.equity} metrics={data.metrics} cutoff={data.cutoff} />
-        </main>
+        <>
+          <Results equity={data.equity} metrics={data.metrics} />
+          <Allocation weights={data.weights} />
+          <Memos memos={data.memos} sources={data.sources} />
+        </>
       ) : (
-        <main className="flex items-center justify-center">
-          <span className="label">Loading</span>
-        </main>
+        <p className="mt-8 text-muted">Loading…</p>
       )}
-
-      <CutoffBar cutoff={cutoff} onChange={setCutoff} busy={run.isFetching} origin={run.data?.origin} />
-
-      {data && <EvidenceDrawer run={data} ticker={selected} onClose={close} />}
     </div>
   );
 }

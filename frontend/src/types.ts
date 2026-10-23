@@ -69,11 +69,3 @@ export interface RunResponse {
   equity: Equity;
   metrics: { portfolio: Metrics; baseline: Metrics };
 }
-
-// Live tape message from the TradingView sidecar (ws://localhost:8765/tape)
-export interface TapeTick {
-  symbol: string; // e.g. "NASDAQ:AAPL"
-  price: number;
-  change_pct: number;
-  ts: number; // unix seconds
-}

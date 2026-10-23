@@ -1,11 +1,12 @@
-# The Desk — Track 3, Financial Portfolio Management
+# Multi-signal portfolio experiment — Track 3, Financial Portfolio Management
 
 Five analyst agents (technical, fundamentals, macro, sentiment, geopolitics) each write a
 dated memo from data available on or before a chosen cutoff. A portfolio-manager agent
 reconciles them into target weights with a rationale and a "changes my mind" trigger per
 position. The portfolio is then backtested from the cutoff forward against equal weight
-and SPY. The whole thesis is inspectable on one screen; click any position for the
-evidence trail. Design and lane plan: `PLAN.md`.
+and SPY. The result is a single report page: equity curve and metrics against the baseline, the
+allocation with the PM's rationale, and each analyst memo with its cited sources.
+`PLAN.md` records the original build plan; the next phase is defined by a PRD.
 
 **This is a historical experiment, not financial advice.**
 
@@ -27,7 +28,7 @@ evidence trail. Design and lane plan: `PLAN.md`.
 | Model | `us.openai.gpt-5.6-luna` on Amazon Bedrock via the Converse API, one call per analyst plus one for the PM |
 | Cache | responses cached under `backend/.cache/` keyed by cutoff, so re-running a cutoff is deterministic; pass `?refresh=true` to `/api/run` to recompute |
 
-## Run The Desk
+## Run it
 
 Backend, through the workshop credential wrapper (see "Connect to AWS" below):
 
@@ -41,12 +42,6 @@ Frontend:
 
 ```sh
 npm run dev:frontend
-```
-
-Live tape (optional; the header falls back to the last committed close if it is off):
-
-```sh
-uv run python tape/server.py
 ```
 
 Tests and lint:
