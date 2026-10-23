@@ -5,14 +5,14 @@ These roles extend the pinned upstream Dexter `Agent` and native tools. They do 
 | Role | Available work | Delegation |
 |---|---|---|
 | `orchestrator` | Coordinate phases, read/write files, use native research, inspect desk records | Create and message specialist descendants |
-| `research` | Native finance, market data, filings, screening, web/URL/X tools and shared files | Spawn an adversarial reviewer |
+| `research` | Native finance and ownership data, filings, screening, Exa/URL/X, live FRED, Jev sentiment, optional Apify and shared files | Spawn an adversarial reviewer |
 | `adversarial` | Challenge research/strategy with native evidence; record APPROVE or CHANGES_REQUESTED | None |
 | `strategy` | Research, write declarative target weights, register an immutable strategy | Spawn an adversarial reviewer |
 | `backtester` | Only `run_backtest` for its bound strategy ID | None |
 | `executor` | Native web search, URL fetch, market data; paper account and guarded paper orders | None |
 | `moderator` | Inspect desk, inspect paper account, engage emergency stop | None |
 
-Native finance tools use `FINANCIAL_DATASETS_API_KEY`. Exa web search and X search appear only when their existing keys are configured. No extra search client or custom research API is introduced. The backtester never gets these tools, file tools, roster inspection, or delegation tools.
+Native finance tools use `FINANCIAL_DATASETS_API_KEY`. Exa web search and X search appear only when their existing keys are configured. No extra search client or custom research API is introduced. Research-capable profiles also include all direct native finance inputs plus `analyze_sentiment`, `get_macro_series`, `apify_actor`, and `apify_run`. Jev alone uses OpenRouter; other model calls stay on Bedrock. The backtester never gets these tools, file tools, roster inspection, or delegation tools.
 
 The model's tool list is filtered from server-owned permissions, and backend tool routes check the authenticated agent's role. A research agent cannot request an executor child or change its own role. Parent-child ownership and fund token lookup remain enforced. Old root agents become orchestrators; old specialists default to research. Roles survive roster reloads.
 

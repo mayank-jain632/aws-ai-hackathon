@@ -16,6 +16,7 @@ A wealth-management team creates funds and client mandates, then uses agents to 
 | Demo login | Kush, Mayank, and Gerson demo accounts share the board. Credentials stay outside Git. Reuse this login. |
 | AWS hosting | EC2 runs the container; CloudFront provides HTTPS; encrypted EBS stores state; ECR stores images; Secrets Manager stores secrets; IAM supplies Bedrock credentials; Systems Manager manages the host. |
 | Native Dexter research tools on main | Finance, market data, SEC filings, screening, URL fetch, Exa web search, and X search reuse upstream implementations. See the registry and README for key requirements. Their presence on main does not prove the hosted image is updated or providers have been tested live. |
+| Additional live research inputs | Native direct finance/earnings/ownership tools, live FRED series, Jev sentiment via OpenRouter Decisions only, and optional Apify public-web collection. Role permissions still apply; see `docs/data-sources.md` for credential and verification limits. |
 | Historical analysis modules | `backend/app/data.py`, `backend/app/agents/`, `backend/app/backtest.py`, and `backend/app/schema.py` retain the Desk loaders, analysts, portfolio-manager logic, and backtest. Their former report page is historical, not the current app. |
 
 The last deployment verified by this chat ran Bedrock delegation and shared file tools, demo login, collaboration, and restart persistence. Verify the deployed image before claiming newer tools are live.

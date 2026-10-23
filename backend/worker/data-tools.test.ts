@@ -86,7 +86,7 @@ test('Apify start uses inspected actor input and bounded costs/runtime', async (
   process.env.APIFY_TOKEN = 'test-only';
   mockFetch((url, init) => {
     const target = new URL(url);
-    expect(target.pathname).toBe('/v2/acts/test~scraper/runs');
+    expect(target.pathname).toBe('/v2/actors/test~scraper/runs');
     expect(target.searchParams.get('timeout')).toBe('180');
     expect(target.searchParams.get('maxTotalChargeUsd')).toBe('0.5');
     expect(target.searchParams.get('restartOnError')).toBe('false');

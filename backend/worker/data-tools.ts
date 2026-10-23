@@ -131,7 +131,7 @@ export const apifyActor = new DynamicStructuredTool({
   func: async (input, _manager, config) => {
     const id = encodeURIComponent(input.actor_id.replace('/', '~'));
     if (input.action === 'inspect') {
-      const { data } = await apify(`acts/${id}/builds/default`, {}, config?.signal);
+      const { data } = await apify(`actors/${id}/builds/default`, {}, config?.signal);
       if (!data) throw new Error('Apify returned no Actor build');
       return JSON.stringify({ provider: 'Apify', actor_id: input.actor_id, build: data.buildNumber, input_schema: data.actorDefinition?.input || data.inputSchema, readme: typeof data.readme === 'string' ? data.readme.slice(0, 12000) : undefined });
     }
@@ -139,7 +139,7 @@ export const apifyActor = new DynamicStructuredTool({
     const actorInput = JSON.parse(input.input_json);
     if (!actorInput || Array.isArray(actorInput) || typeof actorInput !== 'object') throw new Error('Actor input must be a JSON object');
     const query = new URLSearchParams({ timeout: '180', maxTotalChargeUsd: String(input.max_cost_usd), maxItems: String(input.max_items), restartOnError: 'false', waitForFinish: '0' });
-    const { data } = await apify(`acts/${id}/runs?${query}`, { method: 'POST', body: JSON.stringify(actorInput) }, config?.signal);
+    const { data } = await apify(`actors/${id}/runs?${query}`, { method: 'POST', body: JSON.stringify(actorInput) }, config?.signal);
     if (!data?.id) throw new Error('Apify did not return a run ID; do not automatically retry a start request');
     return JSON.stringify({ provider: 'Apify', ...runSummary(data), warning: 'Asynchronous collection, not completed evidence. maxItems caps billed items for applicable Actors, not necessarily total output. A canvas stop does not automatically abort remote runs; use apify_run abort. Do not retry a failed start blindly.' });
   },

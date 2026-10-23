@@ -20,7 +20,7 @@ Configure the workshop credentials below before starting. Open http://127.0.0.1:
 
 New subagents appear beneath their parent. Collapse or expand a branch using its subagent count. Drag cards to arrange them, scroll to zoom, or use **Arrange tree** to restore the automatic layout. **Stop** cancels the selected agent and all its descendants.
 
-The initial version supports six agents and four active runs. `create_agent`, `list_agents`, and `message_agent` let agents delegate and follow up with their descendants. The canvas also exposes Dexter's existing finance, search, and URL-fetch tools, described below. Shell commands and trade execution remain disabled.
+The role-aware canvas supports sixteen agents and four active runs. `create_agent`, `list_agents`, and `message_agent` let agents delegate and follow up with their descendants. The canvas also exposes Dexter's existing finance, search, and URL-fetch tools, described below. Shell commands remain disabled. Paper-order tools are restricted to the executor role and backend approval checks; see `docs/agent-roles.md`.
 
 ## Agent tools
 
@@ -32,15 +32,19 @@ The canvas uses Dexter's existing tool implementations directly alongside its sh
 | `get_market_data` | Stock/crypto prices, news, and insider/ownership data | `FINANCIAL_DATASETS_API_KEY` |
 | `read_filings` | SEC filing content | `FINANCIAL_DATASETS_API_KEY` |
 | `stock_screener` | Find stocks by financial criteria | `FINANCIAL_DATASETS_API_KEY` |
+| Native direct finance tools | Statements, ratios, earnings, segments, price history, ticker lookup, news, insider trades/ownership, institutional holdings/investors, beneficial ownership, and filing sections | `FINANCIAL_DATASETS_API_KEY` |
+| `analyze_sentiment` | Jev sentiment labels, probabilities, confidence and sample score for retrieved excerpts | `OPENROUTER_API_KEY`; only Jev uses OpenRouter |
+| `get_macro_series` | Current-vintage FRED observations including rates, inflation, employment, yield curve and volatility | No key |
+| `apify_actor`, `apify_run` | Inspect/start a public-data scraper, read results/status, or abort it | `APIFY_TOKEN` |
 | `web_fetch` | Read a URL and answer a question about its content | Bedrock credentials for the model call |
 | `web_search` | Search current web information through Exa | Appears when `EXASEARCH_API_KEY` is set |
 | `x_search` | Search X/Twitter through Dexter's X adapter | Appears when `X_BEARER_TOKEN` is set; API access still depends on the token's permissions |
 
-Set provider keys in `.env` or `.env.local` for local workers. The finance tools are registered even without a key; successful provider access requires valid credentials. Their internal routing and the URL fetcher's model calls use Bedrock.
+Set provider keys in `.env` or `.env.local` for local workers. The finance tools are registered even without a key; successful provider access requires valid credentials. Their internal routing and the URL fetcher's model calls use Bedrock. The separate sentiment tool uses OpenRouter Decisions with `~typesafe/jev-latest`, currently Jev 1.14. Research-capable roles get the broader data tools; the blind backtester still has only `run_backtest`. See [data sources](docs/data-sources.md) for exact coverage and verification.
 
 There is no custom research API or conversation mode/cutoff lock. The Desk's cached data loaders and backtest remain separate modules. Live search and finance responses are not point-in-time-safe backtest inputs; historical decisions must still use cutoff-aware loaders.
 
-The tools are on `main`. Their registration and provider calls were checked with mocked responses; live provider access and deployment of this tool update to AWS have not been verified. Rebuild locally with `npm run dev`, or deploy the updated image with the commands below.
+Native tool registration is in the hosted fund image. The expanded data/sentiment tools need a new image rollout. FRED and native Exa were exercised live; Jev and Apify responses were tested with mocks. See `hub/status/kushagra.md` for the latest provider and deployment checks. Rebuild locally with `npm run dev`, or deploy the updated image with the commands below.
 
 ## Hosted AWS demo
 

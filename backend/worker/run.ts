@@ -50,6 +50,7 @@ plugin({
         import { exaSearch } from './search/exa';
         import { xSearchTool } from './search/x-search';
         import * as nativeFinance from './finance/index';
+        import { getCompanyNews } from './finance/news';
         import { additionalDataTools } from ${JSON.stringify(pathToFileURL(resolve(root, 'backend/worker/data-tools.ts')).href)};
         import { createWebFetch } from './fetch/web-fetch';
         import { createDeskTools } from ${JSON.stringify(pathToFileURL(resolve(root, 'backend/worker/desk-tools.ts')).href)};
@@ -83,7 +84,7 @@ plugin({
           readFileTool, writeFileTool, editFileTool, createAgent, listAgents, messageAgent,
           nativeFinance.createGetFinancials(model), nativeFinance.createGetMarketData(model), nativeFinance.createReadFilings(model), nativeFinance.createScreenStocks(model), createWebFetch(model),
           ...Object.values(nativeFinance).filter(tool => tool && typeof tool === 'object' && typeof tool.invoke === 'function'),
-          nativeFinance.createGetInsiderTrades(model),
+          nativeFinance.createGetInsiderTrades(model), getCompanyNews,
           ...additionalDataTools,
           ...(process.env.EXASEARCH_API_KEY ? [exaSearch] : []),
           ...(process.env.X_BEARER_TOKEN ? [xSearchTool] : []),
