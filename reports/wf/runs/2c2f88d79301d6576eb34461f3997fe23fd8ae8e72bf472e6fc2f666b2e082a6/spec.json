@@ -1,0 +1,56 @@
+{
+  "name": "opus46_llm_execution",
+  "window": {
+    "first_decision": "2025-10-03",
+    "last_decision": "2026-10-16",
+    "mark_end": "2026-10-22",
+    "dev_decisions": 8
+  },
+  "universe": [
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "AMZN",
+    "GOOGL",
+    "JPM",
+    "XOM",
+    "UNH",
+    "PG",
+    "CAT"
+  ],
+  "reference": "SPY",
+  "decider": {
+    "ref": "opus_pipeline",
+    "params": {}
+  },
+  "execution": {
+    "ref": "llm_execution",
+    "params": {}
+  },
+  "evaluator": null,
+  "baselines": [
+    "equal_weight_buy_hold",
+    "equal_weight_weekly",
+    "spy_buy_hold",
+    "momentum_12_1_top5",
+    "mechanical_seed"
+  ],
+  "engine": {
+    "start_cash": 1000000.0,
+    "slippage_bps": 5.0,
+    "volume_participation_cap": 0.05,
+    "rebalance_band": 0.01
+  },
+  "limits": {
+    "max_weight": 0.25,
+    "min_stop_pct": 0.02,
+    "max_stop_pct": 0.2,
+    "min_target_pct": 0.03,
+    "max_tokens": 4000
+  },
+  "model_id": "us.anthropic.claude-opus-4-6-v1",
+  "model_training_cutoff": "2025-08",
+  "temperature": 0.0,
+  "seed": 0,
+  "notes": "Frozen Opus 4.6 experiment rerun through the plug-in layer (D22)"
+}

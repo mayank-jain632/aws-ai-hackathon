@@ -84,3 +84,37 @@ Price return only, 5 bps slippage and no commissions, long-only, 10 names, one r
 finally published (small revision risk); 8-K filings stand in for news (titles and item codes, no press-release text);
 the daily Fed funds target series is used so the macro view is not a month stale. Frozen decisions used the commit tagged
 `wf-frozen-v1` (the dev1 trial run in `reports/wf/dev1` predates the macro fix and is not part of the results).
+
+## 7. Update: plug-in layer, blind-backtester integration, and proofs (D22 accepted)
+
+**What exists now** (all in `backend/app/wf/`, branch `mayank/wf-walkforward`):
+
+| Piece | Where | Purpose |
+|---|---|---|
+| Contracts | `interfaces.py` | `Decider`, `ExecutionPolicy`, `Evaluator`; a planner gets a `PortfolioSnapshot` in the shape `plan_orders` expects |
+| Closed-loop engine | `engine.py` (`decision_fn`) | state-dependent planners run inside the simulation; old path verified identical to the saved frozen run to 1e-9 |
+| Run spec, registry, results, replay, CLI | `runspec.py`, `registry.py`, `results*.py`, `harness.py`, `cli.py` | one hashed spec per run, model-clean / contaminated / unknown-cutoff label, standard result JSON (`reports/wf/runs/result.schema.json`) |
+| Adapters | `adapters/` | Opus pipeline, the team's `seed_from_memos` and `plan_orders` (lazy import), LLM execution, deterministic target-weight execution, reference and wf evaluators |
+| Conformance suite | `conformance.py` | any teammate's component must pass: future-poison, determinism, schema, import lint, no oversell |
+| Leakage proof | `leakage_proof.py` | real prompts rebuilt from real, truncated and poisoned data at all 55 dates: byte-identical, no future dates, poison confirmed present (`reports/wf/leakage_proof/`) |
+| Gate on our engine | `gate.py`, `model_cutoffs.py`, `desk.py` (opt-in) | same verdict and result shape as `Desk.evaluate`, plus engine, label, assumptions and a leakage statement |
+
+**The blind backtester agent.** The canvas `backtester` role calls `run_backtest`, which calls `Desk.evaluate`. Set
+`BACKTEST_ENGINE=wf` in the backend environment and that same tool runs our engine on `data/wf` (to 2026-10-22) instead
+of the old snapshot (to 2025-06-30). Default is unchanged. The agent still receives only a strategy id; the backend
+supplies prices, so the LLM can see no more than the weights and dates it is bound to. The result adds `engine`,
+`label`, `author_model`, `model_training_cutoff`, `assumptions` and `leakage`. A strategy authored by a model with no
+documented cutoff (GPT-6.1 Sol, Opus 5.5) is labelled `unknown-cutoff`, never clean. Suggested one-line addition to the
+backtester role instructions (not made, it is another lane's file): also report `label` and `leakage` verbatim.
+
+**Reproducibility proof.** The frozen experiment re-run through the plug-in layer reproduces the saved pipeline equity
+with a maximum difference of 0.0 (baselines too), and all three runs replay with zero difference. Same decisions, three
+execution components, full 55 weeks (`specs/opus46_*.json`): LLM execution agent +2.4%, deterministic weights-to-orders
++6.1%, the team's `plan_orders` +5.6%.
+
+**Reference backtester finding (for Lane 2).** `backend/app/backtest.py::rebalanced_curve` sizes the new units with
+the previous value but marks them at the same day's prices, so the portfolio's return on the first trading day of every
+month is zero. Checked on 2023-01-03..2025-06-30, equal weight over the ten names: 22 of 29 month-start sessions are exactly
+zero (the rest are floating-point noise) where the stocks moved +0.11% on average, about 3.2% of cumulative return. SPY is
+unaffected, so the gate understates portfolios relative to SPY. Fix: mark the old units at today's prices, then rebalance.
+Not edited here; our engine does not have the problem (`compare_reference.py` quantifies the gap).

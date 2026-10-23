@@ -3,6 +3,7 @@
 import hashlib
 import json
 import math
+import os
 import threading
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -169,10 +170,34 @@ class Desk:
             self.event("adversarial_review", record)
             return record
 
+    def _author_model(self, record):
+        agent = getattr(self.manager, "agents", {}).get(record.get("author"))
+        return getattr(agent, "model", None)
+
+    def _evaluate_wf(self, strategy_id, record, policy):
+        """Opt-in (BACKTEST_ENGINE=wf, hub D22): same gate checks and result shape on the
+        leakage-safe walk-forward engine, plus engine/label/leakage fields."""
+        from backend.app.wf.gate import evaluate_with_wf
+
+        result = evaluate_with_wf(
+            strategy_id,
+            record,
+            policy,
+            now=stamp(),
+            policy_hash=digest(self.state["policy"]),
+            author_model=self._author_model(record),
+        )
+        self.state["tests"][strategy_id] = result
+        self.state["approvals"].pop(strategy_id, None)
+        self.event("backtest", result)
+        return result
+
     def evaluate(self, strategy_id):
         with self.lock:
             record = self.strategy(strategy_id)
             policy = self.policy()
+            if os.environ.get("BACKTEST_ENGINE") == "wf":
+                return self._evaluate_wf(strategy_id, record, policy)
             # Both windows and weights are frozen before the evaluator is created.
             window = data.prices_full(list(record["weights"]) + [data.REFERENCE])
             available_end = window.index.max().date().isoformat()
