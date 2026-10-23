@@ -77,12 +77,12 @@ If the session changed code or found something the team needs to know:
 
 ## Verified facts (check here before guessing)
 
-- Run the app: follow "Set up and run" in `README.md` (it creates `.env` and `.env.local`, then `npm run dev`). It builds one Docker container with the frontend, the FastAPI backend, and the Dexter workers; open http://127.0.0.1:5173. Stop it with `npm run stop`. Source changes need a rebuild with the same command.
+- Run the app on `main`: `npm run dev:backend` (FastAPI on 8000, through `./workshop-run` when it needs AWS) and `npm run dev:frontend` (Vite on 5173); see "Run it" in `README.md`. The Docker agent canvas is on branch `agent-canvas`; its sandbox builds with `npm run dev:canvas` and stops with `npm run stop:canvas`.
 - AWS region `us-east-1`. Workshop Studio credentials are temporary and expire about every 60 minutes; refresh them in Workshop Studio.
 - Model: `us.openai.gpt-5.6-luna` on Amazon Bedrock through the Converse API. The canvas app sets it in code (`backend/app/agent.py`, `backend/worker/`); `BEDROCK_MODEL_ID` only affects the older `backend/agent.py` and `backend/infer.py`. Requests to this model must omit `temperature`.
 - `.env.example` lists keys for Dexter's finance, web search, and X integrations. Adding a key does not turn a tool on; the adapter only exposes file and delegation tools so far. Live data APIs return today's data, so anything used for a historical decision still has to pass the no-look-ahead rule above.
 - Models the event allows, and which ones need the data retention setting changed: `docs/reference/aws-services-and-allowed-models.md`.
-- Canvas agent tools today: `create_agent`, `list_agents`, `message_agent`. Up to six agents and four active runs.
+- Canvas agent tools (branch `agent-canvas`): `create_agent`, `list_agents`, `message_agent`. Up to six agents and four active runs.
 - Checks: `uv run pytest backend/tests`, `npm run check:python`, `npm run lint`, `npm run build`.
 - Data sources, date ranges, and deviations from the plan: `data/README.md`. The rows in `data/gdelt/curated_events.csv` were written by hand today; treat them as unverified until someone checks each date and headline against a real source.
 - Event pages, AWS service notes, sample-repo READMEs, and a research brief with a public data map: `docs/README.md`.
