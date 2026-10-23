@@ -44,7 +44,7 @@ Set provider keys in `.env` or `.env.local` for local workers. The finance tools
 
 There is no custom research API or conversation mode/cutoff lock. The Desk's cached data loaders and backtest remain separate modules. Live search and finance responses are not point-in-time-safe backtest inputs; historical decisions must still use cutoff-aware loaders.
 
-Native tool registration is in the hosted fund image. The expanded data/sentiment tools need a new image rollout. FRED and native Exa were exercised live; Jev and Apify responses were tested with mocks. See `hub/status/kushagra.md` for the latest provider and deployment checks. Rebuild locally with `npm run dev`, or deploy the updated image with the commands below.
+Native tool registration is in the hosted fund image. The expanded data/sentiment tools need a new image rollout. FRED, native Exa and Jev were exercised live; Apify responses were tested with mocks. See `hub/status/kushagra.md` for the latest provider and deployment checks. Rebuild locally with `npm run dev`, or deploy the updated image with the commands below.
 
 ## Hosted AWS demo
 
