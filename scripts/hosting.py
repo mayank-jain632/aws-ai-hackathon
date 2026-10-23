@@ -156,7 +156,19 @@ def main():
     env = {
         key: value
         for key, value in dotenv_values(ROOT / ".env").items()
-        if value and (key.endswith("_API_KEY") or key in {"X_BEARER_TOKEN", "APIFY_TOKEN"})
+        if value
+        and (
+            key.endswith("_API_KEY")
+            or key
+            in {
+                "X_BEARER_TOKEN",
+                "ALPACA_SECRET_KEY",
+                "APCA_API_KEY_ID",
+                "APCA_API_SECRET_KEY",
+                "APIFY_TOKEN",
+                "APIFY_API_TOKEN",
+            }
+        )
     }
     env.update(
         AWS_REGION=REGION,
@@ -172,7 +184,13 @@ def main():
         )
         save(secret_arn=result["ARN"])
     else:
-        sm.put_secret_value(SecretId=state["secret_arn"], SecretString=json.dumps(env))
+        previous = json.loads(
+            sm.get_secret_value(SecretId=state["secret_arn"])["SecretString"]
+        )
+        # A teammate's blank local template must not erase deployed credentials.
+        sm.put_secret_value(
+            SecretId=state["secret_arn"], SecretString=json.dumps({**previous, **env})
+        )
     if not state.get("repository"):
         try:
             repo = ecr.create_repository(

@@ -132,9 +132,12 @@ class FundStore:
         if fund_id not in self.managers:
             self.managers[fund_id] = AgentManager(root=self.root / "funds" / fund_id)
         runtime = self.managers[fund_id]
-        runtime.context = json.dumps(
-            {"fund_id": fund_id, "mandate": self.records[fund_id]}, indent=2
-        )
+        mandate = dict(self.records[fund_id])
+        if mandate["mode"] == "paper":
+            # Preserve the saved date for later mode changes, but do not present
+            # it to live research as an active historical restriction.
+            mandate["cutoff"] = None
+        runtime.context = json.dumps({"fund_id": fund_id, "mandate": mandate}, indent=2)
         runtime.paused = self.records[fund_id]["status"] != "active"
         return runtime
 

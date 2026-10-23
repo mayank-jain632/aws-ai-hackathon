@@ -140,3 +140,23 @@ def test_fund_api_scopes_files_tokens_and_layout(tmp_path, monkeypatch):
             == 200
         )
         assert client.get("/api/funds/does-not-exist").status_code == 404
+
+
+def test_live_research_context_does_not_activate_saved_historical_cutoff(tmp_path):
+    import json
+
+    legacy = AgentManager(root=tmp_path)
+    store = FundStore(legacy, root=tmp_path)
+    live = store.create(
+        Mandate(name="Live research", mode="paper", cutoff="2024-06-01"), "Team"
+    )
+    historical = store.create(
+        Mandate(name="Historical research", mode="historical", cutoff="2024-06-01"),
+        "Team",
+    )
+    assert json.loads(store.runtime(live["id"]).context)["mandate"]["cutoff"] is None
+    assert store.records[live["id"]]["cutoff"] == "2024-06-01"
+    assert (
+        json.loads(store.runtime(historical["id"]).context)["mandate"]["cutoff"]
+        == "2024-06-01"
+    )

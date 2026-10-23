@@ -30,7 +30,12 @@ plugin({
           if (model.startsWith('bedrock:') && Array.isArray(chunk.content) && chunk.content.every(b => b.type === 'text')) {
             chunk.content = chunk.content.map(b => b.text).join('');
           }
-          yield chunk as AIMessageChunk;`),
+          yield chunk as AIMessageChunk;`).replace('return { response: (result as { content: string }).content, usage };', `
+          const content = (result as AIMessage).content;
+          const response = model.startsWith('bedrock:') && Array.isArray(content)
+            ? content.filter(block => block.type === 'text').map(block => block.text).join('')
+            : content;
+          return { response, usage };`),
       };
     });
     build.onLoad({ filter: /dexter\/src\/utils\/ai-message\.ts$/ }, async ({ path }) => ({
