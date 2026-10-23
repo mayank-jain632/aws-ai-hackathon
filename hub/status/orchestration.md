@@ -22,9 +22,9 @@ Updated 2026-10-23 by the coordinating Codex chat.
 **Coordinator files**
 - This file only. Runtime and frontend edits remain with the four owners. Retrieve their progress through thread tools; keep handoffs concrete and avoid duplicate shared-file work.
 
-**Completion evidence so far**
-- Data slice finished at `9342757`: native finance breadth, Jev/FRED/Apify wiring; real Exa/FRED requests, mocked credential-dependent Jev/Apify. Deployment owner has the handoff.
-- Frontend slice finished at `994b10b`: requested visual refinement and AWS branding, existing checks passed; final combined deployment pending.
-- Role/runtime slice finished at `df2f088`: expanded role delegation/tools, four-slot queueing and cancellation; 36 Python tests, 15 worker tests, builds and real isolated Bedrock recursive role/file handoff passed. Deployment owner has the handoff.
-- Provider state changed after the first data report: Jev passed a real local API call; OpenRouter and Apify keys are configured locally. Deployment owner was told to refresh and forward configured secrets privately. No secret values are recorded here.
-- Hosted verification owner has exercised Exa and URL fetch through Bedrock, plus frozen strategy/review/historical evaluation/backend gate. Final newer role slice and combined image checks remain pending. Alpaca execution remains unverified without paper credentials.
+**Completed integration**
+- Data slice `9342757`, frontend `994b10b`, role/runtime `df2f088`, later credential readiness and the separately owned watchdog are included in the deployment owner's verified runtime revision `4c776fe`.
+- Hosted Bedrock chain: orchestrator → research → strategy → adversarial → research. The final researcher used FRED, native Exa search/URL fetch, Jev sentiment and Apify Actor schema access. Parents read the same shared result file. No scraping job was started.
+- Hosted strategy/review/historical backtest/backend gate recheck passed with trading disabled and zero orders. Real Alpaca paper-account read reports ACTIVE. Watchdog firm-wide stop and an oversized blocked dry run were checked; prior stop state was restored.
+- Login for all three accounts, fund controls, SSE, recursive branch cancellation and access boundaries passed. Six funds, 19 agents, 25 files, layouts and desk/watchdog records survived container restart. Deployment owner reports 73 backend tests and 16 tool tests passing.
+- Remaining limits: Financial Datasets and X need credentials; broker order submission/fills remain untested. No successful broker execution is claimed. Existing policy/mandate requirements still apply. This coordination added no product features.
