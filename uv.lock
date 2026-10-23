@@ -99,6 +99,7 @@ dependencies = [
     { name = "plotly" },
     { name = "pyarrow" },
     { name = "pydantic" },
+    { name = "python-dotenv" },
     { name = "streamlit" },
 ]
 
@@ -120,6 +121,7 @@ requires-dist = [
     { name = "plotly" },
     { name = "pyarrow" },
     { name = "pydantic" },
+    { name = "python-dotenv", specifier = ">=1.2.4" },
     { name = "streamlit" },
 ]
 

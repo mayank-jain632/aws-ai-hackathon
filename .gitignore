@@ -21,3 +21,7 @@ __pycache__/
 .bedrock_agentcore/
 .bedrock_agentcore.yaml
 resources.json
+
+# Local agent files and conversation history
+.local/
+.dexter/

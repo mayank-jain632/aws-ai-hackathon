@@ -1,3 +1,13 @@
-:root { font-family: system-ui, sans-serif; color: #203241; background: #f7fafc; line-height: 1.6; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-* { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; }
+@import '@fontsource-variable/geist';
+/* Palette, typography, and floating controls adapted from the takehome's Sketchroom. */
+:root { --paper:#f3f5f8; --surface:#fff; --ink:#1d2230; --ink-2:#545c6c; --ink-3:#868ea0; --line:#e2e6ed; --accent:#3355d6; --accent-soft:#e9edfc; --ok:#2b8a4b; --danger:#c92a35; --shadow:0 1px 2px rgb(29 34 48 / 5%),0 6px 20px rgb(29 34 48 / 8%); font-family:'Geist Variable',system-ui,sans-serif; color:var(--ink); background:var(--paper); font-size:14px; font-synthesis:none; -webkit-font-smoothing:antialiased; }
+* { box-sizing:border-box; }
+html,body,#root { height:100%; margin:0; }
+body { overflow:hidden; }
+button,textarea { font:inherit; color:inherit; }
+button { cursor:pointer; }
+button:disabled { cursor:default; opacity:.4; }
+button:focus-visible,textarea:focus-visible,[tabindex]:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+button { -webkit-tap-highlight-color:transparent; }
+h1,h2,p { margin:0; }
+svg { display:block; }

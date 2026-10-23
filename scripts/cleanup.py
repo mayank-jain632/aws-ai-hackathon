@@ -30,6 +30,8 @@ def main():
             ".ruff_cache",
             ".pytest_cache",
             "__pycache__",
+            ".local/dexter",
+            ".dexter",
         )
     ]
     generated.extend(
@@ -40,6 +42,8 @@ def main():
             "backend/.bedrock_agentcore",
             "backend/__pycache__",
             "backend/app/__pycache__",
+            "backend/worker/node_modules",
+            "backend/worker/__pycache__",
             "scripts/__pycache__",
         )
     )

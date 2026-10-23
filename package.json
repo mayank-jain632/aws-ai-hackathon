@@ -4,16 +4,21 @@
   "private": true,
   "scripts": {
     "agentcore": "agentcore",
-    "dev:frontend": "npm run dev --workspace frontend",
-    "dev:backend": "uv run fastapi dev --host 127.0.0.1 --port 8000",
+    "dev:frontend": "npm run dev",
+    "dev:backend": "npm run dev",
     "build": "npm run build --workspace frontend",
     "lint": "npm run lint --workspace frontend",
-    "check:python": "uv run ruff check backend scripts"
+    "check:python": "uv run ruff check backend scripts",
+    "setup:agent": "uv run python backend/worker/setup.py",
+    "stop:backend": "npm run stop",
+    "dev": "mkdir -p .local && LOCAL_UID=$(id -u) LOCAL_GID=$(id -g) docker compose up --build sandbox",
+    "stop": "docker compose down"
   },
   "devDependencies": {
     "@aws/agentcore": "1.0.0"
   },
   "workspaces": [
-    "frontend"
+    "frontend",
+    "backend/worker"
   ]
 }

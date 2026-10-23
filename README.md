@@ -1,45 +1,37 @@
 # AWS hackathon
 
-Team 4's starter uses React, TypeScript, and Vite for the frontend, FastAPI for the backend, and Amazon Bedrock with AgentCore for the agent.
+A local agent canvas using React/Vite, FastAPI, and Dexter's actual agent loop. Agents form a recursive tree: each agent can create and manage its own subagents. All workers run in one Docker sandbox and share the same workspace and filesystem. Model calls use Amazon Bedrock.
 
-## Set up
+## Set up and run
 
-Install Python 3.12, uv, Node.js 22.12 or newer, npm, and AWS CLI v2. From the project root:
-
-```sh
-uv sync --locked
-npm ci --ignore-scripts --no-audit --no-fund
-```
-
-Start the backend:
+Install Docker Desktop, Node.js 22.12 or newer, and npm. Start Docker Desktop, then run from the project root:
 
 ```sh
-npm run dev:backend
+test -f .env.local || cp .env.example .env.local
+npm run dev
 ```
 
-Start the frontend in another terminal:
+This builds one image and starts one container containing the production frontend, FastAPI backend, and all Dexter workers. No separate frontend or backend process is needed. The first build downloads dependencies; later starts reuse cached layers. Source changes require rebuilding with the same command.
 
-```sh
-npm run dev:frontend
-```
+Configure the workshop credentials below before starting. Open http://127.0.0.1:5173. Click an agent to chat or inspect its activity and shared files. Try:
 
-Open http://127.0.0.1:5173 and click **Check backend connection**. FastAPI's API documentation is at http://127.0.0.1:8000/docs. Both servers run locally; starting them does not call AWS.
+> Create a researcher named Scout. Ask Scout to create a writer agent that writes a short introduction in hello.txt, reads it back, and reports the result.
 
-## Folders
+New subagents appear beneath their parent. Collapse or expand a branch using its subagent count. Drag cards to arrange them, scroll to zoom, or use **Arrange tree** to restore the automatic layout. **Stop** cancels the selected agent and all its descendants.
 
-- `frontend/src/`: React interface. Vite forwards `/api` requests to FastAPI.
-- `backend/app/`: FastAPI application, starting with `/api/health`.
-- `backend/agent.py`: separate AgentCore starter that accepts a prompt and calls Bedrock.
-- `scripts/`: local and AWS cleanup tools.
-- `.vscode/`: project interpreter and debugging settings.
+The initial version supports six agents and four active runs. `create_agent`, `list_agents`, and `message_agent` let agents delegate and follow up with their descendants. Shell commands, web research, and financial-data APIs are not enabled yet.
 
-Python dependencies are in `pyproject.toml` and `uv.lock`. Node dependencies use npm workspaces and `package-lock.json`. `backend/requirements.txt` contains the separate agent deployment dependencies. Keep AWS calls and credentials on the backend, never in frontend code.
+## Shared workspace
 
-## Connect to AWS
+Every agent reads and writes `.local/workspace/` on your laptop, mounted as `/app/.local/workspace` in Docker. Changes are visible to all agents immediately. Coordinate edits when working on the same file.
 
-Join the event at https://catalog.workshops.aws/join and use the temporary account and credentials supplied by Workshop Studio. A personal AWS account is not required. Confirm the account matches your teammates and use `us-east-1`.
+Conversations and activity remain separate. Dexter's history is in `.local/agent/`; created agents' histories are under `.local/agents/<id>/`. The roster is in `.local/agents.json`. All of `.local/` is excluded from Git and survives container restarts.
 
-The local wrapper uses these dedicated files instead of the default AWS configuration:
+The sandbox uses a non-root user, a read-only application filesystem, resource limits, and only a localhost API port. Application code and the built frontend are inside the image. It mounts only this project's local state, environment settings, and the two dedicated workshop credential files. It does not mount your home directory or Docker socket. Network access remains available for Bedrock.
+
+## Bedrock credentials
+
+Use temporary credentials supplied by Workshop Studio. These dedicated files are already configured on this laptop and are mounted read-only in the sandbox:
 
 ```ini
 # ~/.aws/aws-hackathon-2026.credentials
@@ -56,60 +48,50 @@ region = us-east-1
 output = json
 ```
 
-Keep both files private with `chmod 600`. In the ignored root `.env.local`, set:
+Keep both files private with `chmod 600`. Refresh them through Workshop Studio when the session expires. Optional `BEDROCK_MODEL_ID` in ignored `.env.local` overrides `us.openai.gpt-5.6-luna`. Keep the existing `EXPECTED_AWS_ACCOUNT` setting for the separate workshop cleanup tools.
+
+Credentials stay in the backend. Model requests incur normal Bedrock charges. Running this local version creates no new AgentCore resources.
+
+## Code and checks
+
+- `frontend/src/board/`: recursive tree layout and SVG canvas adapted from the sibling takehome project.
+- `frontend/src/App.tsx`: selected agent's chat, activity, and shared files.
+- `backend/app/`: FastAPI, worker lifecycle, and parent–child ownership.
+- `backend/worker/`: pinned Dexter source setup and Bedrock/tool adapters.
+- `backend/Dockerfile` and `compose.yaml`: shared local sandbox.
+- `backend/agent.py`: earlier AgentCore sample, separate from this local app.
+
+Dexter source is pinned to `534f6be455523c5926eba72bdaf4f914555be5c9` from https://github.com/virattt/dexter, whose README identifies it as MIT-licensed. The image build downloads that source into `/app/vendor/dexter`. The upstream agent loop is unchanged; the adapter adds Bedrock, agent tools, and a shared file workspace. The canvas reuses the takehome's SVG gesture approach, design tokens, and Geist font.
+
+For optional host-side code checks, install Node dependencies with `npm ci --ignore-scripts --no-audit --no-fund`, then use Python 3.12 and uv:
 
 ```sh
-export EXPECTED_AWS_ACCOUNT=YOUR_WORKSHOP_ACCOUNT_ID
-```
-
-Verify access from the project root:
-
-```sh
-./workshop-run aws sts get-caller-identity
-./workshop-run uv run python backend/infer.py
-```
-
-The inference check makes one small Bedrock request. Refresh expired credentials through Workshop Studio. Existing local credentials and `.env.local` are already configured; replace them only when needed.
-
-## AgentCore starter
-
-The official starter is from https://atx.rahman.dev/hackathon-kit.zip. Direct Bedrock inference and the deployed runtime both returned `OK`. The model is `us.openai.gpt-5.6-luna`; its request must omit `temperature`.
-
-The existing deployment's role, private encrypted bucket, and runtime are recorded in ignored `backend/resources.json`. Local deployment configuration is in `backend/.bedrock_agentcore.yaml`. Do not rerun role creation for this existing deployment.
-
-Invoke it from the project root:
-
-```sh
-cd backend
-../workshop-run ../.venv/bin/agentcore invoke '{"prompt":"Reply with OK."}' --agent team4_baseline_kushagra
-```
-
-This deployment uses the official kit's older Python CLI, which prints a deprecation notice. `npm run agentcore -- --help` selects the newer Node CLI; its commands and configuration differ. Runtime use and model requests can incur charges.
-
-## Checks
-
-```sh
+uv sync --locked
+npm run check:python
 npm run lint
 npm run build
-npm run check:python
 ```
 
-## Cleanup
+## Stop and clean up
 
-Preview cloud cleanup, then add `--apply` when finished with the runtime:
+```sh
+npm run stop
+```
+
+This removes only the project's sandbox container and network. Shared files and conversations stay in `.local/`. To also remove the project's image, run `docker compose down --rmi local`. Move `.local/workspace/`, `.local/agent/`, `.local/agents/`, and `.local/agents.json` to Trash if you want to reset the board.
+
+The earlier cloud sample runtime still exists. Its inventory is in ignored `backend/resources.json`. Preview its cleanup, then add `--apply` when finished:
 
 ```sh
 ./workshop-run uv run python scripts/cleanup_cloud.py
 ./workshop-run uv run python scripts/cleanup_cloud.py --apply
 ```
 
-This checks the account and ownership tags, then removes only the recorded starter resources. Organizer infrastructure is left alone.
-
-After cloud cleanup, close project terminals and clean local dependencies and temporary credentials:
+After stopping Docker and cleaning up the cloud sample, preview local dependency and credential cleanup:
 
 ```sh
 python3 scripts/cleanup.py
 python3 scripts/cleanup.py --apply
 ```
 
-The first command previews changes. Local cleanup moves generated files to macOS Trash and removes only this setup's dedicated credentials and `.env.local`. Source and lockfiles stay available. The `AWS Hackathon` editor profile can be removed through VS Code Profiles after switching to Default. Shared system tools, other AWS profiles, and shell startup files are left alone.
+That command keeps agent-created files and conversations. Shared system tools and other AWS profiles are left alone.
