@@ -40,6 +40,14 @@ class Policy(StrictModel):
         return self
 
 
+class PaperCriteria(StrictModel):
+    min_sharpe: float
+    min_excess_return: float
+    max_order_notional: float = Field(gt=0, le=10000000)
+    max_daily_orders: int = Field(ge=1, le=100)
+    rationale: str = Field(min_length=20, max_length=2000)
+
+
 class StrategyInput(StrictModel):
     name: str = Field(min_length=1, max_length=120)
     weights: dict[str, float] = Field(min_length=1, max_length=15)
@@ -66,6 +74,7 @@ class ReviewInput(StrictModel):
     strategy_id: str
     verdict: Literal["APPROVE", "CHANGES_REQUESTED"]
     critique: str = Field(min_length=20, max_length=6000)
+    evaluation_id: str | None = Field(default=None, min_length=64, max_length=64)
 
 
 class OrderInput(StrictModel):
@@ -133,19 +142,44 @@ class Desk:
     def policy(self):
         if not self.state["policy"]:
             raise ValueError(
-                "A person must configure the desk policy and test thresholds first"
+                "Please configure the paper policy and freeze criteria before testing"
             )
         return Policy.model_validate(self.state["policy"])
 
-    def set_policy(self, policy):
+    def set_policy(self, policy, *, origin=None):
         with self.lock:
             self.state["policy"] = policy.model_dump()
+            self.state["policy_version"] = uuid4().hex
+            self.state["policy_origin"] = origin or {"type": "human", "time": stamp()}
             self.state["approvals"] = {}
             self.state["approved_evaluations"] = {}
             self.state["stop"] = True
             self.event(
-                "human_policy", "Policy updated; stop engaged and approvals invalidated"
+                "human_policy" if self.state["policy_origin"]["type"] == "human" else "agent_paper_policy", "Policy updated; stop engaged and approvals invalidated"
             )
+
+    def configure_paper_policy(self, criteria, author):
+        with self.lock:
+            mandate = json.loads(getattr(self.manager, "context", "") or "{}").get("mandate", {})
+            if mandate.get("mode") != "paper":
+                raise ValueError("Agent policy selection is limited to an explicit paper fund")
+            policy = Policy(
+                universe=mandate["universe"], max_position=mandate["max_position"] / 100,
+                max_drawdown=mandate["max_drawdown"] / 100,
+                min_sharpe=criteria.min_sharpe, min_excess_return=criteria.min_excess_return,
+                max_order_notional=criteria.max_order_notional, max_daily_orders=criteria.max_daily_orders,
+                trading_allowed=bool(mandate.get("trading_allowed")), approval_required=bool(mandate.get("approval_required", True)),
+            )
+            if policy.max_order_notional > mandate["capital"]:
+                raise ValueError("Paper order limit cannot exceed saved fund capital")
+            if self.state["tests"]:
+                if self.state["policy"] == policy.model_dump() and self.state.get("policy_origin", {}).get("type") == "agent":
+                    return {"policy": self.state["policy"], "policy_version": self.state["policy_version"], "origin": self.state["policy_origin"]}
+                raise ValueError("Paper criteria are frozen after the first observed evaluation; agents cannot tune thresholds to results")
+            origin = {"type": "agent", "author": author, "rationale": criteria.rationale, "time": stamp(), "authorization": "Human delegated paper policy selection before testing"}
+            self.set_policy(policy, origin=origin)
+            self.event("paper_policy_selected", {"policy_version": self.state["policy_version"], "policy": self.state["policy"], "origin": self.state["policy_origin"]})
+            return {"policy": self.state["policy"], "policy_version": self.state["policy_version"], "origin": self.state["policy_origin"]}
 
     def strategy(self, strategy_id):
         if strategy_id not in self.state["strategies"]:
@@ -180,7 +214,13 @@ class Desk:
             strategy = self.strategy(body.strategy_id)
             if strategy["author"] == author:
                 raise ValueError("A strategy author cannot review their own strategy")
-            record = {**body.model_dump(), "author": author, "time": stamp()}
+            if body.evaluation_id is not None:
+                test = self.state["tests"].get(body.strategy_id, {})
+                if not self.test_is_current(body.strategy_id) or body.evaluation_id != test.get("evaluation_id"):
+                    raise ValueError("Final review must reference the exact current evaluation_id")
+                if body.verdict == "APPROVE" and test.get("verdict") != "PASS":
+                    raise ValueError("A failed backtest cannot receive execution APPROVE")
+            record = {**body.model_dump(), "phase": "final" if body.evaluation_id else "strategy", "author": author, "time": stamp()}
             self.state["reviews"][body.strategy_id] = record
             self.state["approvals"].pop(body.strategy_id, None)
             self.state["approved_evaluations"].pop(body.strategy_id, None)
@@ -196,6 +236,7 @@ class Desk:
             and test.get("engine") == engine
             and test.get("engine_version") == ENGINE_VERSIONS[engine]
             and test.get("policy_hash") == digest(self.state["policy"])
+            and test.get("policy_version") == self.state.get("policy_version")
             and test.get("strategy_hash") == digest(self.strategy(strategy_id))
             and test.get("evaluation_id") == digest(unsigned)
         )
@@ -208,13 +249,20 @@ class Desk:
             == self.state["tests"][strategy_id]["evaluation_id"]
         )
 
+    def require_final_review(self, strategy_id):
+        review = self.state["reviews"].get(strategy_id, {})
+        if review.get("verdict") != "APPROVE":
+            raise ValueError("An approving adversarial review is required")
+        test = self.state["tests"].get(strategy_id, {})
+        if not test.get("evaluation_id") or review.get("evaluation_id") != test["evaluation_id"] or review.get("phase") != "final":
+            raise ValueError("An independent final review of this exact backtest evaluation is required")
+
     def approve(self, strategy_id):
         with self.lock:
             self.strategy(strategy_id)
             if not self.test_is_current(strategy_id) or self.state["tests"][strategy_id]["verdict"] != "PASS":
                 raise ValueError("A current backend PASS is required before human approval")
-            if self.state["reviews"].get(strategy_id, {}).get("verdict") != "APPROVE":
-                raise ValueError("An approving adversarial review is required")
+            self.require_final_review(strategy_id)
             evaluation_id = self.state["tests"][strategy_id]["evaluation_id"]
             self.state["approvals"][strategy_id] = digest(self.state["policy"])
             self.state["approved_evaluations"][strategy_id] = evaluation_id
@@ -225,6 +273,7 @@ class Desk:
             engine=engine,
             engine_version=ENGINE_VERSIONS[engine],
             strategy_hash=digest(record),
+            policy_version=self.state.get("policy_version"),
             author_model=record.get("author_model"),
         )
         result["evaluation_id"] = digest(result)
@@ -312,8 +361,7 @@ class Desk:
         test = self.state["tests"].get(strategy_id, {})
         if test.get("verdict") != "PASS" or not self.test_is_current(strategy_id):
             raise ValueError("A current backend PASS is required")
-        if self.state["reviews"].get(strategy_id, {}).get("verdict") != "APPROVE":
-            raise ValueError("An approving adversarial review is required")
+        self.require_final_review(strategy_id)
         if policy.approval_required and not self.human_approved(strategy_id):
             raise ValueError("Human strategy approval is required by this mandate")
         # Also honor the fund dashboard mandate when that integration is installed.

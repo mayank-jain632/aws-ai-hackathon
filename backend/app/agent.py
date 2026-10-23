@@ -183,10 +183,35 @@ class LocalAgent:
             and ".dexter" not in p.relative_to(self.workspace).parts
         )[:200]
 
+    def lifecycle(self):
+        status = self.state["status"]
+        if status == "running":
+            if self.waiting_until:
+                return "waiting"
+            if self.pending_delegations or self.state.get("monitoring"):
+                return "monitoring"
+            return "working" if self.holds_slot else "queued"
+        if status == "idle":
+            outcome = self.state.get("workflow", {}).get("status")
+            return {"blocked": "blocked", "complete": "completed"}.get(outcome, "idle")
+        return status
+
+    def graph_node(self, blind=False):
+        result = {"id": self.id, "parentId": self.parent_id, "name": "Historical evaluator" if blind else self.name, "role": self.role, "model": self.model, "status": self.state["status"], "lifecycle": self.lifecycle()}
+        if not blind:
+            result.update(
+                objective=next((m["text"][:600] for m in reversed(self.state["messages"]) if m["role"] == "user"), ""),
+                recentResult=next((m["text"][-800:] for m in reversed(self.state["messages"]) if m["role"] == "assistant"), ""),
+                workflow=self.state.get("workflow", {}),
+                recentActivity=[{"label": a["label"][:120], "detail": a["detail"][:250], "time": a["time"]} for a in self.state["activity"][-2:]],
+                artifacts=self.state.get("workflow", {}).get("artifacts", [])[:4],
+                waitingUntil=self.waiting_until,
+            )
+        return result
+
     def snapshot(self):
         return {
-            "id": self.id,
-            "parentId": self.parent_id,
+            **self.graph_node(),
             "role": self.role,
             "waitingForAgents": self.pending_delegations > 0,
             "waitingUntil": self.waiting_until,
@@ -281,6 +306,7 @@ class LocalAgent:
             self.resume_progress = self.state.get("progress")
             self.state["progress"] = {"prompt": prompt, "steps": [], "started_at": now(), "complete": False}
             self.state["monitoring"] = False
+            self.state["workflow"] = {"status": "working", "phase": "Starting", "blocker": None, "artifacts": []}
             self.state["status"] = "running"
             self.stop_event.clear()
             self.cancelled = False
@@ -389,11 +415,11 @@ class LocalAgent:
                             {"id": uuid4().hex, "role": "assistant", "text": answer}
                         )
                     self.activity(
-                        "Run completed",
+                        "Run blocked" if self.state.get("workflow", {}).get("status") == "blocked" else "Run completed",
                         f"{event.get('iterations', 0)} model turns",
                         "success",
                     )
-                    self.state.setdefault("progress", {})["complete"] = True
+                    self.state.setdefault("progress", {})["complete"] = self.state.get("workflow", {}).get("status") != "blocked"
                     self.state["monitoring"] = False
                     completed = True
                 else:

@@ -22,7 +22,7 @@ export function createSwarmTools() {
       func: async (input, _manager, config) => agentControl('/create', input, config?.signal),
     }),
     new DynamicStructuredTool({
-      name: 'list_agents', description: 'List yourself and your descendants with IDs, parent relationships and current status.',
+      name: 'list_agents', description: 'Read the fund agent-tree graph. The main orchestrator sees every fund agent; other roles see their subtree. Includes parent IDs, role, objective, lifecycle, recent visible results/activity, artifacts and explicit self-reported progress/blockers. Drill down with read_agent_thread. Blind roles receive only identity/status metadata.',
       schema: z.object({}), func: async (_, _m, c) => agentControl('', undefined, c?.signal, 'GET'),
     }),
     new DynamicStructuredTool({
@@ -42,6 +42,11 @@ export function createSwarmTools() {
       name: 'read_tool_result', description: 'Read only persisted native tool-result text for a named same-fund non-blind agent. Omit path to list actual files; use the returned .dexter/tool-results or .dexter/web-fetch path, then page with next_offset. Use this when a native tool returns a private absolute result path that read_file cannot open. Never guesses file names or reads scratchpads, credentials, state, other funds or blind evaluator files.',
       schema: z.object({ agent_id: z.string().min(1).max(60), path: z.string().max(4096).optional(), offset: z.number().int().min(0).max(100000000).default(0), limit: z.number().int().min(1).max(16000).default(12000) }),
       func: async (input, _m, c) => agentControl('/result', input, c?.signal),
+    }),
+    new DynamicStructuredTool({
+      name: 'report_agent_progress', description: 'Record your current phase, artifacts and working/blocked/complete claim for the supervisor and canvas. Blocked requires a concrete external input or failure. This is self-reported workflow status, never proof of a passed gate, approved strategy or fill. It cannot stop another agent, change permissions or override backend lifecycle.',
+      schema: z.object({phase: z.string().min(1).max(200), status: z.enum(['working', 'blocked', 'complete']), blocker: z.string().max(1000).optional(), artifacts: z.array(z.string().min(1).max(180)).max(10).default([])}),
+      func: async (input, _m, c) => agentControl('/progress', input, c?.signal),
     }),
     new DynamicStructuredTool({
       name: 'wait', description: 'Wait 0.01 to 3600 seconds without using a model/worker slot. If agent_ids are supplied, return when any listed descendant finishes or the timer expires. Pass only agents still running to avoid immediate repeated returns. Stop/pause cancels promptly. This waits within the current run; it does not create a recurring schedule.',

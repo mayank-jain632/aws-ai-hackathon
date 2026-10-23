@@ -57,6 +57,7 @@ def approved_desk(manager):
         "reviewer",
     )
     desk.evaluate(sid)
+    desk.review(ReviewInput(strategy_id=sid, verdict="APPROVE", critique="Final independent check of the actual backend evaluation.", evaluation_id=desk.state["tests"][sid]["evaluation_id"]), "reviewer")
     desk.approve(sid)
     desk.state["stop"] = False
     desk.save()

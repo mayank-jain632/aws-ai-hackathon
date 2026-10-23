@@ -6,13 +6,14 @@ from pydantic import Field
 
 from backend.app.desk import (
     OrderInput,
+    PaperCriteria,
     Policy,
     ReviewInput,
     StrategyInput,
     StrictModel,
     desk_for,
 )
-from backend.app.paper import account_snapshot, order_status, submit
+from backend.app.paper import account_snapshot, market_snapshot, order_status, submit
 from backend.app.roles import PROFILES, require_tool, role_of
 
 router = APIRouter(tags=["agent roles and desk"])
@@ -105,6 +106,15 @@ def inspect_worker(request: Request) -> dict:
     return desk.state
 
 
+@router.post("/api/internal/desk/paper-policy")
+def configure_paper_policy(body: PaperCriteria, request: Request) -> dict:
+    agent, desk = worker(request, "configure_paper_policy")
+    try:
+        return desk.configure_paper_policy(body, agent.id)
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+
+
 @router.post("/api/internal/desk/strategy")
 def register_strategy(body: StrategyInput, request: Request) -> dict:
     agent, desk = worker(request, "register_strategy")
@@ -150,6 +160,25 @@ def paper_account(request: Request) -> dict:
         raise HTTPException(422, str(error)) from error
     except httpx.HTTPError as error:
         raise HTTPException(502, "Alpaca paper account request failed") from error
+
+
+class MarketInput(StrictModel):
+    symbols: list[str] = Field(min_length=1, max_length=15)
+
+
+@router.post("/api/internal/desk/market")
+def paper_market(body: MarketInput, request: Request) -> dict:
+    worker(request, "alpaca_paper_market")
+    from backend.app import data
+
+    if set(body.symbols) - set(data.UNIVERSE):
+        raise HTTPException(422, "Use symbols from the supported universe")
+    try:
+        return market_snapshot(body.symbols)
+    except (ValueError, TypeError) as error:
+        raise HTTPException(422, str(error)) from error
+    except httpx.HTTPError as error:
+        raise HTTPException(502, "Alpaca market data request failed; no stale fallback") from error
 
 
 @router.get("/api/internal/desk/orders/{client_order_id}")

@@ -211,7 +211,7 @@ def test_plan_orders_route_requires_gates(board, monkeypatch):
     desk.evaluate(sid)
     desk.state["tests"][sid]["verdict"] = "PASS"
     client.post("/api/internal/desk/review", headers=headers("adversarial"),
-                json={"strategy_id": sid, "verdict": "APPROVE", "critique": "independent check of concentration and evidence"})
+                json={"strategy_id": sid, "verdict": "APPROVE", "critique": "independent check of concentration and evidence", "evaluation_id": desk.state["tests"][sid]["evaluation_id"]})
     plan = client.post("/api/internal/desk/plan-orders", headers=headers("executor"), json={"strategy_id": sid})
     assert plan.status_code == 200, plan.text
     assert plan.json()["ready"] and all(o["side"] == "buy" for o in plan.json()["orders"])
@@ -232,7 +232,7 @@ def test_execute_plan_submits_in_order_and_halts_on_block(board, monkeypatch):
     desk.evaluate(sid)
     desk.state["tests"][sid]["verdict"] = "PASS"
     client.post("/api/internal/desk/review", headers=headers("adversarial"),
-                json={"strategy_id": sid, "verdict": "APPROVE", "critique": "independent check of concentration and evidence"})
+                json={"strategy_id": sid, "verdict": "APPROVE", "critique": "independent check of concentration and evidence", "evaluation_id": desk.state["tests"][sid]["evaluation_id"]})
     snap = snapshot(cash=5000, equity=5000)
     monkeypatch.setattr("backend.app.routes.synthesis.account_snapshot", lambda: snap)
     monkeypatch.setattr(paper, "account_snapshot", lambda: snap)

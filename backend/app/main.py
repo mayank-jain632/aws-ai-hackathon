@@ -5,6 +5,7 @@ import json
 import secrets
 from collections.abc import AsyncIterable
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -214,18 +215,9 @@ def list_workers(request: Request) -> dict:
     current = manager(request)
     return {
         "agents": [
-            {
-                "id": a.id,
-                "name": "Historical evaluator"
-                if caller.role == "backtester"
-                else a.name,
-                "parentId": a.parent_id,
-                "role": a.role,
-                "model": a.model,
-                "status": a.state["status"],
-            }
+            a.graph_node(blind=caller.role == "backtester")
             for a in current.agents.values()
-            if caller.id in current.ancestors(a.id)
+            if (caller.id == "dexter" and caller.role == "orchestrator") or caller.id in current.ancestors(a.id)
         ]
     }
 
@@ -251,6 +243,25 @@ def read_worker_thread(
     if agent_id not in current.agents:
         raise HTTPException(404, "Agent not found in this fund")
     return current.read_thread(agent_id, cursor=cursor, limit=limit, max_chars=max_chars, include_activity=include_activity)
+
+
+class AgentProgress(BaseModel):
+    phase: str = Field(min_length=1, max_length=200)
+    status: str = Field(pattern="^(working|blocked|complete)$")
+    blocker: str | None = Field(default=None, max_length=1000)
+    artifacts: list[Annotated[str, Field(min_length=1, max_length=180)]] = Field(default_factory=list, max_length=10)
+
+
+@app.post("/api/internal/agents/progress")
+def report_worker_progress(body: AgentProgress, request: Request) -> dict:
+    caller, current = swarm_worker(request, "report_agent_progress")
+    if not current.worker_alive(caller):
+        raise HTTPException(409, "Progress requires an active worker")
+    if body.status == "blocked" and not (body.blocker or "").strip():
+        raise HTTPException(422, "Blocked progress requires a concrete blocker")
+    caller.state["workflow"] = {**body.model_dump(), "reported_at": datetime.now(UTC).isoformat()}
+    caller.publish()
+    return {"reported": caller.state["workflow"], "lifecycle": caller.lifecycle(), "note": "Self-reported progress; does not change gates or prove completion"}
 
 
 class AgentResult(BaseModel):

@@ -4,6 +4,7 @@ import json
 import math
 import os
 import threading
+from datetime import UTC, datetime
 from urllib.parse import quote, urlencode
 
 import httpx
@@ -61,6 +62,31 @@ def account_snapshot():
         "positions": broker("GET", "/v2/positions"),
         "open_orders": broker("GET", "/v2/orders?status=open&limit=500"),
     }
+
+
+def market_snapshot(symbols):
+    """Fresh read through the existing Alpaca adapter, with no snapshot fallback."""
+    from backend.app.watchdog import market
+
+    snapshots = market.get(market.DATA_URL, "/v2/stocks/snapshots", {"symbols": ",".join(sorted(set(symbols))), "feed": "iex"})
+    clock = market.get(market.TRADING_URL, "/v2/clock")
+    if not isinstance(snapshots, dict) or not isinstance(clock, dict):
+        raise TypeError("Alpaca market snapshot or clock is unavailable")
+    retrieved = datetime.now(UTC)
+    def age(item):
+        try:
+            timestamp = datetime.fromisoformat(item["t"])
+            if timestamp.tzinfo is None:
+                return None
+            return round((retrieved - timestamp).total_seconds(), 3)
+        except (KeyError, TypeError, ValueError):
+            return None
+    quotes = {}
+    for symbol in symbols:
+        snapshot = snapshots.get(symbol) or {}
+        trade, quote_data = snapshot.get("latestTrade") or {}, snapshot.get("latestQuote") or {}
+        quotes[symbol] = {"latest_trade": trade, "latest_quote": quote_data, "trade_age_seconds": age(trade), "quote_age_seconds": age(quote_data), "missing": not trade and not quote_data}
+    return {"paper": True, "source": "Alpaca market data API", "feed": "iex", "feed_scope": "IEX venue subset; not consolidated SIP quotes", "retrieved_at": retrieved.isoformat(), "cache_used": False, "market_clock": clock, "symbols": quotes, "limitations": "Use exchange timestamps and ages to assess freshness; market closure may leave old last trades. Quotes are not guaranteed fill prices. Missing, stale or future timestamps are not current evidence. Broker-reported fills remain definitive."}
 
 
 def submit(desk, body):

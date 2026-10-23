@@ -375,3 +375,28 @@ def test_persisted_result_reader_has_no_private_state_or_symlink_escape(controll
         manager.read_tool_result("dexter", str(link))
     with pytest.raises(ValueError, match="not found"):
         manager.read_tool_result("dexter", ".dexter/tool-results/invented.txt")
+
+
+def test_full_tree_graph_reports_objectives_and_explicit_blocker(controlled_board):
+    manager, processes, _ = controlled_board
+
+    async def exercise():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://localhost") as client:
+            root = manager.agents["dexter"]
+            await root.start("Supervise the full tree")
+            await until(lambda: "dexter" in processes)
+            child = await manager.create("dexter", "Research", "Find dated evidence")
+            await until(lambda: child.id in processes)
+            result = await client.post("/api/internal/agents/progress", headers=auth(manager, child.id), json={"phase": "Research", "status": "blocked", "blocker": "Provider credential is unavailable", "artifacts": ["memo.md"]})
+            assert result.status_code == 200
+            graph = (await client.get("/api/internal/agents", headers=auth(manager, "dexter"))).json()["agents"]
+            node = next(a for a in graph if a["id"] == child.id)
+            assert node["parentId"] == "dexter" and node["objective"] == "Find dated evidence"
+            assert node["workflow"]["blocker"] == "Provider credential is unavailable"
+            processes[child.id].finish()
+            await child.task
+            assert child.snapshot()["lifecycle"] == "blocked"
+            assert child.state["progress"]["complete"] is False
+            await manager.close()
+
+    asyncio.run(exercise())

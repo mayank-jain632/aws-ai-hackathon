@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from backend.app.desk import Desk, Policy, StrategyInput
+from backend.app.desk import Desk, Policy, ReviewInput, StrategyInput
 from backend.app.schema import Metrics
 from backend.app.wf import gate, market
 from backend.app.wf.interfaces import EvalResult
@@ -179,6 +179,7 @@ def passing_desk(tmp_path, monkeypatch):
     desk.review(ReviewInput(strategy_id=sid, verdict="APPROVE", critique="Checked frozen inputs and concentration independently."), "reviewer")
     desk.evaluate(sid)
     assert desk.state["tests"][sid]["verdict"] == "PASS"
+    desk.review(ReviewInput(strategy_id=sid, verdict="APPROVE", critique="Final independent check of the actual backend evaluation.", evaluation_id=desk.state["tests"][sid]["evaluation_id"]), "reviewer")
     desk.approve(sid)
     desk.state["stop"] = False
     return desk, sid
@@ -196,8 +197,9 @@ def test_approval_is_bound_to_exact_evaluation_and_engine(passing_desk, monkeypa
     monkeypatch.setenv("BACKTEST_ENGINE", "wf")
     desk.evaluate(sid)
     assert not desk.human_approved(sid)
-    with pytest.raises(ValueError, match="Human strategy approval"):
+    with pytest.raises(ValueError, match="final review"):
         desk.execution_checks(sid)
+    desk.review(ReviewInput(strategy_id=sid, verdict="APPROVE", critique="Final independent check of the actual backend evaluation.", evaluation_id=desk.state["tests"][sid]["evaluation_id"]), "reviewer")
     desk.approve(sid)
     desk.state["tests"][sid]["metrics"]["portfolio"]["total_return"] = 999
     assert not desk.test_is_current(sid)
@@ -249,3 +251,20 @@ def test_explicit_legacy_and_invalid_engine_have_no_fallback(tmp_path, monkeypat
         desk.evaluate(sid)
     assert desk.state["tests"][sid] == old
     assert not desk.test_is_current(sid)
+
+
+@needs_data
+def test_final_review_is_bound_to_current_evaluation_and_is_independent(passing_desk):
+    desk, sid = passing_desk
+    old = desk.state["tests"][sid]["evaluation_id"]
+    desk.evaluate(sid)
+    with pytest.raises(ValueError, match="final review"):
+        desk.approve(sid)
+    with pytest.raises(ValueError, match="exact current"):
+        desk.review(ReviewInput(strategy_id=sid, evaluation_id=old, verdict="APPROVE", critique="Independent review of an earlier evaluation result."), "reviewer")
+    current = desk.state["tests"][sid]["evaluation_id"]
+    with pytest.raises(ValueError, match="own strategy"):
+        desk.review(ReviewInput(strategy_id=sid, evaluation_id=current, verdict="APPROVE", critique="Claimed review by the strategy author themselves."), desk.strategy(sid)["author"])
+    desk.review(ReviewInput(strategy_id=sid, evaluation_id=current, verdict="APPROVE", critique="Independent review of current metrics and leakage assumptions."), "reviewer")
+    desk.approve(sid)
+    assert desk.human_approved(sid)

@@ -227,6 +227,7 @@ def test_backend_gate_and_bound_evaluator(board, monkeypatch):
             "strategy_id": sid,
             "verdict": "APPROVE",
             "critique": "Concentration and available evidence checked independently.",
+            "evaluation_id": tested.json()["evaluation_id"],
         },
     )
     assert review.status_code == 200, review.text
@@ -447,3 +448,19 @@ def test_orchestrator_orders_still_obey_backend_stop(board):
     )
     assert response.status_code == 422
     assert "stop" in response.json()["detail"]
+
+
+def test_agent_paper_policy_and_market_role_permissions(board):
+    from backend.app.funds import Mandate
+
+    manager, client = board
+    manager.token = "TOKEN"
+    manager.context = json.dumps({"mandate": Mandate(name="Paper fund", mode="paper").model_dump()})
+    criteria = {"min_sharpe": -5, "min_excess_return": -1, "max_order_notional": 100, "max_daily_orders": 5, "rationale": "Select low criteria before any observed historical result."}
+    for role in ["backtester", "executor", "research"]:
+        assert client.post("/api/internal/desk/paper-policy", headers=headers(role), json=criteria).status_code == 403
+    result = client.post("/api/internal/desk/paper-policy", headers=headers("strategy"), json=criteria)
+    assert result.status_code == 200, result.text
+    assert result.json()["origin"]["author"] == "strategy" and result.json()["policy_version"]
+    assert desk_for(manager).state["stop"] is True
+    assert client.post("/api/internal/desk/market", headers=headers("backtester"), json={"symbols": ["AAPL"]}).status_code == 403
