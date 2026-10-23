@@ -216,6 +216,11 @@ def test_plan_orders_route_requires_gates(board, monkeypatch):
     assert plan.status_code == 200, plan.text
     assert plan.json()["ready"] and all(o["side"] == "buy" for o in plan.json()["orders"])
     assert sum(o["notional"] for o in plan.json()["orders"]) <= 5000 + 1e-6
+    persisted = client.get("/api/desk/runs").json()["runs"][-1]
+    assert persisted["kind"] == "order_plan"
+    assert persisted["orders"] == plan.json()["orders"]
+    assert persisted["ready"] is True
+    assert not desk.state["orders"]  # Prepared intent is not a broker submission.
 
 
 def test_execute_plan_submits_in_order_and_halts_on_block(board, monkeypatch):

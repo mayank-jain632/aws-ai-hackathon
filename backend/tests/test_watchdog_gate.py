@@ -313,3 +313,42 @@ def test_monitor_ignores_other_funds_holdings(approved):
         "positions": [{"symbol": "XOM", "qty": "-5", "market_value": "-500"}, {"symbol": "MSFT", "qty": "90", "market_value": "9000"}],
     }
     assert [e for e in monitor.audit(desk, snapshot, opinions=False) if e.kind == "position"] == []
+
+
+def test_closed_market_notional_order_records_actual_queued_receipt(approved, monkeypatch):
+    from backend.app.watchdog.models import LiveMarket
+
+    desk, sid = approved
+    monkeypatch.setattr(paper, "account_snapshot", account)
+    monkeypatch.setattr(gate, "live_market", lambda symbols: LiveMarket(
+        source="test broker fixture", tradable={"AAPL": True}, market_open=False,
+    ))
+    receipt = {
+        "id": "test-queued-broker-id", "client_order_id": "stable-order-001",
+        "symbol": "AAPL", "side": "buy", "notional": "100.00",
+        "status": "accepted", "submitted_at": "2026-10-23T20:10:00Z",
+        "filled_qty": "0", "filled_avg_price": None, "filled_at": None,
+    }
+    calls = []
+
+    def fake(method, path, body=None):
+        calls.append((method, path, body))
+        return receipt.copy()
+
+    monkeypatch.setattr(paper, "broker", fake)
+    result = paper.submit(desk, order(sid))
+    assert calls[0][2]["type"] == "market"
+    assert calls[0][2]["time_in_force"] == "day"
+    assert "limit_price" not in calls[0][2]
+    assert result["status"] == "accepted"
+    assert result["submitted_at"] == receipt["submitted_at"]
+    assert result["broker_response"] == receipt
+    assert result["filled_qty"] == "0" and result["filled_avg_price"] is None
+    assert result["filled_at"] is None
+    assert paper.submit(desk, order(sid)) == result
+    assert len(calls) == 1
+    desk.state["stop"] = True
+    refreshed = paper.order_status(desk, "stable-order-001")
+    assert refreshed["status"] == "accepted"
+    assert refreshed["broker_response"] == receipt
+    assert calls[-1][0] == "GET" and len(calls) == 2

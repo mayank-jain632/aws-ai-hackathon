@@ -666,10 +666,6 @@ class AgentManager:
                         "Blind delegates must evaluate the parent's frozen strategy"
                     )
                 strategy_id = bound
-            if len(self.agents) >= 16:
-                raise ValueError(
-                    "This board supports up to sixteen agents; reuse idle specialists."
-                )
             if role == "backtester":
                 from backend.app.desk import desk_for
 

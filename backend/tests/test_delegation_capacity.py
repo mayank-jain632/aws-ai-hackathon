@@ -400,3 +400,41 @@ def test_full_tree_graph_reports_objectives_and_explicit_blocker(controlled_boar
             await manager.close()
 
     asyncio.run(exercise())
+
+
+def test_roster_over_sixteen_creates_executor_queues_and_cancels(controlled_board):
+    manager, processes, peaks = controlled_board
+
+    async def exercise():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://localhost"
+        ) as client:
+            root = manager.agents["dexter"]
+            await root.start("Coordinate a large existing fund roster")
+            await until(lambda: "dexter" in processes)
+            created = []
+            for index in range(20):
+                child = await manager.create(
+                    "dexter", f"Specialist {index}", "Inspect and prepare authorized work",
+                    "executor" if index == 19 else "research",
+                )
+                created.append(child)
+            await until(lambda: len(processes) == 4)
+            assert len(manager.agents) == 21
+            assert created[-1].role == "executor"
+            assert created[-1].snapshot()["queued"]
+            assert max(peaks) == 4
+            assert sum(a.holds_slot for a in manager.agents.values()) == 4
+            assert sum(a.snapshot()["queued"] for a in created) == 17
+            catalog = (await client.get("/api/agent-roles")).json()
+            assert catalog["max_agents"] is None
+            assert catalog["max_active_runs"] == 4
+            await asyncio.wait_for(manager.stop("dexter"), timeout=1)
+            assert all(a.state["status"] == "stopped" for a in manager.agents.values())
+            assert all(not a.holds_slot for a in manager.agents.values())
+            assert manager.slots._value == 4
+            reloaded = runtime.AgentManager(root=manager.root)
+            assert len(reloaded.agents) == 21
+            assert reloaded.agents[created[-1].id].role == "executor"
+
+    asyncio.run(exercise())

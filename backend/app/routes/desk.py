@@ -49,7 +49,7 @@ def worker(request, capability):
 
 @router.get("/api/agent-roles")
 def roles() -> dict:
-    return {"roles": PROFILES, "max_agents": 16, "max_active_runs": 4}
+    return {"roles": PROFILES, "max_agents": None, "max_active_runs": 4}
 
 
 @router.get("/api/desk")
@@ -57,6 +57,19 @@ def roles() -> dict:
 def inspect_human(request: Request, fund_id: str | None = None) -> dict:
     human(request)
     return desk_for(current_manager(request, fund_id)).state
+
+
+@router.get("/api/funds/{fund_id}/desk/orders/{client_order_id}")
+def reconcile_human_order(fund_id: str, client_order_id: str, request: Request) -> dict:
+    """Refresh a known fund receipt via broker GET; never create or resubmit orders."""
+    human(request)
+    desk = desk_for(current_manager(request, fund_id))
+    try:
+        return order_status(desk, client_order_id)
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+    except httpx.HTTPError as error:
+        raise HTTPException(502, "Alpaca paper order status request failed; do not resubmit") from error
 
 
 @router.put("/api/desk/policy")

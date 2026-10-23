@@ -202,6 +202,10 @@ def submit(desk, body):
             broker_id=result["id"],
             filled_qty=result.get("filled_qty"),
             filled_avg_price=result.get("filled_avg_price"),
+            submitted_at=result.get("submitted_at"),
+            broker_response=result.copy(),
+            filled_at=result.get("filled_at"),
+            broker_updated_at=result.get("updated_at"),
         )
         desk.event("paper_order_response", record.copy())
         return record
@@ -261,6 +265,8 @@ def order_status(desk, client_order_id):
             broker_id=result["id"],
             filled_qty=result.get("filled_qty"),
             filled_avg_price=result.get("filled_avg_price"),
+            submitted_at=result.get("submitted_at"),
+            broker_response=result.copy(),
             filled_at=result.get("filled_at"),
             broker_updated_at=result.get("updated_at"),
             last_checked_at=stamp(),

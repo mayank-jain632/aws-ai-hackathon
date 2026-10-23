@@ -184,6 +184,14 @@ def test_role_token_and_fund_boundaries(tmp_path, monkeypatch):
         )
         assert r.status_code == 422 and "this fund" in r.json()["detail"]
         assert len(calls) == 3
+        human_path = f"/api/funds/{one['id']}/desk/orders/{CLIENT_ID}"
+        result = client.get(human_path)
+        assert result.status_code == 200 and result.json()["status"] == "filled"
+        assert result.json()["broker_response"] == filled()
+        assert len(calls) == 4
+        assert client.get(f"/api/funds/{two['id']}/desk/orders/{CLIENT_ID}").status_code == 422
+        assert client.get(human_path, headers={"X-Agent-Token": first.token, "X-Agent-ID": "executor"}).status_code == 403
+        assert len(calls) == 4
         assert first.desk.state["stop"] is True
     finally:
         client.close()
