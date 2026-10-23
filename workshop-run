@@ -1,0 +1,19 @@
+#!/bin/sh
+# Select the workshop account for one command without changing the parent shell.
+workshop_root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_SECURITY_TOKEN
+unset AWS_WEB_IDENTITY_TOKEN_FILE AWS_ROLE_ARN AWS_ROLE_SESSION_NAME
+export AWS_SHARED_CREDENTIALS_FILE="$HOME/.aws/aws-hackathon-2026.credentials"
+export AWS_CONFIG_FILE="$HOME/.aws/aws-hackathon-2026.config"
+export AWS_PROFILE=aws-hackathon-2026
+export AWS_DEFAULT_PROFILE=aws-hackathon-2026
+export AWS_REGION=us-east-1
+export AWS_DEFAULT_REGION=us-east-1
+export BEDROCK_MODEL_ID="${BEDROCK_MODEL_ID:-us.openai.gpt-5.6-luna}"
+export AWS_PAGER=""
+
+# Optional local account guard, separate from shared project settings.
+if [ -f "${workshop_root:-.}/.env.local" ]; then
+  . "${workshop_root:-.}/.env.local"
+fi
+exec "$@"

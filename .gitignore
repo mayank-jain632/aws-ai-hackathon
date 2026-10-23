@@ -1,5 +1,23 @@
+# Local credentials and environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.aws/
+
+# Dependencies, builds, and caches
+.venv/
 node_modules/
 dist/
 __pycache__/
-.venv/
-.env
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+*.log
+
+# Workshop deployment state
+.bedrock_agentcore/
+.bedrock_agentcore.yaml
+resources.json

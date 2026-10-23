@@ -1,0 +1,24 @@
+[project]
+name = "aws-hackathon-prep"
+version = "0.0.0"
+description = "Local environment and dataset preparation"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "boto3",
+  "bedrock-agentcore",
+  "bedrock-agentcore-starter-toolkit",
+  "numpy",
+  "pandas",
+  "pyarrow",
+  "plotly",
+  "streamlit",
+  "httpx",
+  "pydantic",
+  "fastapi[standard]>=0.161.1",
+]
+
+[dependency-groups]
+dev = ["pytest", "ruff"]
+
+[tool.fastapi]
+entrypoint = "backend.app.main:app"

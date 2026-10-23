@@ -1,0 +1,50 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Current file",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "AWS_SHARED_CREDENTIALS_FILE": "${env:HOME}/.aws/aws-hackathon-2026.credentials",
+        "AWS_CONFIG_FILE": "${env:HOME}/.aws/aws-hackathon-2026.config",
+        "AWS_PROFILE": "aws-hackathon-2026",
+        "AWS_DEFAULT_PROFILE": "aws-hackathon-2026",
+        "AWS_REGION": "us-east-1",
+        "AWS_DEFAULT_REGION": "us-east-1",
+        "BEDROCK_MODEL_ID": "us.openai.gpt-5.6-luna",
+        "AWS_PAGER": ""
+      }
+    },
+    {
+      "name": "FastAPI backend",
+      "type": "debugpy",
+      "request": "launch",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "AWS_SHARED_CREDENTIALS_FILE": "${env:HOME}/.aws/aws-hackathon-2026.credentials",
+        "AWS_CONFIG_FILE": "${env:HOME}/.aws/aws-hackathon-2026.config",
+        "AWS_PROFILE": "aws-hackathon-2026",
+        "AWS_DEFAULT_PROFILE": "aws-hackathon-2026",
+        "AWS_REGION": "us-east-1",
+        "AWS_DEFAULT_REGION": "us-east-1",
+        "BEDROCK_MODEL_ID": "us.openai.gpt-5.6-luna",
+        "AWS_PAGER": ""
+      },
+      "module": "uvicorn",
+      "args": [
+        "backend.app.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8000"
+      ]
+    }
+  ]
+}

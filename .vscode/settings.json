@@ -1,0 +1,33 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "git.enabled": true,
+  "aws.telemetry": false,
+  "aws.cloudformation.telemetry.enabled": false,
+  "terminal.integrated.env.osx": {
+    "AWS_ACCESS_KEY_ID": null,
+    "AWS_SECRET_ACCESS_KEY": null,
+    "AWS_SESSION_TOKEN": null,
+    "AWS_SECURITY_TOKEN": null,
+    "AWS_WEB_IDENTITY_TOKEN_FILE": null,
+    "AWS_ROLE_ARN": null,
+    "AWS_ROLE_SESSION_NAME": null,
+    "AWS_SHARED_CREDENTIALS_FILE": "${env:HOME}/.aws/aws-hackathon-2026.credentials",
+    "AWS_CONFIG_FILE": "${env:HOME}/.aws/aws-hackathon-2026.config",
+    "AWS_PROFILE": "aws-hackathon-2026",
+    "AWS_DEFAULT_PROFILE": "aws-hackathon-2026",
+    "AWS_REGION": "us-east-1",
+    "AWS_DEFAULT_REGION": "us-east-1",
+    "AWS_PAGER": ""
+  },
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.ruff_cache": true
+  },
+  "search.exclude": {
+    "**/.venv": true,
+    "**/node_modules": true,
+    "**/data/raw": true
+  }
+}
