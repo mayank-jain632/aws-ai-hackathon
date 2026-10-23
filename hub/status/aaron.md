@@ -1,6 +1,6 @@
 # Aaron · Lane 4 (moderator half): watchdog and moderator
 
-Updated 14:12 by Claude Code (watchdog and scores sessions share this file)
+Updated 14:02 by Claude Code (watchdog and scores sessions share this file)
 
 **Shipped** (on `main`, locally checked, broker mocked; reference in `docs/watchdog.md`)
 - Pre-trade gate `backend/app/watchdog/` (D17, D19): 17 deterministic rules (16 checks plus a market-hours note), no LLM in the path. Emergency stop, trading permission, client universe, ticker exists in our data, backend PASS (buys), quantity/cash/no-short sanity, per-order size, position size, top-three concentration, account and tested drawdown, price band vs last close, rapid fire, duplicate under a new id, same-day wash trade, daily turnover, daily order count. The most serious block leads the reason
@@ -16,13 +16,25 @@ Updated 14:12 by Claude Code (watchdog and scores sessions share this file)
 - Project-wide AWS review: `docs/aws-integration-review.md` (allowed services, the model-list problem, per-lane wiring map, ranked next steps)
 - Tests: `backend/tests/test_watchdog_rules.py` (each rule), `test_watchdog_gate.py` (real `paper.submit` path, halt across funds, routes, role denial, monitor loop starts with the app), `test_watchdog_monitor.py`, `backend/worker/watchdog-tools.test.ts`
 
-**Scores view demo path** (needs a hosted image built from `main` at or after this commit; until then run it locally)
-1. Open fund `ac8b623ccc0a4acb` (AWS source-to-strategy verification). On the overview, the "Scores and reasoning" panel shows eight rings; click Backtest score
-2. Backtest reads the real blind Opus 4.6 result for baseline `e344522d`: FAIL, 3 of 4 gate checks. Click "Return over SPY" to see 16.9% vs SPY 17.06% against the policy minimum, the gate's recorded limitations, and the price-snapshot provenance
-3. Click Strategy score, then Adversarial review: the reviewer agent's own critique, by name. Click "Cited memos" for the memo text, its URLs, and the agent whose write_file produced it
-4. Scroll to "Inputs the agents used": every tool call the fund's nine agents made (income statements, ratio snapshots, FRED, Exa, web_fetch, Apify, X, Jev sentiment, Alpaca read), by agent and time. "Where the data comes from" lists each record and whether it exists yet
-5. Open fund `fdf64d8751a448ea`: the Execution ring reads the real $1 AAPL paper buy that filled at Alpaca; the Watchdog gate ring shows the gate's verdict on it
-6. For a fund whose strategy came through the synthesize tool, Significance shows t-stat, p-value, hit rate and 95% CI, Sensitivity shows each monthly start date against SPY, and Confidence shows each position's net analyst conviction. Other funds show "not produced yet" with the owning lane; walk-forward (Lane 2b) fills empty rings tagged firm-wide once it merges
+**Scores view demo path** (hosted canvas after the ~15:00 redeploy of main; every ring below reads records already on the hosted funds)
+
+Open a fund, stay on Overview, find the "Scores and reasoning" panel under Performance. Click any ring to open the full view: ring, then factor table (value, weight, pass or fail, producing agent), then click a factor for the recorded reasoning and provenance (record, file, time, cited sources). "Inputs the agents used" and "Where the data comes from" sit at the bottom.
+
+Fund 1: `ac8b623ccc0a4acb`, AWS source-to-strategy verification (nine real Bedrock agents)
+- Backtest score, REAL: FAIL, 3 of 4 gate checks (75). Click "Return over SPY": 16.90% vs SPY 17.06% against the policy minimum of 0, so the excess-return gate fails; drawdown, Sharpe and mandate pass. Reasoning shows the gate's recorded limitations; agents show the bound Opus 4.6 backtester and the backend gate
+- Strategy score, REAL: click "Adversarial review" for the reviewer agent's own APPROVE critique, by name; "Cited memos" for `historical-baseline.md` text, plus the writing agent when its write_file call is still in the activity log (the last 100 entries per agent); "Human approval" fails because no person approved this strategy (trading stays off)
+- Risk / mandate fit, REAL: the frozen 10-name, 10%-each baseline against this fund's mandate (universe, largest position vs cap, tested drawdown vs limit, constraints the engine can model). Score is the share of checks passed
+- Inputs the agents used, REAL: every tool call from the nine agents, grouped by tool (income statements, ratio snapshots, FRED, Exa, web_fetch, Apify, X, Jev sentiment, Alpaca read)
+- Not produced yet: Confidence, Significance and Sensitivity (no synthesis-layer run for this strategy; Lane 2), Execution (zero orders), Watchdog gate (no order reached the gate; its context row shows the fund's desk stop is on)
+
+Fund 2: `fdf64d8751a448ea`, hosted one-order role flow
+- Execution score, REAL: 1 of 1 paper orders filled (100). Click the "buy $1 AAPL" factor for the Alpaca broker id, filled quantity and average price, reconciled to filled by the executor's GET lookup
+- Backtest score, REAL: PASS under the permission policy (fresh Opus 4.6 evaluation)
+- Strategy score and Risk / mandate fit, REAL: independent APPROVE review, human approval recorded, mandate checks
+- Watchdog gate: REAL if the gate recorded its verdict on that order (the gate runs inside paper.submit), shown as approve with every rule's result; otherwise "not produced yet"
+- Not produced yet: Confidence, Significance, Sensitivity (no synthesis run; Lane 2)
+
+What "not produced yet" means on screen: a dashed ring with "?", the reason, and the owning lane. No placeholder number anywhere. Rings tagged "Firm-wide walk-forward" appear only after Lane 2b's `reports/wf/` reaches main and the image
 
 **Interface for execution and strategy owners**
 - Nothing to call if you go through `paper.submit`; the gate already runs there
