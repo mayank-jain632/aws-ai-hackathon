@@ -156,7 +156,7 @@ def main():
     env = {
         key: value
         for key, value in dotenv_values(ROOT / ".env").items()
-        if value and (key.endswith("_API_KEY") or key == "X_BEARER_TOKEN")
+        if value and (key.endswith("_API_KEY") or key in {"X_BEARER_TOKEN", "APIFY_TOKEN"})
     }
     env.update(
         AWS_REGION=REGION,
