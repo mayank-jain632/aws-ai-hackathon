@@ -1,0 +1,147 @@
+{
+ "window": "clean",
+ "n_dates": 55,
+ "first": "2025-10-03",
+ "last": "2026-10-16",
+ "model_id": "us.anthropic.claude-opus-4-6-v1",
+ "contaminated": false,
+ "rows": [
+  {
+   "series": "fundamentals",
+   "horizon": "1w",
+   "n_dates": 54,
+   "named_ic": -0.06842049609832747,
+   "masked_ic": -0.07356446508122633,
+   "diff": 0.005143968982898871,
+   "ci_lo": -0.021495529284800273,
+   "ci_hi": 0.027541007563942385,
+   "verdict": "no detectable memory effect"
+  },
+  {
+   "series": "fundamentals",
+   "horizon": "4w",
+   "n_dates": 51,
+   "named_ic": -0.07983859901021904,
+   "masked_ic": -0.08295163840174402,
+   "diff": 0.0031130393915249866,
+   "ci_lo": -0.02855377753032732,
+   "ci_hi": 0.03159001386665326,
+   "verdict": "no detectable memory effect"
+  },
+  {
+   "series": "geopolitics",
+   "horizon": "1w",
+   "n_dates": 50,
+   "named_ic": -0.019112297820484087,
+   "masked_ic": 0.06750560228032138,
+   "diff": -0.09357713244719365,
+   "ci_lo": -0.2546961555032003,
+   "ci_hi": 0.039875964973503666,
+   "verdict": "no detectable memory effect"
+  },
+  {
+   "series": "geopolitics",
+   "horizon": "4w",
+   "n_dates": 47,
+   "named_ic": -0.07775485907008695,
+   "masked_ic": 0.011468965499057687,
+   "diff": -0.10271045738691191,
+   "ci_lo": -0.2722502585134451,
+   "ci_hi": 0.0660409450125882,
+   "verdict": "no detectable memory effect"
+  },
+  {
+   "series": "macro",
+   "horizon": "1w",
+   "n_dates": 54,
+   "named_ic": -0.0475937412682116,
+   "masked_ic": 0.005519542328020344,
+   "diff": -0.05311328359623196,
+   "ci_lo": -0.18544124605250598,
+   "ci_hi": 0.09046323093289076,
+   "verdict": "no detectable memory effect"
+  },
+  {
+   "series": "macro",
+   "horizon": "4w",
+   "n_dates": 51,
+   "named_ic": -0.1828888159243333,
+   "masked_ic": -0.04936322420666218,
+   "diff": -0.1335255917176711,
+   "ci_lo": -0.28892278538761235,
+   "ci_hi": 0.013127026756428278,
+   "verdict": "no detectable memory effect"
+  },
+  {
+   "series": "sentiment",
+   "horizon": "1w",
+   "n_dates": 50,
+   "named_ic": 0.009333859534605228,
+   "masked_ic": -0.004419800661881462,
+   "diff": 0.016428279662179843,
+   "ci_lo": -0.08941993366017817,
+   "ci_hi": 0.07451908312817923,
+   "verdict": "no detectable memory effect"
+  },
+  {
+   "series": "sentiment",
+   "horizon": "4w",
+   "n_dates": 47,
+   "named_ic": -0.009374919682963799,
+   "masked_ic": -0.03671703490560568,
+   "diff": 0.022154296617694386,
+   "ci_lo": -0.03797462786645746,
+   "ci_hi": 0.06969130181733742,
+   "verdict": "no detectable memory effect"
+  },
+  {
+   "series": "strategy_weight",
+   "horizon": "1w",
+   "n_dates": 54,
+   "named_ic": -0.07385728460978157,
+   "masked_ic": -0.02905245405496095,
+   "diff": -0.04480483055482059,
+   "ci_lo": -0.10200405914154247,
+   "ci_hi": -0.004828932587611914,
+   "verdict": "masked better"
+  },
+  {
+   "series": "strategy_weight",
+   "horizon": "4w",
+   "n_dates": 51,
+   "named_ic": -0.14295955621771816,
+   "masked_ic": -0.08403170687854922,
+   "diff": -0.05892784933916899,
+   "ci_lo": -0.13627898119637294,
+   "ci_hi": 0.013431785500672108,
+   "verdict": "no detectable memory effect"
+  },
+  {
+   "series": "technical",
+   "horizon": "1w",
+   "n_dates": 54,
+   "named_ic": -0.026578706635570454,
+   "masked_ic": -0.03820464586405626,
+   "diff": 0.011625939228485796,
+   "ci_lo": -0.016676617447669455,
+   "ci_hi": 0.0505433074136527,
+   "verdict": "no detectable memory effect"
+  },
+  {
+   "series": "technical",
+   "horizon": "4w",
+   "n_dates": 51,
+   "named_ic": -0.00685168627880917,
+   "masked_ic": -0.022422012212258237,
+   "diff": 0.015570325933449057,
+   "ci_lo": -0.03731838295320622,
+   "ci_hi": 0.06678740795244661,
+   "verdict": "no detectable memory effect"
+  }
+ ],
+ "agreement": {
+  "n_dates": 55,
+  "mean_abs_weight_diff": 0.03825454545454545,
+  "share_weight_diff_gt_5pts": 0.3109090909090909
+ }
+}
