@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { extendRootLoop, ROOT_MAX_MS, runSupervised } from './swarm-runtime';
+import { extendAgentLoop, runSupervised } from './swarm-runtime';
 
 function fakeAgent(answers: string[]) {
   const calls: string[] = [];
@@ -32,18 +32,19 @@ test('provider errors and exhausted work never turn into supervision success', a
   }
 });
 
-test('supervision stops on cancellation and has a four-hour wall limit', async () => {
+test('supervision stops on cancellation and accepts work beyond the old turn ceiling', async () => {
   const controller = new AbortController();
   controller.abort();
   await expect(runSupervised(fakeAgent([]), 'work', {messages: []}, controller.signal, () => {}, true, 'dexter')).rejects.toThrow('incomplete');
-  let time = 0;
-  await expect(runSupervised(fakeAgent(['progress']), 'work', {messages: []}, new AbortController().signal, () => {}, true, 'dexter', async () => JSON.stringify({agents: [{id: 'child', status: 'running'}]}), () => {const result = time; time += ROOT_MAX_MS; return result;})).rejects.toThrow('incomplete');
+  const events: any[] = [];
+  const agent = {async *run() {yield {type: 'done', answer: 'finished after useful work', iterations: 100000};}};
+  await runSupervised(agent, 'work', {messages: []}, new AbortController().signal, e => events.push(e), true, 'dexter', async () => JSON.stringify({agents: []}));
+  expect(events.at(-1).answer).toBe('finished after useful work');
 });
 
 test('specialists do not acquire supervisor behavior and incompatible pins fail clearly', async () => {
   const events: any[] = [];
   await runSupervised(fakeAgent(['specialist result']), 'work', {messages: []}, new AbortController().signal, e => events.push(e), false, 'specialist', async () => {throw new Error('not a supervisor');});
   expect(events[0].type).toBe('done');
-  expect(extendRootLoop('unchanged source', false)).toBe('unchanged source');
-  expect(() => extendRootLoop('wrong pin', true)).toThrow('no longer matches');
+  expect(() => extendAgentLoop('wrong pin')).toThrow('no longer matches');
 });

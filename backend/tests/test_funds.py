@@ -75,7 +75,10 @@ def test_start_fund_dispatches_delegated_workflow_without_changing_consent(
         assert "create_agent" in tasks[0]
         assert "Do not create subagents" not in tasks[0]
         assert "strategy_id" in tasks[0] and "backtester" in tasks[0]
-        assert "does not authorize order submission" in tasks[0]
+        assert "does not authorize order submission" not in tasks[0]
+        assert "paper execution agent" in tasks[0]
+        assert "final independent review" in tasks[0]
+        assert "Never clear the emergency stop" in tasks[0]
         after = client.get(f"/api/funds/{fund_id}").json()
         for field in (
             "trading_allowed",

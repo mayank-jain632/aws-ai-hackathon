@@ -210,7 +210,7 @@ async def plan(fund_id: str, request: Request) -> dict:
     runtime = fund(request, fund_id)
     try:
         await runtime.agents["dexter"].start(
-            "Run this fund's research-to-evaluation workflow under its current mandate. "
+            "Run this fund's research-to-paper-execution workflow under its current mandate. "
             "This request supersedes any earlier document-only planning task. "
             "Read mandate.md and inspect_desk first. Then use create_agent to start "
             "research specialists for distinct evidence families, such as company "
@@ -228,7 +228,12 @@ async def plan(fund_id: str, request: Request) -> dict:
             "paths, strategy/evaluation IDs and any concrete blockers. If one phase "
             "is blocked, complete independent research and review before reporting it. "
             "Keep trading permission, human approval requirements and emergency stop "
-            "unchanged. This task does not authorize order submission or mandate changes. "
+            "unchanged. After the real backtest and final independent review, hand off promptly "
+            "to the paper execution agent. Make paper decisions and trades autonomously "
+            "without redundant confirmation when the actual saved "
+            "mandate, current backend evaluation/final review, applicable human approval "
+            "and emergency stop checks permit them. Never clear the emergency stop or "
+            "change the mandate to force execution. "
             "Never invent prices, sources, performance, approvals, trades or fills.",
             getattr(request.state, "user", "Team").split("@")[0].title(),
         )
