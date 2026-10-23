@@ -195,7 +195,9 @@ def list_workers(request: Request) -> dict:
         "agents": [
             {
                 "id": a.id,
-                "name": a.name,
+                "name": "Historical evaluator"
+                if caller.role == "backtester"
+                else a.name,
                 "parentId": a.parent_id,
                 "role": a.role,
                 "status": a.state["status"],
@@ -213,19 +215,35 @@ async def delegate(action: str, body: AgentTask, request: Request) -> dict:
     if not body.task.strip() or not body.name.strip():
         raise HTTPException(422, "Name and task cannot be blank")
     try:
-        if action == "create":
-            require_tool(caller, "create_agent")
-            child = await current.create(caller.id, body.name, body.task, body.role, body.strategy_id)
-        elif action == "message":
-            child = get_agent(request, body.agent_id)
-            if child.id == caller.id or caller.id not in current.ancestors(child.id):
-                raise ValueError("An agent can delegate only to its own descendants.")
-            require_tool(caller, "message_agent")
-            allow_child(caller, child.role)
-            await child.start(body.task, caller.name)
-        else:
+        if action not in {"create", "message"}:
             raise HTTPException(404, "Unknown action")
-        return await current.result(child)
+        require_tool(caller, "create_agent" if action == "create" else "message_agent")
+        async with current.delegating(caller):
+            if action == "create":
+                child = await current.create(
+                    caller.id, body.name, body.task, body.role, body.strategy_id
+                )
+            else:
+                child = get_agent(request, body.agent_id)
+                if child.id == caller.id or caller.id not in current.ancestors(
+                    child.id
+                ):
+                    raise ValueError(
+                        "An agent can delegate only to its own descendants."
+                    )
+                allow_child(caller, child.role)
+                if caller.role == "backtester" and child.state.get(
+                    "strategy_id"
+                ) != caller.state.get("strategy_id"):
+                    raise PermissionError(
+                        "Blind delegates must evaluate the parent's frozen strategy"
+                    )
+                await child.start(body.task, caller.name)
+            result = await current.result(child)
+            if caller.role == "backtester":
+                result["files"] = []
+                result["name"] = "Historical evaluator"
+            return result
     except PermissionError as error:
         raise HTTPException(403, str(error)) from error
     except ValueError as error:

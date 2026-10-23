@@ -7,6 +7,7 @@ import platform
 import secrets
 import shutil
 import signal
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
@@ -80,7 +81,9 @@ def bun_binary():
 
 
 class LocalAgent:
-    def __init__(self, manager, agent_id="dexter", name="Dexter", parent_id=None, role=None):
+    def __init__(
+        self, manager, agent_id="dexter", name="Dexter", parent_id=None, role=None
+    ):
         self.manager = manager
         self.id = agent_id
         self.name = name
@@ -111,6 +114,8 @@ class LocalAgent:
         self.task = None
         self.lock = asyncio.Lock()
         self.cancelled = False
+        self.holds_slot = False
+        self.pending_delegations = 0
 
     def migrate_workspace(self):
         legacy = self.local / "workspace"
@@ -146,6 +151,10 @@ class LocalAgent:
             "id": self.id,
             "parentId": self.parent_id,
             "role": self.role,
+            "waitingForAgents": self.pending_delegations > 0,
+            "queued": self.state["status"] == "running"
+            and not self.holds_slot
+            and not self.pending_delegations,
             "tools": PROFILES[self.role]["tools"],
             "name": self.name,
             "status": self.state["status"],
@@ -182,15 +191,6 @@ class LocalAgent:
                 raise ValueError(
                     f"{self.name} is already running. Stop it before sending another message."
                 )
-            if (
-                sum(
-                    a.state["status"] == "running" for a in self.manager.agents.values()
-                )
-                >= 4
-            ):
-                raise ValueError(
-                    "Four agents are already running. Wait for one to finish."
-                )
             if self.manager.paused:
                 raise ValueError(
                     "This fund is paused. Resume it before starting agents."
@@ -201,18 +201,31 @@ class LocalAgent:
             if self.role == "backtester":
                 from backend.app.desk import desk_for
 
-                record = desk_for(self.manager).strategy(self.state.get("strategy_id", ""))
-                prompt = "Call run_backtest and report its exact result. Frozen numeric strategy: " + json.dumps({
-                    "strategy_id": record["id"], "weights": record["weights"],
-                    "cutoff": record["cutoff"], "end": record["end"],
-                })
+                record = desk_for(self.manager).strategy(
+                    self.state.get("strategy_id", "")
+                )
+                prompt = (
+                    "Call run_backtest and report its exact result. Frozen numeric strategy: "
+                    + json.dumps(
+                        {
+                            "strategy_id": record["id"],
+                            "weights": record["weights"],
+                            "cutoff": record["cutoff"],
+                            "end": record["end"],
+                        }
+                    )
+                )
             history = []
             for message in self.state["messages"]:
                 if message["role"] == "user":
                     history.append({"query": message["text"], "answer": ""})
                 elif history and message["role"] == "assistant":
                     history[-1]["answer"] = message["text"]
-            history = [turn for turn in history if turn["answer"]][-8:] if self.role != "backtester" else []
+            history = (
+                [turn for turn in history if turn["answer"]][-8:]
+                if self.role != "backtester"
+                else []
+            )
             self.state["messages"].append(
                 {"id": uuid4().hex, "role": "user", "text": prompt, "source": source}
             )
@@ -225,6 +238,14 @@ class LocalAgent:
     async def run(self, prompt, history):
         completed = False
         try:
+            if self.manager.slots.locked():
+                self.activity("Queued for a worker slot")
+                self.publish()
+            await self.manager.slots.acquire()
+            self.holds_slot = True
+            if self.cancelled:
+                self.state["status"] = "stopped"
+                return
             self.process = await asyncio.create_subprocess_exec(
                 bun_binary(),
                 "--tsconfig-override",
@@ -235,7 +256,9 @@ class LocalAgent:
                     **environment(),
                     "AGENT_CONTROL_TOKEN": self.manager.token,
                     "LOCAL_AGENT_ID": self.id,
-                    "LOCAL_AGENT_NAME": "Historical evaluator" if self.role == "backtester" else self.name,
+                    "LOCAL_AGENT_NAME": "Historical evaluator"
+                    if self.role == "backtester"
+                    else self.name,
                     "LOCAL_AGENT_ROLE": self.role,
                     "AGENT_ALLOWED_TOOLS": json.dumps(PROFILES[self.role]["tools"]),
                     "AGENT_ROLE_INSTRUCTIONS": PROFILES[self.role]["instructions"],
@@ -254,7 +277,9 @@ class LocalAgent:
                     "prompt": prompt,
                     "history": history,
                     "files": [] if self.role == "backtester" else self.files(),
-                    "context": "" if self.role == "backtester" else self.manager.context,
+                    "context": ""
+                    if self.role == "backtester"
+                    else self.manager.context,
                 }
             ).encode()
             self.process.stdin.write(payload)
@@ -320,6 +345,9 @@ class LocalAgent:
                 self.activity("Run stopped")
             elif not completed:
                 self.activity("Run ended without a result", kind="error")
+        except asyncio.CancelledError:
+            self.state["status"] = "stopped"
+            self.activity("Run stopped")
         except (OSError, RuntimeError, ValueError) as error:
             self.state["status"] = "stopped" if self.cancelled else "error"
             self.activity(
@@ -330,6 +358,9 @@ class LocalAgent:
                 os.killpg(self.process.pid, signal.SIGKILL)
                 await self.process.wait()
             self.process = None
+            if self.holds_slot:
+                self.holds_slot = False
+                self.manager.slots.release()
             self.publish()
 
     async def stop(self):
@@ -337,8 +368,13 @@ class LocalAgent:
         if self.process and self.process.returncode is None:
             os.killpg(self.process.pid, signal.SIGTERM)
         if self.task and not self.task.done():
+            if self.process is None and not self.holds_slot:
+                self.task.cancel()
             try:
                 await asyncio.wait_for(asyncio.shield(self.task), timeout=3)
+            except asyncio.CancelledError:
+                self.state["status"] = "stopped"
+                self.publish()
             except TimeoutError:
                 if self.process and self.process.returncode is None:
                     os.killpg(self.process.pid, signal.SIGKILL)
@@ -355,6 +391,7 @@ class AgentManager:
         self.token = secrets.token_urlsafe(32)
         self.subscribers = set()
         self.lock = asyncio.Lock()
+        self.slots = asyncio.Semaphore(4)
         self.registry = self.root / "agents.json"
         self.layout_file = self.root / "layout.json"
         self.layout = (
@@ -394,18 +431,65 @@ class AgentManager:
             agent_id = self.agents[agent_id].parent_id
         return found
 
+    @asynccontextmanager
+    async def delegating(self, caller):
+        """Yield the parent's active slot while Dexter waits for delegated tools.
+
+        Multiple tool calls from one model turn share one suspended parent. Only
+        the final returning request reacquires its slot before the next model call.
+        """
+        caller.pending_delegations += 1
+        if caller.holds_slot:
+            caller.holds_slot = False
+            self.slots.release()
+        caller.publish()
+        try:
+            yield
+        finally:
+            caller.pending_delegations -= 1
+            if caller.pending_delegations == 0 and self.worker_alive(caller):
+                await self.slots.acquire()
+                if self.worker_alive(caller) and caller.pending_delegations == 0:
+                    caller.holds_slot = True
+                else:
+                    self.slots.release()
+            caller.publish()
+
+    @staticmethod
+    def worker_alive(agent):
+        return (
+            not agent.cancelled
+            and agent.process is not None
+            and agent.process.returncode is None
+        )
+
     async def create(self, parent_id, name, task, role="research", strategy_id=None):
         async with self.lock:
-            allow_child(self.agents[parent_id], role)
+            parent = self.agents[parent_id]
+            allow_child(parent, role)
+            if parent.role == "backtester":
+                bound = parent.state.get("strategy_id")
+                if strategy_id not in (None, bound):
+                    raise PermissionError(
+                        "Blind delegates must evaluate the parent's frozen strategy"
+                    )
+                strategy_id = bound
             if len(self.agents) >= 16:
-                raise ValueError("This board supports up to sixteen agents; reuse idle specialists.")
+                raise ValueError(
+                    "This board supports up to sixteen agents; reuse idle specialists."
+                )
             if role == "backtester":
                 from backend.app.desk import desk_for
 
                 desk = desk_for(self)
                 desk.strategy(strategy_id)
-                if desk.state["reviews"].get(strategy_id, {}).get("verdict") != "APPROVE":
-                    raise ValueError("Create an adversarial reviewer and obtain approval before blind evaluation")
+                if (
+                    desk.state["reviews"].get(strategy_id, {}).get("verdict")
+                    != "APPROVE"
+                ):
+                    raise ValueError(
+                        "Create an adversarial reviewer and obtain approval before blind evaluation"
+                    )
             child = LocalAgent(self, uuid4().hex[:12], name.strip(), parent_id, role)
             if role == "backtester":
                 child.state["strategy_id"] = strategy_id
@@ -419,7 +503,12 @@ class AgentManager:
             temporary.write_text(
                 json.dumps(
                     [
-                        {"id": a.id, "name": a.name, "parentId": a.parent_id, "role": a.role}
+                        {
+                            "id": a.id,
+                            "name": a.name,
+                            "parentId": a.parent_id,
+                            "role": a.role,
+                        }
                         for a in self.agents.values()
                         if a.id != "dexter"
                     ]
@@ -434,7 +523,11 @@ class AgentManager:
 
     async def result(self, child):
         if child.task:
-            await asyncio.shield(child.task)
+            try:
+                await asyncio.shield(child.task)
+            except asyncio.CancelledError:
+                if not child.cancelled:
+                    raise
         answer = ""
         for message in reversed(child.state["messages"]):
             if message["role"] == "user":

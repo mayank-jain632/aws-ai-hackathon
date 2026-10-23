@@ -130,8 +130,8 @@ class StrategyId(StrictModel):
 def run_backtest(body: StrategyId, request: Request) -> dict:
     agent, desk = worker(request, "run_backtest")
     if (
-        role_of(agent) != "backtester"
-        or agent.state.get("strategy_id") != body.strategy_id
+        role_of(agent) != "orchestrator"
+        and agent.state.get("strategy_id") != body.strategy_id
     ):
         raise HTTPException(403, "Evaluator is bound to a different strategy")
     try:
@@ -155,9 +155,8 @@ def paper_account(request: Request) -> dict:
 def paper_order(body: OrderInput, request: Request) -> dict:
     agent, desk = worker(request, "submit_paper_order")
     try:
-        # This live-only leaf cannot contaminate a historical conversation tree.
-        if role_of(agent) != "executor":
-            raise ValueError("Only paper executors can submit orders")
+        if role_of(agent) not in {"executor", "orchestrator"}:
+            raise ValueError("Only paper executors or orchestrators can submit orders")
         return submit(desk, body)
     except ValueError as error:
         with desk.lock:

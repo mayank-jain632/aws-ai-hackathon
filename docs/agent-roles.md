@@ -4,17 +4,17 @@ These roles extend the pinned upstream Dexter `Agent` and native tools. They do 
 
 | Role | Available work | Delegation |
 |---|---|---|
-| `orchestrator` | Coordinate phases, read/write files, use native research, inspect desk records | Create and message specialist descendants |
-| `research` | Native finance and ownership data, filings, screening, Exa/URL/X, live FRED, Jev sentiment, optional Apify and shared files | Spawn an adversarial reviewer |
-| `adversarial` | Challenge research/strategy with native evidence; record APPROVE or CHANGES_REQUESTED | None |
-| `strategy` | Research, write declarative target weights, register an immutable strategy | Spawn an adversarial reviewer |
-| `backtester` | Only `run_backtest` for its bound strategy ID | None |
-| `executor` | Native web search, URL fetch, market data; paper account and guarded paper orders | None |
-| `moderator` | Inspect desk, inspect paper account, engage emergency stop | None |
+| `orchestrator` | Every registered capability, including research, strategy, review, evaluation, paper execution and stop, subject to backend checks | Create and message any descendant role, including orchestrators |
+| `research` | Native finance and ownership data, filings, screening, Exa/URL/X, live FRED, Jev sentiment, optional Apify and shared files | Create and message any descendant role |
+| `adversarial` | Challenge research/strategy with native evidence; record APPROVE or CHANGES_REQUESTED | Create and message any descendant role |
+| `strategy` | Research, write declarative target weights, register an immutable strategy | Create and message any descendant role |
+| `backtester` | `run_backtest` plus delegation restricted to its bound strategy ID | Create/message only same-strategy blind backtesters |
+| `executor` | Native web search, URL fetch, market data; paper account and guarded paper orders | Create and message any descendant role |
+| `moderator` | Inspect desk, inspect paper account, engage emergency stop | Create and message any descendant role |
 
-Native finance tools use `FINANCIAL_DATASETS_API_KEY`. Exa web search and X search appear only when their existing keys are configured. No extra search client or custom research API is introduced. Research-capable profiles also include all direct native finance inputs plus `analyze_sentiment`, `get_macro_series`, `apify_actor`, and `apify_run`. Jev alone uses OpenRouter; other model calls stay on Bedrock. The backtester never gets these tools, file tools, roster inspection, or delegation tools.
+Native finance tools use `FINANCIAL_DATASETS_API_KEY`. Exa web search and X search appear only when their existing keys are configured. No extra search client or custom research API is introduced. Research-capable profiles also include all direct native finance inputs plus `analyze_sentiment`, `get_macro_series`, `apify_actor`, and `apify_run`. Jev alone uses OpenRouter; other model calls stay on Bedrock. The backtester never gets native research or file tools. Its delegation and descendant roster are restricted to blind evaluators of the same immutable strategy, with sanitized context and file lists.
 
-The model's tool list is filtered from server-owned permissions, and backend tool routes check the authenticated agent's role. A research agent cannot request an executor child or change its own role. Parent-child ownership and fund token lookup remain enforced. Old root agents become orchestrators; old specialists default to research. Roles survive roster reloads.
+The model's tool list is filtered from server-owned permissions, and backend tool routes check the authenticated agent's role. Non-blind agents may request other role types, including an executor or another orchestrator, while retaining their own role identity and direct tool restrictions. Children do not inherit the parent's tool set. Parent-child ownership and fund token lookup remain enforced. Old root agents become orchestrators; old specialists default to research. Roles survive roster reloads.
 
 ## Handoffs
 
@@ -25,7 +25,7 @@ The model's tool list is filtered from server-owned permissions, and backend too
 5. `run_backtest` calls the existing Desk engine against the existing snapshot and SPY. It computes metrics and compares them with human-configured thresholds. The model cannot manufacture a backend PASS or change weights/windows. The result includes limitations.
 6. The executor can submit orders only after backend PASS, adversarial approval, trading permission, any required human approval, and a cleared stop. The moderator can engage the stop; only a person can clear it.
 
-The roster supports sixteen agents and four active workers, including waiting parents. Reuse idle specialists; do not launch every role concurrently. The orchestrator has 24 model iterations, specialists 12, and the evaluator 3. Iteration exhaustion is an error, not successful task completion. A branch stop still cancels agent workers and descendants; it does not cancel accepted brokerage orders.
+The roster supports sixteen agents and four active workers. Additional runs queue. A parent releases its active worker slot during delegation and reacquires it before resuming; concurrent sibling tool calls share one suspended parent. Waiting/queued identities remain visible, and branch cancellation includes queued descendants. Reuse idle specialists. The orchestrator has 24 model iterations, specialists 12, and the evaluator 3. Iteration exhaustion is an error, not successful task completion. A branch stop still cancels agent workers and descendants; it does not cancel accepted brokerage orders.
 
 ## Human controls
 

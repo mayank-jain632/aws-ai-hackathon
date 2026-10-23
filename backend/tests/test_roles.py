@@ -37,10 +37,15 @@ def headers(role="dexter"):
 def test_role_tools_and_route_denial(board):
     manager, client = board
     manager.token = "TOKEN"
-    assert PROFILES["backtester"]["tools"] == ["run_backtest"]
+    assert set(PROFILES["backtester"]["tools"]) == {
+        "run_backtest",
+        "create_agent",
+        "list_agents",
+        "message_agent",
+    }
     for role in ["backtester", "executor", "moderator"]:
         assert (
-            client.get("/api/internal/agents", headers=headers(role)).status_code == 403
+            client.get("/api/internal/agents", headers=headers(role)).status_code == 200
         )
     assert (
         client.post(
@@ -96,30 +101,61 @@ def test_role_tools_and_route_denial(board):
     )
 
 
-def test_delegation_cannot_escalate_roles(board):
+def test_nonblind_specialists_create_other_roles(board, tmp_path, monkeypatch):
     manager, client = board
     manager.token = "TOKEN"
-    for caller in [
-        "research",
-        "adversarial",
-        "strategy",
-        "backtester",
-        "executor",
-        "moderator",
-    ]:
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / ".revision").write_text("test")
+    monkeypatch.setattr(runtime, "DEXTER_SOURCE", source)
+    monkeypatch.setattr(runtime, "bun_binary", lambda: "bun")
+
+    async def fake_run(self, prompt, history):
+        self.state["status"] = "idle"
+        self.state["messages"].append({"role": "assistant", "text": "done"})
+        self.publish()
+
+    monkeypatch.setattr(runtime.LocalAgent, "run", fake_run)
+    pairs = [
+        ("dexter", "orchestrator"),
+        ("research", "strategy"),
+        ("strategy", "executor"),
+        ("adversarial", "research"),
+        ("executor", "moderator"),
+        ("moderator", "research"),
+    ]
+    for caller, role in pairs:
         response = client.post(
             "/api/internal/agents/create",
             headers=headers(caller),
-            json={"role": "executor", "name": "Escalate", "task": "Trade"},
+            json={"role": role, "name": role, "task": "Complete the assigned task"},
         )
-        assert response.status_code == 403
-    assert len(manager.agents) == 7
+        assert response.status_code == 200, response.text
+        child = manager.agents[response.json()["id"]]
+        assert child.role == role and child.parent_id == caller
+        assert child.snapshot()["tools"] == PROFILES[role]["tools"]
+    response = client.post(
+        "/api/internal/agents/create",
+        headers=headers("backtester"),
+        json={"role": "research", "name": "escape", "task": "Browse future results"},
+    )
+    assert response.status_code == 403
     response = client.post(
         "/api/internal/agents/message",
         headers=headers("research"),
-        json={"agent_id": "executor", "task": "Trade"},
+        json={"agent_id": "executor", "task": "Cross a sibling ownership boundary"},
     )
-    assert response.status_code in {403, 409}
+    assert response.status_code == 409
+
+
+def test_orchestrator_has_every_capability(board):
+    from backend.app.roles import require_tool
+
+    manager, _ = board
+    for profile in PROFILES.values():
+        for tool in profile["tools"]:
+            require_tool(manager.agents["dexter"], tool)
+    require_tool(manager.agents["dexter"], "future_registered_tool")
 
 
 def policy_body():
@@ -165,6 +201,10 @@ def test_backend_gate_and_bound_evaluator(board):
         ).status_code
         == 403
     )
+    direct = client.post(
+        "/api/internal/desk/backtest", headers=headers(), json={"strategy_id": sid}
+    )
+    assert direct.status_code == 200, direct.text
     manager.agents["backtester"].state["strategy_id"] = sid
     tested = client.post(
         "/api/internal/desk/backtest",
@@ -312,3 +352,95 @@ def test_desk_artifacts_and_worker_tokens_are_fund_scoped(tmp_path, monkeypatch)
         assert first.desk.path.parent != second.desk.path.parent
     finally:
         client.close()
+
+
+def test_blind_delegates_keep_exact_binding(board, tmp_path, monkeypatch):
+    manager, client = board
+    manager.token = "TOKEN"
+    desk = manager.desk
+    desk.set_policy(Policy(**policy_body()))
+    first = desk.register(StrategyInput(**strategy_body()), "strategy")["id"]
+    second = desk.register(StrategyInput(**strategy_body()), "strategy")["id"]
+    desk.state["reviews"][first] = {"verdict": "APPROVE"}
+    desk.state["reviews"][second] = {"verdict": "APPROVE"}
+    parent = manager.agents["backtester"]
+    parent.state["strategy_id"] = first
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / ".revision").write_text("test")
+    monkeypatch.setattr(runtime, "DEXTER_SOURCE", source)
+    monkeypatch.setattr(runtime, "bun_binary", lambda: "bun")
+    inputs = []
+
+    async def run(self, prompt, history):
+        inputs.append((prompt, history))
+        self.state["status"] = "idle"
+        self.state["messages"].append(
+            {"role": "assistant", "text": "Only numeric test results"}
+        )
+        self.publish()
+
+    monkeypatch.setattr(runtime.LocalAgent, "run", run)
+    rejected = client.post(
+        "/api/internal/agents/create",
+        headers=headers("backtester"),
+        json={
+            "role": "backtester",
+            "strategy_id": second,
+            "name": "escape",
+            "task": "Change the test",
+        },
+    )
+    assert rejected.status_code == 403
+    for role in ["orchestrator", "research", "executor"]:
+        assert (
+            client.post(
+                "/api/internal/agents/create",
+                headers=headers("backtester"),
+                json={"role": role, "name": "escape", "task": "Search the future"},
+            ).status_code
+            == 403
+        )
+    created = client.post(
+        "/api/internal/agents/create",
+        headers=headers("backtester"),
+        json={
+            "role": "backtester",
+            "name": "SECRET research name",
+            "task": "SECRET research text",
+        },
+    )
+    assert created.status_code == 200, created.text
+    child = manager.agents[created.json()["id"]]
+    assert child.state["strategy_id"] == first
+    assert child.role == "backtester"
+    assert created.json()["files"] == []
+    assert created.json()["name"] == "Historical evaluator"
+    assert inputs[0][1] == [] and "SECRET" not in inputs[0][0]
+    assert first in inputs[0][0] and second not in inputs[0][0]
+    roster = client.get("/api/internal/agents", headers=headers("backtester")).json()[
+        "agents"
+    ]
+    assert all(row["name"] == "Historical evaluator" for row in roster)
+    assert all(row["role"] == "backtester" for row in roster)
+
+
+def test_orchestrator_orders_still_obey_backend_stop(board):
+    manager, client = board
+    manager.token = "TOKEN"
+    desk = manager.desk
+    desk.set_policy(Policy(**policy_body()))
+    sid = desk.register(StrategyInput(**strategy_body()), "strategy")["id"]
+    response = client.post(
+        "/api/internal/desk/order",
+        headers=headers(),
+        json={
+            "strategy_id": sid,
+            "symbol": "AAPL",
+            "side": "buy",
+            "notional": 100,
+            "client_order_id": "orchestrator-test-order",
+        },
+    )
+    assert response.status_code == 422
+    assert "stop" in response.json()["detail"]
