@@ -155,3 +155,5 @@ python3 scripts/cleanup.py --apply
 That command keeps agent-created files and conversations. Shared system tools and other AWS profiles are left alone.
 
 The hosted backtester uses Mayank’s walk-forward engine (`BACKTEST_ENGINE=wf`). The image includes `data/wf`, `reports/wf` and `specs`. Opus 4.6 remains the blind evaluator; reports retain their actual PASS/FAIL and author-model leakage labels. Existing strategies and approvals are preserved; switching engines does not relabel old results.
+
+The hosted watchdog’s Guardrail and AgentCore Memory have a separate private inventory. Preview their cleanup with `./workshop-run uv run python scripts/hosting_watchdog.py --cleanup`; add `--apply` to remove only resources created by that setup. Run this before the existing hosting cleanup. Resources discovered from another setup are preserved.
