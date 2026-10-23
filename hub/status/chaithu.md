@@ -6,7 +6,7 @@ Updated 13:30 by Claude Code
 - The Desk pipeline end to end (earlier today): `data/` snapshots, `backend/app/data.py`, `backend/app/backtest.py`, `backend/app/agents/`, `POST /api/run`.
 - `docs/agent-flow.md`, `.tex`, `.pdf`: high-level agent flow and per-agent variables table for the team.
 
-**In flight** (branch `chaithu/synthesis-layer`, D19 proposed)
+**In flight** (branch `chaithu/synthesis-layer`, D21 proposed)
 - `backend/app/synthesis/`: research bundle contract, `strategy.synthesize` (conviction seed from memos, mandate and policy clamping, optional one-call Bedrock refinement re-clamped in code), `significance.walk_forward` (monthly cutoffs, hit rate, mean excess, t-stat, bootstrap CI vs SPY and equal weight), `orders.plan_orders` (weights x capital minus holdings, sells first, within cash and limits).
 - `backend/app/routes/synthesis.py`: `POST /api/internal/desk/synthesize` (strategy role, registers through `Desk.register`), `POST /api/internal/desk/plan-orders` (executor role, after `execution_checks`), human `GET .../desk/strategies/{id}/significance` and `GET .../desk/runs`; run records in `synthesis.json` beside `desk.json`.
 - Cross-lane, named here: two tool names appended in `backend/app/roles.py` (strategy: `synthesize_strategy`; executor: `plan_paper_orders`), two bridge tools appended in `backend/worker/desk-tools.ts`, one import and one `include_router` line in `backend/app/main.py`. No change to desk gates, paper adapter, schema or policy model.
