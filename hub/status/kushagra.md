@@ -1,4 +1,4 @@
-# Kushagra · Lane: agent canvas and AWS hosting
+# Kushagra · Lane 5: AWS platform, fund dashboard, and canvas
 
 Updated 2026-10-23 by Codex
 
@@ -10,7 +10,9 @@ Updated 2026-10-23 by Codex
 - Deployment/update script and scoped cleanup preview in `scripts/hosting.py`; no workshop desktops or existing AgentCore sample modified.
 
 **In flight**
-- Integrating remote history and pushing the hosted canvas to main, explicitly authorized by Kushagra after disclosing D6. D7 records the direct instruction.
+- Directly requested by Kushagra: fund home/dashboard, short detailed mandate setup, per-fund overview, and an existing agent canvas per fund. Working in managed worktree fund-dashboard.
+- New files in `frontend/src/funds/`, `backend/app/funds.py`, and `backend/app/routes/funds.py`. Preserve existing board as the first fund, then keep each fund's agents, files, layout, and discussions separate; all agents inside one fund still share its filesystem.
+- Cross-lane integration: minimal main.py router/lifecycle lookup edits and a worker prompt context line are required to scope private delegation to the owning fund. No trading execution, strategy gate, or shared pipeline schema changes.
 
 **Blocked, or need from someone**
 - Finance/search API keys are available to hosted workers, but the existing stripped-down registry still exposes only file and delegation tools. No trading functionality has been added by this deployment.

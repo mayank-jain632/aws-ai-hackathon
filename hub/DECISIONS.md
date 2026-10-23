@@ -66,3 +66,9 @@ When the team answers one, delete it here and log the answer below as a decision
 **Decision:** Every coding agent follows `hub/BUILDING.md`: run `scripts/hub-sync.sh` before each slice of work, at least every 15 minutes during long tasks, and before every push; claim work over 20 minutes in your status file first; put new work in new files; regenerate lockfiles instead of hand-merging them.
 **Why:** Six people's agents push to `main` at once, and a 40-minute task built on a stale `main` lands as conflicts or as code that calls something that changed.
 **Affects:** every session in every tool.
+
+
+### D10 · Proposed · Kushagra, direct product instruction recorded by Codex
+**Instruction:** Add a fund creation home page, fund management dashboard, detailed but demo-friendly mandate setup, and one overview plus agent canvas per fund. Keep existing functionality.
+**Implementation scope:** Lane 5 adds fund metadata and scoped runtime storage in new fund modules, reuses the current canvas and login, and preserves the existing board as the first fund. Each fund has one shared agent filesystem; funds do not read each other's files or delegate across fund boundaries. Financial metrics come from recorded portfolio state or starting cash, not invented performance. No new trading execution is introduced.
+**Affects:** new fund routes and UI, minimal canvas/runtime routing/context edits. This follows the direct user instruction while keeping the PRD's pipeline integrations available to other lanes.
