@@ -1,3 +1,60 @@
+# The Desk — Track 3, Financial Portfolio Management
+
+Five analyst agents (technical, fundamentals, macro, sentiment, geopolitics) each write a
+dated memo from data available on or before a chosen cutoff. A portfolio-manager agent
+reconciles them into target weights with a rationale and a "changes my mind" trigger per
+position. The portfolio is then backtested from the cutoff forward against equal weight
+and SPY. The whole thesis is inspectable on one screen; click any position for the
+evidence trail. Design and lane plan: `PLAN.md`.
+
+**This is a historical experiment, not financial advice.**
+
+## Experiment definition (reproducibility)
+
+| Item | Value |
+|---|---|
+| Universe (10) | AAPL, MSFT, NVDA, AMZN, GOOGL, JPM, XOM, UNH, PG, CAT |
+| Reference | SPY |
+| Cutoff | chosen on the slider, 2022-01-01 to 2024-06-01 in monthly steps; default 2023-01-01 |
+| Evaluation window | cutoff to 2025-06-30 |
+| Baseline | equal weight of the universe (SPY shown as a second line) |
+| Rebalancing | monthly, back to the PM's target weights; long only; weights sum to 1 |
+| Costs | none |
+| Returns | price return from split-adjusted closes (no dividends) |
+| Sharpe | daily returns annualised, risk-free = latest FEDFUNDS published by the cutoff |
+| Look-ahead | every loader in `backend/app/data.py` takes `cutoff` and drops rows not public by then (prices by date, FRED by publication date, SEC by filing date, GDELT by event date) before any agent reads them; every cited source carries its date and the API asserts it is on or before the cutoff |
+| Data | committed snapshots under `data/`, downloaded 2026-10-23; see `data/README.md` for sources and ranges |
+| Model | `us.openai.gpt-5.6-luna` on Amazon Bedrock via the Converse API, one call per analyst plus one for the PM |
+| Cache | responses cached under `backend/.cache/` keyed by cutoff, so re-running a cutoff is deterministic; pass `?refresh=true` to `/api/run` to recompute |
+
+## Run The Desk
+
+Backend, through the workshop credential wrapper (see "Connect to AWS" below):
+
+```sh
+./workshop-run uv run fastapi dev --host 127.0.0.1 --port 8000
+```
+
+Without AWS access, `MOCK_AGENTS=1` serves fixture memos and weights with the real backtest.
+
+Frontend:
+
+```sh
+npm run dev:frontend
+```
+
+Live tape (optional; the header falls back to the last committed close if it is off):
+
+```sh
+uv run python tape/server.py
+```
+
+Tests and lint:
+
+```sh
+uv run pytest backend/tests
+```
+
 # AWS hackathon
 
 Team 4's starter uses React, TypeScript, and Vite for the frontend, FastAPI for the backend, and Amazon Bedrock with AgentCore for the agent.

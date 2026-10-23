@@ -38,6 +38,29 @@ export function useTape(tickers: string[]): TapeState {
   });
   const retry = useRef(1000);
 
+  // Seed the fallback from the backend's last committed close, if it is up.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/last-close")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((rows: Record<string, { close: number; change_pct: number }> | null) => {
+        if (!rows || cancelled) return;
+        setTicks((prev) => {
+          const next = { ...prev };
+          for (const [t, row] of Object.entries(rows)) {
+            if (next[t] && next[t].ts === 0) {
+              next[t] = { ...next[t], price: row.close, change_pct: row.change_pct / 100 };
+            }
+          }
+          return next;
+        });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     let ws: WebSocket | null = null;
     let timer: number | undefined;
