@@ -15,7 +15,7 @@ from typing import Any
 from backend.app.agent import ROOT
 from backend.app.scores.models import AgentRef, Citation
 
-# The container image does not copy reports/ today; SCORES_WF_DIR points at a mounted copy.
+# SCORES_WF_DIR points at a mounted copy when the container image does not include reports/wf.
 WF_ROOT = Path(os.getenv("SCORES_WF_DIR") or ROOT / "reports" / "wf")
 SYNTHESIS_CODE = ROOT / "backend" / "app" / "synthesis"
 FILE_TOOLS = {"write_file", "edit_file"}

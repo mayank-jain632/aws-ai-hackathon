@@ -80,7 +80,7 @@ def test_rings_without_data_say_not_produced_and_name_the_owner(tmp_path):
         assert score.owner and score.missing
     statuses = {s.id: s.status for s in card.sources}
     assert statuses["desk"] == "empty"
-    assert statuses["walk_forward"] == "not_on_main"
+    assert statuses["walk_forward"] == "empty"
 
 
 def test_scored_rings_show_raw_formula_source_and_recorded_reasoning(tmp_path):

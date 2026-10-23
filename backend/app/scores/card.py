@@ -32,7 +32,7 @@ OWNERS = {
     "execution": "Lane 4 execution: paper executor agent and the Alpaca paper adapter",
     "watchdog": "Lane 4 moderator (Aaron): watchdog gate",
     "synthesis": "Lane 2, Chaithu's synthesis layer (backend/app/synthesis)",
-    "wf": "Lane 2b, Mayank's walk-forward evaluation (reports/wf/, not on main yet)",
+    "wf": "Lane 2b, Mayank's walk-forward evaluation (reports/wf/)",
 }
 WATCHDOG = AgentRef(name="Watchdog gate (16 deterministic rules, no model)", role="moderator", attribution="system")
 GATE = AgentRef(name="Backend gate (desk.evaluate)", role="backend", attribution="system")
@@ -847,8 +847,8 @@ def source_statuses(ctx: Context) -> list[SourceStatus]:
         ),
         SourceStatus(
             id="walk_forward", label="Walk-forward evaluation", owner=OWNERS["wf"], location=src.rel(ctx.wf["dir"]) if ctx.wf else "reports/wf/",
-            status="present" if ctx.wf else "not_on_main",
-            detail=f"{ctx.wf['n_decisions']} weekly decision records, firm-wide (not this fund's strategy)" if ctx.wf else "reports/wf/ is not on main yet",
+            status="present" if ctx.wf else "empty",
+            detail=f"{ctx.wf['n_decisions']} weekly decision records, firm-wide (not this fund's strategy)" if ctx.wf else "reports/wf/ is not in this deployment (set SCORES_WF_DIR or copy reports/wf into the image)",
         ),
     ]
 
