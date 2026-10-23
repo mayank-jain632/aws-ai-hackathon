@@ -15,7 +15,6 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.app.access import HostedAccess
 from backend.app.agent import AgentManager
-from backend.app.routes.research import router as research_router
 
 
 @asynccontextmanager
@@ -36,7 +35,6 @@ app.add_middleware(
     ],
 )
 app.add_middleware(HostedAccess)
-app.include_router(research_router)
 
 
 class MessageRequest(BaseModel):

@@ -3,8 +3,8 @@
 Updated 2026-10-23 by Codex
 
 **Shipped**
-- Data breadth bridge on `codex/agent-data-tools`: `list_data_sources`, `query_research_data`, and `search_live_context`. Canvas tools can query cached prices/OHLCV, SEC fundamentals, FRED macro, curated events, and optional GDELT tone; Exa provides live-only web/news/social context when configured. Private routes reuse worker authentication and manager lookup. Conversation trees keep one mode/cutoff to prevent mixing tool results.
-- Container now packages pandas and the cached data. Verified 15 Python tests, three Bun worker tests, mock analyst path, Python/frontend lint, frontend build, and Docker build plus actual TS-tool → authenticated API → snapshot queries. Live Exa responses are mocked in tests; no live search or funded model run verified. See `docs/canvas-research-tools.md`.
+- User correction to D11: removed the custom research layer, its mode/cutoff locks, cached-data API routes, and extra Docker data/pandas packaging. Canvas now directly exposes Dexter's existing finance, market-data, SEC-filing, stock-screener and URL-fetch tools, Exa search when configured, and X search when configured. Existing file/delegation tools remain.
+- Verified six backend tests, Python lint, mock analyst path, Docker build, and container smoke checks of the actual native registry, key gating, nested Bedrock model routing, financial API request and Exa request with mocked responses. No live provider/model calls or AWS deployment performed.
 - One-container canvas hosted at https://dgvmahl7u2clq.cloudfront.net on a dedicated EC2 instance, with CloudFront HTTPS, encrypted EBS storage, ECR image, Secrets Manager environment, IAM Bedrock access, and Systems Manager management.
 - Demo accounts for kush@example.com, mayank@example.com, and gerson@example.com. Passwords remain outside Git in the deployer's ignored `.local/hosting/demo-accounts.json`.
 - Shared agent tree, chats with author attribution, files, synchronized canvas positions, and live connection count. Selection, pan, zoom, and branch collapse remain local to each viewer.
@@ -18,7 +18,7 @@ Updated 2026-10-23 by Codex
 - Cross-lane integration: minimal main.py router/lifecycle lookup edits and a worker prompt context line are required to scope private delegation to the owning fund. No trading execution, strategy gate, or shared pipeline schema changes.
 
 **Blocked, or need from someone**
-- The research tools need the updated image deployed before they are available on AWS. Exa needs `EXASEARCH_API_KEY`; missing keys fail explicitly. GDELT tone snapshot is absent. Curated events are unverified and FRED availability dates approximate. No trading or live quote tools were added.
+- Native Dexter tools need the updated image deployed before use on AWS. Finance needs `FINANCIAL_DATASETS_API_KEY`; Exa/X search appear when their respective keys are configured. Live responses remain unsuitable as point-in-time backtest inputs. IMPORTANT for in-flight role work: `backend/app/research.py`, `backend/app/routes/research.py`, and `backend/worker/research-tools.ts` were removed at the user's explicit request. Restrict native tools by role rather than importing the removed research layer.
 - Agent-loop inspection by Codex on 2026-10-23: `create_agent` and `message_agent` wait for the child's result; waiting parents count toward the four active runs, so recursive delegation can exhaust capacity before reaching the six-agent roster cap. Lane 1 should account for this when orchestrating phases.
 - Dexter's eight-iteration exhaustion emits `done`; the Python adapter records "Run completed" and returns to idle even when the answer says the task was not completed. This is a status-reporting gap for pipeline consumers. Inspection only; no runtime code changed or Bedrock calls made.
 
