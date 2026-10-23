@@ -84,9 +84,11 @@ class LocalAgent:
         self.name = name
         self.parent_id = parent_id
         self.local = (
-            LOCAL if agent_id == "dexter" else ROOT / ".local/agents" / agent_id
+            manager.root / "agent"
+            if agent_id == "dexter"
+            else manager.root / "agents" / agent_id
         )
-        self.workspace = ROOT / ".local/workspace"
+        self.workspace = manager.root / "workspace"
         self.state_path = self.local / "state.json"
         self.workspace.mkdir(parents=True, exist_ok=True)
         self.local.mkdir(parents=True, exist_ok=True)
@@ -144,7 +146,9 @@ class LocalAgent:
             "messages": self.state["messages"],
             "activity": self.state["activity"],
             "files": self.files(),
-            "workspace": str(self.workspace.relative_to(ROOT)),
+            "workspace": str(self.workspace.relative_to(ROOT))
+            if self.workspace.is_relative_to(ROOT)
+            else "workspace",
         }
 
     def publish(self):
@@ -179,6 +183,10 @@ class LocalAgent:
             ):
                 raise ValueError(
                     "Four agents are already running. Wait for one to finish."
+                )
+            if self.manager.paused:
+                raise ValueError(
+                    "This fund is paused. Resume it before starting agents."
                 )
             bun_binary()
             if not (DEXTER_SOURCE / ".revision").exists():
@@ -224,7 +232,12 @@ class LocalAgent:
             if self.cancelled:
                 os.killpg(self.process.pid, signal.SIGTERM)
             payload = json.dumps(
-                {"prompt": prompt, "history": history, "files": self.files()}
+                {
+                    "prompt": prompt,
+                    "history": history,
+                    "files": self.files(),
+                    "context": self.manager.context,
+                }
             ).encode()
             self.process.stdin.write(payload)
             await self.process.stdin.drain()
@@ -315,12 +328,15 @@ class LocalAgent:
 class AgentManager:
     """Local workers share a workspace and keep separate conversations."""
 
-    def __init__(self):
+    def __init__(self, root=None):
+        self.root = Path(root) if root else ROOT / ".local"
+        self.context = ""
+        self.paused = False
         self.token = secrets.token_urlsafe(32)
         self.subscribers = set()
         self.lock = asyncio.Lock()
-        self.registry = ROOT / ".local/agents.json"
-        self.layout_file = ROOT / ".local/layout.json"
+        self.registry = self.root / "agents.json"
+        self.layout_file = self.root / "layout.json"
         self.layout = (
             json.loads(self.layout_file.read_text())
             if self.layout_file.exists()

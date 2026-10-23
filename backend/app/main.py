@@ -15,6 +15,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.app.access import HostedAccess
 from backend.app.agent import AgentManager
+from backend.app.routes.funds import router as funds_router
 
 
 @asynccontextmanager
@@ -48,6 +49,10 @@ class AgentTask(BaseModel):
 
 
 def manager(request: Request) -> AgentManager:
+    if hasattr(request.state, "fund_manager"):
+        return request.state.fund_manager
+    if request.headers.get("x-agent-token") and hasattr(request.app.state, "funds"):
+        return request.app.state.funds.by_token(request.headers["x-agent-token"])
     return request.app.state.manager
 
 
@@ -212,6 +217,8 @@ async def delegate(action: str, body: AgentTask, request: Request) -> dict:
     except ValueError as error:
         raise HTTPException(409, str(error)) from error
 
+
+app.include_router(funds_router)
 
 # The same server serves the built React app and API inside the single container.
 frontend = Path(__file__).resolve().parents[2] / "frontend/dist"
