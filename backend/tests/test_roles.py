@@ -257,3 +257,58 @@ def test_invalid_weights_and_unconfigured_gate(board):
         StrategyInput(**(strategy_body() | {"weights": {"AAPL": float("nan")}}))
     with pytest.raises(ValueError, match="configure"):
         desk_for(manager).register(StrategyInput(**strategy_body()), "strategy")
+
+
+def test_desk_artifacts_and_worker_tokens_are_fund_scoped(tmp_path, monkeypatch):
+    import backend.app.funds as funds_module
+    from backend.app.funds import FundStore, Mandate
+
+    manager = runtime.AgentManager(root=tmp_path / ".local")
+    monkeypatch.setattr(funds_module, "ROOT", tmp_path)
+    store = FundStore(manager, root=manager.root)
+    one = store.create(Mandate(name="First fund"), "team")
+    two = store.create(Mandate(name="Second fund"), "team")
+    first, second = store.runtime(one["id"]), store.runtime(two["id"])
+    first.agents["strategy"] = runtime.LocalAgent(
+        first, "strategy", "Strategy", "dexter", "strategy"
+    )
+    second.agents["strategy"] = runtime.LocalAgent(
+        second, "strategy", "Strategy", "dexter", "strategy"
+    )
+    monkeypatch.setattr(app.state, "manager", manager, raising=False)
+    monkeypatch.setattr(app.state, "funds", store, raising=False)
+    monkeypatch.delenv("APP_ACCESS_PASSWORD", raising=False)
+    client = TestClient(app, base_url="http://localhost")
+    try:
+        assert (
+            client.put(
+                f"/api/funds/{one['id']}/desk/policy", json=policy_body()
+            ).status_code
+            == 200
+        )
+        h1 = {"X-Agent-Token": first.token, "X-Agent-ID": "strategy"}
+        registered = client.post(
+            "/api/internal/desk/strategy", headers=h1, json=strategy_body()
+        )
+        assert registered.status_code == 200, registered.text
+        sid = registered.json()["id"]
+        assert sid in client.get(f"/api/funds/{one['id']}/desk").json()["strategies"]
+        assert (
+            sid not in client.get(f"/api/funds/{two['id']}/desk").json()["strategies"]
+        )
+        h2 = {"X-Agent-Token": second.token, "X-Agent-ID": "strategy"}
+        assert (
+            sid
+            not in client.get("/api/internal/desk/inspect", headers=h2).json()[
+                "strategies"
+            ]
+        )
+        assert (
+            client.put(
+                f"/api/funds/{one['id']}/desk/policy", headers=h2, json=policy_body()
+            ).status_code
+            == 403
+        )
+        assert first.desk.path.parent != second.desk.path.parent
+    finally:
+        client.close()

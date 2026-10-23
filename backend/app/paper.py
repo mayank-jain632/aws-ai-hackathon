@@ -99,7 +99,14 @@ def submit(desk, body):
             float(p["market_value"]) for p in positions if p["symbol"] == body.symbol
         )
         if body.side == "buy":
-            cap = min(policy.max_position, strategy["weights"][body.symbol], fund["max_position"] / 100 if fund else 1) * capital
+            cap = (
+                min(
+                    policy.max_position,
+                    strategy["weights"][body.symbol],
+                    fund["max_position"] / 100 if fund else 1,
+                )
+                * capital
+            )
             if body.notional > cash or market_value + body.notional > cap + 0.01:
                 raise ValueError(
                     "Buy would exceed cash, mandate position size, or frozen strategy target"
