@@ -13,7 +13,7 @@ FROM oven/bun:1.4.4 AS bun
 FROM python:3.12-slim-bookworm
 WORKDIR /app
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
-RUN pip install --no-cache-dir fastapi==0.161.1 uvicorn==0.54.0 python-dotenv==1.2.4 pandas==3.1.0 httpx==0.28.1
+RUN pip install --no-cache-dir fastapi==0.161.1 uvicorn==0.54.0 python-dotenv==1.2.4 pandas==3.1.0 httpx==0.28.1 boto3==1.43.118
 COPY --from=javascript /app/node_modules ./node_modules
 COPY --from=javascript /app/backend/worker ./backend/worker
 COPY --from=javascript /app/frontend/dist ./frontend/dist

@@ -3,9 +3,9 @@
 Runs the real backend routes the canvas tools call (strategy registration, adversarial
 review, blind backtest on the real price snapshot, human approval, executor order) in a
 throwaway directory. Only the Alpaca broker is stubbed, so no order leaves this machine;
-the stub account mirrors the connected paper account's $100,000 starting state. The
-second opinion calls Bedrock when AWS credentials are present, otherwise it says it ran
-in mock mode.
+the stub account mirrors the connected paper account's $100,000 starting state. With AWS
+credentials and no MOCK_AGENTS, the second opinion calls Bedrock and the watchdog sends its
+verdicts to CloudWatch, EventBridge and AgentCore Memory; otherwise it says it ran in mock mode.
 
     uv run python scripts/watchdog_demo.py          # pauses between steps
     uv run python scripts/watchdog_demo.py --fast   # no pauses
@@ -33,7 +33,7 @@ from fastapi.testclient import TestClient
 from backend.app import agent as runtime
 from backend.app import paper
 from backend.app.main import app
-from backend.app.watchdog import feedback, monitor, opinion
+from backend.app.watchdog import aws, feedback, monitor, opinion
 
 UNIVERSE = ["AAPL", "MSFT", "JPM", "PG", "UNH", "XOM"]
 STRATEGY = {
@@ -242,6 +242,9 @@ def main():
     print(feedback.lessons(calder.desk))
     http.put("/api/watchdog/halt", json={"halted": False, "reason": "Review finished"}).raise_for_status()
     say(f"Stop cleared by a person. Scratch files: {SCRATCH}")
+    if aws.enabled():
+        sent = aws.flush()
+        say(f"AWS: verdicts, the stop and lessons {'were sent' if sent else 'are still sending'} to CloudWatch {aws.NAMESPACE}, EventBridge {aws.EVENT_SOURCE} and AgentCore Memory.")
 
 
 if __name__ == "__main__":

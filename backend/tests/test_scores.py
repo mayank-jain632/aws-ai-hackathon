@@ -209,9 +209,28 @@ def test_synthesis_records_fill_fund_rings_when_present(tmp_path):
     confidence = rings["confidence"]
     assert confidence.scope == "fund" and confidence.value == pytest.approx(50 * (1 + (0.5 * 1.2 + 0.5 * -0.4) / 2), abs=0.05)
     assert {f.label for f in confidence.factors} >= {"AAPL", "MSFT", "NVDA (dropped)"}
-    assert rings["significance"].value == pytest.approx(98.0) and rings["significance"].scope == "fund"
-    assert rings["sensitivity"].value == pytest.approx(70.0)
+    from backend.app.synthesis.significance import walk_forward
+
+    real = walk_forward(sid, {"AAPL": 0.5, "MSFT": 0.5}, horizon_days=182)
+    one_sided = real.p_value_vs_spy / 2 if real.t_stat_vs_spy > 0 else 1 - real.p_value_vs_spy / 2
+    sig = rings["significance"]
+    assert sig.scope == "fund" and sig.value == pytest.approx(100 * (1 - one_sided), abs=0.05)
+    assert f"t = {real.t_stat_vs_spy:.2f}" in sig.raw and "95% CI" in sig.raw and "hit rate" in sig.raw
+    lo, hi = real.ci95_excess_vs_spy
+    assert sig.raw.endswith("includes zero" if lo <= 0 <= hi else "excludes zero")
+    assert "s2" in sig.factors[0].provenance.record and "not recorded" in sig.factors[0].provenance.record
+    beat = sum(w.excess_vs_spy > 0 for w in real.windows)
+    assert rings["sensitivity"].value == pytest.approx(round(100 * beat / real.n_windows, 1))
+    assert len(rings["sensitivity"].factors) == real.n_windows
     assert next(s for s in build_scorecard("f1", Mandate(name="Growth").model_dump(), manager).sources if s.id == "synthesis").status == "present"
+
+
+def test_strategy_without_a_synthesis_record_has_no_significance(tmp_path):
+    manager, _, _ = evaluated_fund(tmp_path)
+    rings = by_key(build_scorecard("f1", Mandate(name="Growth").model_dump(), manager))
+    assert rings["significance"].status == "not_produced"
+    assert "synthesis layer has no record" in rings["significance"].missing
+    assert "Lane 2b" in rings["significance"].owner and rings["significance"].value is None
 
 
 def test_plan_files_give_context_before_any_strategy(tmp_path):
