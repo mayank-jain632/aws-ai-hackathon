@@ -90,7 +90,7 @@ def dry_run(body: ReviewInput, request: Request, fund_id: str | None = None) -> 
                 test = desk.state["tests"].get(body.strategy_id, {})
                 portfolio = portfolio.model_copy(update={"backtest_verdict": test.get("verdict")})
         else:
-            portfolio = gate.portfolio_for(desk, body.strategy_id, account_snapshot())
+            portfolio = gate.portfolio_for(desk, body.strategy_id, account_snapshot(), body.symbol.upper())
     except ValueError as error:
         raise HTTPException(422, str(error)) from error
     except httpx.HTTPError as error:

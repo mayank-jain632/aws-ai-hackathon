@@ -8,8 +8,9 @@ ValueError, which the existing order route records as `paper_order_blocked`.
 from __future__ import annotations
 
 import json
+import os
 
-from backend.app.watchdog import feedback, store
+from backend.app.watchdog import feedback, market, store
 from backend.app.watchdog.halt import halt_reason
 from backend.app.watchdog.models import (
     PastOrder,
@@ -68,7 +69,14 @@ def past_orders(desk) -> list[PastOrder]:
     ]
 
 
-def portfolio_for(desk, strategy_id: str | None, snapshot: dict) -> WatchPortfolio:
+def live_market(symbols: list[str]):
+    """Live venue data unless turned off (tests set WATCHDOG_LIVE_DATA=0)."""
+    if os.getenv("WATCHDOG_LIVE_DATA", "1") == "0":
+        return None
+    return market.live_market(symbols)
+
+
+def portfolio_for(desk, strategy_id: str | None, snapshot: dict, symbol: str | None = None) -> WatchPortfolio:
     account = snapshot["account"]
     equity = float(account["equity"])
     positions, last_close = {}, {}
@@ -76,9 +84,13 @@ def portfolio_for(desk, strategy_id: str | None, snapshot: dict) -> WatchPortfol
         positions[p["symbol"]] = positions.get(p["symbol"], 0.0) + float(p["market_value"])
         if p.get("lastday_price"):
             last_close[p["symbol"]] = float(p["lastday_price"])
+    live = live_market(sorted({*positions, *([symbol] if symbol else [])}))
+    if live and not live.error:
+        last_close.update(live.prev_close)
     with store.LOCK:
         state = store.load_state(desk)
-        state["peak_equity"] = max(state.get("peak_equity", 0.0), equity)
+        broker_peak = live.equity_peak if live and not live.error and live.equity_peak else 0.0
+        state["peak_equity"] = max(state.get("peak_equity", 0.0), equity, broker_peak)
         store.save_state(desk, state)
     test = desk.state["tests"].get(strategy_id or "", {})
     tested_drawdown = test.get("metrics", {}).get("portfolio", {}).get("max_drawdown")
@@ -91,6 +103,7 @@ def portfolio_for(desk, strategy_id: str | None, snapshot: dict) -> WatchPortfol
         recent_orders=past_orders(desk),
         backtest_verdict=test.get("verdict"),
         backtest_max_drawdown=tested_drawdown,
+        live=live,
     )
 
 
@@ -106,7 +119,7 @@ def review_desk_order(desk, body, policy, snapshot, agent_id: str | None = None)
     return review_order(
         order,
         mandate_for(desk, policy),
-        portfolio_for(desk, body.strategy_id, snapshot),
+        portfolio_for(desk, body.strategy_id, snapshot, body.symbol.upper()),
         halt=halt_reason(desk),
     )
 

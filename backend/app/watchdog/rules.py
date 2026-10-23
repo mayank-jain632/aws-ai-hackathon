@@ -65,6 +65,7 @@ PRIORITY = [
     "rapid_fire",
     "turnover",
     "daily_orders",
+    "market_hours",
 ]
 
 
@@ -144,7 +145,18 @@ def rule_universe(order: WatchOrder, mandate: WatchMandate) -> RuleResult:
     return ok("universe", f"{order.symbol} is in the approved list.")
 
 
-def rule_known_ticker(order: WatchOrder, known: set[str]) -> RuleResult:
+def live_ok(portfolio: WatchPortfolio) -> bool:
+    return portfolio.live is not None and portfolio.live.error is None
+
+
+def rule_known_ticker(order: WatchOrder, known: set[str], portfolio: WatchPortfolio) -> RuleResult:
+    if live_ok(portfolio) and order.symbol in portfolio.live.tradable:
+        if not portfolio.live.tradable[order.symbol]:
+            return block(
+                "known_ticker",
+                f"Alpaca does not list {order.symbol} as an active, tradable asset right now.",
+            )
+        return ok("known_ticker", f"Alpaca lists {order.symbol} as active and tradable.")
     if order.symbol.upper() not in known:
         return block(
             "known_ticker",
@@ -292,12 +304,26 @@ def rule_drawdown(order: WatchOrder, mandate: WatchMandate, portfolio: WatchPort
 
 
 def rule_price_band(order: WatchOrder, mandate: WatchMandate, portfolio: WatchPortfolio) -> RuleResult:
+    band = guardrail(mandate, "price_band")
     if order.price is None:
-        return info("price_band", "Market order with no stated price; nothing to compare to the last close.")
+        live = portfolio.live if live_ok(portfolio) else None
+        trade = live.last_trade.get(order.symbol) if live else None
+        prev = live.prev_close.get(order.symbol) if live else None
+        if not (trade and prev):
+            return info("price_band", "Market order with no stated price and no live quote to check.")
+        # A market order fills wherever the stock is trading, so check how far it has run today.
+        move, limit = abs(trade / prev - 1), 2 * band
+        if order.side == "buy" and move > limit:
+            return block(
+                "price_band",
+                f"{order.symbol} last traded at ${trade:,.2f}, {move:.1%} from yesterday's ${prev:,.2f} close; a {mandate.risk} mandate does not send market buys into a move over {pct(limit)}.",
+                move,
+                limit,
+            )
+        return ok("price_band", f"{order.symbol} is {move:.1%} from yesterday's close (live).", move, limit)
     last = portfolio.last_close.get(order.symbol)
     if not last:
         return info("price_band", f"No last close for {order.symbol} to compare the ${order.price:,.2f} price against.")
-    band = guardrail(mandate, "price_band")
     gap = abs(order.price / last - 1)
     if gap > band:
         return block(
@@ -384,6 +410,14 @@ def rule_daily_orders(mandate: WatchMandate, portfolio: WatchPortfolio, now: dat
     return ok("daily_orders", f"Order {count} of {mandate.max_daily_orders} today.", count, mandate.max_daily_orders)
 
 
+def rule_market_hours(portfolio: WatchPortfolio) -> RuleResult:
+    if not live_ok(portfolio) or portfolio.live.market_open is None:
+        return info("market_hours", "Market clock unavailable; checks used the desk snapshot.")
+    if portfolio.live.market_open:
+        return info("market_hours", "Market is open (Alpaca clock).")
+    return info("market_hours", "Market is closed (Alpaca clock); a day order waits for the next open.")
+
+
 # --------------------------------------------------------------------------- gate
 
 
@@ -404,7 +438,7 @@ def review_order(
         rule_emergency_stop(halt),
         rule_trading_permission(mandate),
         rule_universe(order, mandate),
-        rule_known_ticker(order, known if known is not None else known_symbols()),
+        rule_known_ticker(order, known if known is not None else known_symbols(), portfolio),
         rule_backtest_pass(order, portfolio),
         rule_quantity_sanity(order, portfolio),
         rule_order_size(order, mandate, portfolio),
@@ -417,6 +451,7 @@ def review_order(
         rule_wash_trade(order, portfolio, now),
         rule_turnover(order, mandate, portfolio, now),
         rule_daily_orders(mandate, portfolio, now),
+        rule_market_hours(portfolio),
     ]
     blocked = sorted((r for r in results if r.severity == "block"), key=lambda r: PRIORITY.index(r.rule))
     near = [r for r in results if r.severity == "near_miss"]

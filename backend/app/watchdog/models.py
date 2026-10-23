@@ -63,6 +63,18 @@ class PastOrder(BaseModel):
     status: str = "submitted"
 
 
+class LiveMarket(BaseModel):
+    """Venue data fetched right before the review. `error` set means the gate fell back."""
+
+    source: str
+    error: str | None = None
+    tradable: dict[str, bool] = Field(default_factory=dict)
+    last_trade: dict[str, float] = Field(default_factory=dict)
+    prev_close: dict[str, float] = Field(default_factory=dict)
+    market_open: bool | None = None
+    equity_peak: float | None = None
+
+
 class WatchPortfolio(BaseModel):
     equity: float
     cash: float
@@ -72,6 +84,7 @@ class WatchPortfolio(BaseModel):
     recent_orders: list[PastOrder] = Field(default_factory=list)
     backtest_verdict: str | None = None
     backtest_max_drawdown: float | None = None
+    live: LiveMarket | None = None
 
 
 class RuleResult(BaseModel):
