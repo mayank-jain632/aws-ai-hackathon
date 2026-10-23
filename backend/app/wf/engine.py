@@ -25,6 +25,7 @@ Conventions (pessimistic, documented where the contract is silent):
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -32,6 +33,7 @@ import pandas as pd
 
 from backend.app.wf.config import WfConfig
 from backend.app.wf.evaluate import weekly_returns
+from backend.app.wf.interfaces import PortfolioSnapshot
 from backend.app.wf.schemas import DecisionOrders, OrderIntent
 
 FILL_COLS = ["date", "ticker", "side", "shares", "price", "kind", "slippage_cost"]
@@ -230,6 +232,8 @@ def _apply_decision(
     for o in state.pending:
         state.log(d, o.ticker, "expired", "unfilled when next decision arrived")
     state.pending = []
+    for reason in dec.blocked:
+        state.log(d, "*", "blocked", reason)
     e_t = _equity(state, closes)
     for it in dec.intents:
         if it.ticker not in bars or np.isnan(closes.get(it.ticker, np.nan)):
@@ -279,6 +283,19 @@ def _sessions(bars, start: str, end: str) -> pd.DatetimeIndex:
     return idx[(idx >= pd.Timestamp(start)) & (idx <= pd.Timestamp(end))]
 
 
+def _snapshot(state: _State, d, eq: float, closes: pd.Series) -> PortfolioSnapshot:
+    """Account state at the decision close, built only from the engine's own state."""
+    held = {t: s for t, s in sorted(state.shares.items()) if s > EPS}
+    return PortfolioSnapshot(
+        as_of=pd.Timestamp(d).strftime("%Y-%m-%d"),
+        equity=eq,
+        cash=state.cash,
+        positions={t: s * float(closes[t]) for t, s in held.items()},
+        shares=dict(held),
+        open_orders=(),
+    )
+
+
 def run_engine(
     bars: dict[str, pd.DataFrame],
     decisions: list[DecisionOrders],
@@ -286,9 +303,17 @@ def run_engine(
     rf_annual_pct: pd.Series,
     start: str,
     end: str,
+    decision_fn: Callable[[str, PortfolioSnapshot], DecisionOrders | None] | None = None,
+    decision_dates: Sequence[str] | None = None,
 ) -> EngineResult:
     """Simulate ``decisions`` over [start, end]. ``start`` is the first decision date (the
-    base equity point); decisions dated before it are ignored."""
+    base equity point); decisions dated before it are ignored.
+
+    Closed loop (optional): at each date in ``decision_dates`` (every session when None) that has
+    no precomputed decision, after that session is marked at the close, ``decision_fn(date,
+    snapshot)`` is called with the engine's own account state and its DecisionOrders (or None for
+    no change) is applied exactly like a precomputed one. A precomputed decision wins on the same
+    date and then ``decision_fn`` is not called. ``blocked`` reasons are logged as skipped."""
     bars = {t: b.sort_index() for t, b in bars.items()}
     sessions = _sessions(bars, start, end)
     if len(sessions) < 2:
@@ -304,6 +329,7 @@ def run_engine(
         .reindex(sessions)
     )
     by_date = {pd.Timestamp(x.date): x for x in sorted(decisions, key=lambda x: x.date)}
+    fn_dates = None if decision_dates is None else {pd.Timestamp(x) for x in decision_dates}
     slip = cfg.slippage_bps / 1e4
     state = _State(cash=cfg.start_cash, shares={})
     eq_rows, pos_rows = [], []
@@ -328,8 +354,11 @@ def run_engine(
             for t, s in sorted(state.shares.items())
             if s > EPS
         ]
-        if d in by_date and i + 1 < len(sessions):
-            _apply_decision(
-                state, d, sessions[i + 1], by_date[d], bars, closes.iloc[i], cfg
-            )
+        if i + 1 >= len(sessions):
+            continue
+        dec = by_date.get(d)
+        if dec is None and decision_fn is not None and (fn_dates is None or d in fn_dates):
+            dec = decision_fn(d.strftime("%Y-%m-%d"), _snapshot(state, d, eq, closes.iloc[i]))
+        if dec is not None:
+            _apply_decision(state, d, sessions[i + 1], dec, bars, closes.iloc[i], cfg)
     return _result(state, eq_rows, pos_rows, cfg)

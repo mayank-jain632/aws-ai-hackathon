@@ -1,0 +1,441 @@
+{
+  "$defs": {
+    "AnalystIC": {
+      "additionalProperties": false,
+      "properties": {
+        "hit_rate": {
+          "title": "Hit Rate",
+          "type": "number"
+        },
+        "mean_ic": {
+          "title": "Mean Ic",
+          "type": "number"
+        },
+        "n": {
+          "title": "N",
+          "type": "integer"
+        },
+        "t_stat": {
+          "title": "T Stat",
+          "type": "number"
+        }
+      },
+      "required": [
+        "mean_ic",
+        "t_stat",
+        "hit_rate",
+        "n"
+      ],
+      "title": "AnalystIC",
+      "type": "object"
+    },
+    "ComponentSpec": {
+      "additionalProperties": false,
+      "description": "How a run names a component: a registered name or ``module:Class``, plus parameters.",
+      "properties": {
+        "params": {
+          "additionalProperties": true,
+          "title": "Params",
+          "type": "object"
+        },
+        "ref": {
+          "title": "Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "ref"
+      ],
+      "title": "ComponentSpec",
+      "type": "object"
+    },
+    "DecisionIndexEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "abstained_analysts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Abstained Analysts",
+          "type": "array"
+        },
+        "blocked": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Blocked",
+          "type": "array"
+        },
+        "contaminated": {
+          "title": "Contaminated",
+          "type": "boolean"
+        },
+        "date": {
+          "title": "Date",
+          "type": "string"
+        },
+        "n_intents": {
+          "title": "N Intents",
+          "type": "integer"
+        },
+        "target_gross": {
+          "title": "Target Gross",
+          "type": "number"
+        }
+      },
+      "required": [
+        "date",
+        "contaminated",
+        "n_intents",
+        "target_gross"
+      ],
+      "title": "DecisionIndexEntry",
+      "type": "object"
+    },
+    "EngineSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "rebalance_band": {
+          "default": 0.01,
+          "title": "Rebalance Band",
+          "type": "number"
+        },
+        "slippage_bps": {
+          "default": 5.0,
+          "title": "Slippage Bps",
+          "type": "number"
+        },
+        "start_cash": {
+          "default": 1000000.0,
+          "title": "Start Cash",
+          "type": "number"
+        },
+        "volume_participation_cap": {
+          "default": 0.05,
+          "title": "Volume Participation Cap",
+          "type": "number"
+        }
+      },
+      "title": "EngineSpec",
+      "type": "object"
+    },
+    "LimitsSpec": {
+      "additionalProperties": false,
+      "description": "Validator limits components may read from ``ctx.cfg``.",
+      "properties": {
+        "max_stop_pct": {
+          "default": 0.2,
+          "title": "Max Stop Pct",
+          "type": "number"
+        },
+        "max_tokens": {
+          "default": 4000,
+          "title": "Max Tokens",
+          "type": "integer"
+        },
+        "max_weight": {
+          "default": 0.25,
+          "title": "Max Weight",
+          "type": "number"
+        },
+        "min_stop_pct": {
+          "default": 0.02,
+          "title": "Min Stop Pct",
+          "type": "number"
+        },
+        "min_target_pct": {
+          "default": 0.03,
+          "title": "Min Target Pct",
+          "type": "number"
+        }
+      },
+      "title": "LimitsSpec",
+      "type": "object"
+    },
+    "RunSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "baselines": {
+          "default": [
+            "equal_weight_buy_hold",
+            "equal_weight_weekly",
+            "spy_buy_hold",
+            "momentum_12_1_top5",
+            "mechanical_seed"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "title": "Baselines",
+          "type": "array"
+        },
+        "decider": {
+          "$ref": "#/$defs/ComponentSpec"
+        },
+        "engine": {
+          "$ref": "#/$defs/EngineSpec"
+        },
+        "evaluator": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ComponentSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "execution": {
+          "$ref": "#/$defs/ComponentSpec"
+        },
+        "limits": {
+          "$ref": "#/$defs/LimitsSpec"
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Id"
+        },
+        "model_training_cutoff": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Training Cutoff"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "notes": {
+          "default": "",
+          "title": "Notes",
+          "type": "string"
+        },
+        "reference": {
+          "default": "SPY",
+          "title": "Reference",
+          "type": "string"
+        },
+        "seed": {
+          "default": 0,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "temperature": {
+          "default": 0.0,
+          "title": "Temperature",
+          "type": "number"
+        },
+        "universe": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Universe",
+          "type": "array"
+        },
+        "window": {
+          "$ref": "#/$defs/WindowSpec"
+        }
+      },
+      "required": [
+        "name",
+        "window",
+        "universe",
+        "decider",
+        "execution"
+      ],
+      "title": "RunSpec",
+      "type": "object"
+    },
+    "StrategyMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "cagr": {
+          "title": "Cagr",
+          "type": "number"
+        },
+        "costs": {
+          "title": "Costs",
+          "type": "number"
+        },
+        "final_equity": {
+          "title": "Final Equity",
+          "type": "number"
+        },
+        "max_drawdown": {
+          "title": "Max Drawdown",
+          "type": "number"
+        },
+        "n_blocked": {
+          "title": "N Blocked",
+          "type": "integer"
+        },
+        "n_fills": {
+          "title": "N Fills",
+          "type": "integer"
+        },
+        "n_skipped": {
+          "title": "N Skipped",
+          "type": "integer"
+        },
+        "sharpe": {
+          "title": "Sharpe",
+          "type": "number"
+        },
+        "total_return": {
+          "title": "Total Return",
+          "type": "number"
+        },
+        "turnover": {
+          "description": "mean weekly turnover (traded notional / equity)",
+          "title": "Turnover",
+          "type": "number"
+        }
+      },
+      "required": [
+        "total_return",
+        "cagr",
+        "max_drawdown",
+        "sharpe",
+        "final_equity",
+        "costs",
+        "turnover",
+        "n_fills",
+        "n_skipped",
+        "n_blocked"
+      ],
+      "title": "StrategyMetrics",
+      "type": "object"
+    },
+    "WindowSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "dev_decisions": {
+          "default": 8,
+          "title": "Dev Decisions",
+          "type": "integer"
+        },
+        "first_decision": {
+          "title": "First Decision",
+          "type": "string"
+        },
+        "last_decision": {
+          "title": "Last Decision",
+          "type": "string"
+        },
+        "mark_end": {
+          "title": "Mark End",
+          "type": "string"
+        }
+      },
+      "required": [
+        "first_decision",
+        "last_decision",
+        "mark_end"
+      ],
+      "title": "WindowSpec",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "analyst_ic": {
+      "additionalProperties": {
+        "$ref": "#/$defs/AnalystIC"
+      },
+      "title": "Analyst Ic",
+      "type": "object"
+    },
+    "data_hashes": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Data Hashes",
+      "type": "object"
+    },
+    "decisions": {
+      "items": {
+        "$ref": "#/$defs/DecisionIndexEntry"
+      },
+      "title": "Decisions",
+      "type": "array"
+    },
+    "finished_at": {
+      "title": "Finished At",
+      "type": "string"
+    },
+    "git_sha": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Git Sha"
+    },
+    "label": {
+      "enum": [
+        "model-clean",
+        "contaminated",
+        "unknown-cutoff"
+      ],
+      "title": "Label",
+      "type": "string"
+    },
+    "metrics": {
+      "additionalProperties": {
+        "$ref": "#/$defs/StrategyMetrics"
+      },
+      "title": "Metrics",
+      "type": "object"
+    },
+    "primary": {
+      "default": "strategy",
+      "title": "Primary",
+      "type": "string"
+    },
+    "significance": {
+      "additionalProperties": true,
+      "title": "Significance",
+      "type": "object"
+    },
+    "spec": {
+      "$ref": "#/$defs/RunSpec"
+    },
+    "spec_hash": {
+      "title": "Spec Hash",
+      "type": "string"
+    },
+    "started_at": {
+      "title": "Started At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "spec_hash",
+    "spec",
+    "label",
+    "started_at",
+    "finished_at",
+    "metrics"
+  ],
+  "title": "RunResult",
+  "type": "object"
+}
