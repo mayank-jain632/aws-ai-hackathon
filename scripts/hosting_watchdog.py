@@ -9,9 +9,8 @@ import json
 from pathlib import Path
 
 import boto3
-from watchdog_aws import TOPIC, find_guardrail, find_memory
-
-from backend.app.watchdog import aws
+import watchdog_aws as watchdog_setup
+from watchdog_aws import find_guardrail, find_memory
 
 STATE = Path(__file__).resolve().parents[1] / ".local/hosting/watchdog.json"
 TAGS = {"Project": "AWS-Hackathon", "Team": "4", "Owner": "Kushagra"}
@@ -55,56 +54,19 @@ def main():
     if not args.apply:
         print("Preview only; --apply creates only these two missing resources.")
         return
-    if not guard:
-        result = bedrock.create_guardrail(
-            name=aws.GUARDRAIL_NAME,
-            description="Team 4 hosted watchdog: prompt injection and trading limit evasion.",
-            contentPolicyConfig={
-                "filtersConfig": [
-                    {
-                        "type": "PROMPT_ATTACK",
-                        "inputStrength": "HIGH",
-                        "outputStrength": "NONE",
-                    }
-                ]
-            },
-            topicPolicyConfig={"topicsConfig": [TOPIC]},
-            blockedInputMessaging="Blocked by the Team 4 watchdog guardrail.",
-            blockedOutputsMessaging="Blocked by the Team 4 watchdog guardrail.",
-            tags=[{"key": k, "value": v} for k, v in TAGS.items()],
+    # Reuse the lane owner's exact provisioning/configuration implementation.
+    # A separate inventory prevents cleanup touching that owner's other account.
+    watchdog_setup.STATE = STATE
+    watchdog_setup.TAGS = TAGS
+    created = watchdog_setup.apply(session, account, core_only=True)
+    created["account"] = account
+    for key, existing in [("guardrail", guard), ("memory", memory)]:
+        created[key]["created_here"] = state.get(key, {}).get(
+            "created_here", existing is None
         )
-        guard = {"id": result["guardrailId"], "arn": result["guardrailArn"]}
-        state["guardrail"] = {**guard, "created_here": True}
-        save(state)
-        bedrock.create_guardrail_version(
-            guardrailIdentifier=guard["id"], description="Hosted watchdog v1"
-        )
-    state.setdefault("guardrail", {**guard, "created_here": False})
-    save(state)
-    if not memory:
-        memory = control.create_memory(
-            name=aws.MEMORY_NAME,
-            description="Team 4 hosted watchdog lessons.",
-            eventExpiryDuration=30,
-            memoryStrategies=[
-                {
-                    "semanticMemoryStrategy": {
-                        "name": "watchdogLessons",
-                        "namespaces": [aws.LESSONS_NAMESPACE],
-                    }
-                }
-            ],
-            tags=TAGS,
-        )["memory"]
-        state["memory"] = {
-            "id": memory["id"],
-            "arn": memory["arn"],
-            "created_here": True,
-        }
-    state.setdefault(
-        "memory", {"id": memory["id"], "arn": memory["arn"], "created_here": False}
-    )
-    save(state)
+    save(created)
+    state = created
+
     print(json.dumps(state, indent=2))
 
 

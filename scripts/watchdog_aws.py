@@ -103,7 +103,7 @@ def plan(session) -> list[str]:
     return todo
 
 
-def apply(session, account: str) -> dict:
+def apply(session, account: str, *, core_only: bool = False) -> dict:
     state = load()
     bedrock, control = session.client("bedrock"), session.client("bedrock-agentcore-control")
     cloudwatch, events, logs = (session.client(s) for s in ["cloudwatch", "events", "logs"])
@@ -148,6 +148,9 @@ def apply(session, account: str) -> dict:
         time.sleep(5)
     state["memory"] = {"id": memory["id"], "arn": memory["arn"], "status": memory["status"]}
     save(state)
+
+    if core_only:
+        return state
 
     cloudwatch.put_metric_alarm(
         AlarmName=ALARM,
