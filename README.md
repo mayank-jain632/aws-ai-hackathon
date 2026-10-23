@@ -48,6 +48,8 @@ There is no custom research API or conversation mode/cutoff lock. The Desk's cac
 
 All configured provider integrations have now passed actual hosted-agent checks: Financial Datasets statements, X posts, Exa search, page fetching, FRED, Alpaca paper account reads, Apify collection/results, and Jev sentiment on both X and scraped evidence. Verified on AWS image `1792779772`, 2026-10-23. This covers the exercised paths, not every dataset or Actor. See [hosted verification](docs/data-sources.md#hosted-verification-2026-10-23) for exact inputs, results, cost and limitations. Rebuild locally with `npm run dev`, or deploy with the commands below.
 
+The [hosted fund walkthrough](docs/fund-e2e-verification.md) records real multi-agent research, live proposal/review and a separate blind historical baseline. The backend correctly returned FAIL on the baseline’s excess-return gate; no orders were submitted. The initial live proposal is a provisional cash research hold, with expanded research preserved for its next reassessment.
+
 ## Hosted AWS demo
 
 The hosted version runs the same single container on a dedicated EC2 instance. CloudFront provides HTTPS and forwards live API/event traffic without caching it. An encrypted EBS disk stores agent conversations, files, and shared canvas positions across container restarts and deployments. ECR stores the image, Secrets Manager stores API keys and demo credentials, and an IAM instance role grants Bedrock access. Systems Manager manages the host without an open SSH port.

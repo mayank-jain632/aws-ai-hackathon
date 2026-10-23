@@ -18,7 +18,7 @@ from datetime import UTC, datetime
 
 import httpx
 
-from backend.app.watchdog import claims, feedback, gate, opinion, store
+from backend.app.watchdog import aws, claims, feedback, gate, opinion, store
 from backend.app.watchdog.halt import SWITCH
 from backend.app.watchdog.models import ModeratorEvent
 from backend.app.watchdog.rules import parse_time
@@ -156,6 +156,35 @@ def claim_events(desk) -> list[tuple[str, ModeratorEvent]]:
     return found
 
 
+def guardrail_events(desk, seen: set[str]) -> list[tuple[str, ModeratorEvent]]:
+    """Screen each new strategy's rationale and memos with the Bedrock guardrail, once."""
+    workspace = store.workspace_dir(desk).parent.resolve()
+    found = []
+    for strategy in desk.state["strategies"].values():
+        key = f"guard:{strategy['id']}"
+        if key in seen:
+            continue
+        parts = [strategy.get("rationale", ""), strategy.get("changes_my_mind", "")]
+        for path in strategy.get("memo_paths", []):
+            target = (workspace / path).resolve()
+            if target.is_relative_to(workspace) and target.is_file():
+                parts.append(target.read_text(errors="replace"))
+        result = aws.scan_text("\n\n".join(parts))
+        if result is None:
+            continue
+        event = None
+        if result["intervened"]:
+            event = ModeratorEvent(
+                kind="claim",
+                severity="critical",
+                subject=strategy["id"],
+                message=f"Bedrock Guardrail flagged strategy {strategy['name']}: {', '.join(result['findings']) or 'policy intervention'}. Agent-written text may be trying to steer other agents or get around limits.",
+                details={"strategy_id": strategy["id"], "problem": "guardrail", "findings": result["findings"]},
+            )
+        found.append((key, event))
+    return found
+
+
 def record_outcomes(desk, state: dict) -> None:
     seen = state.setdefault("outcomes", {})
     for o in desk.state["orders"].values():
@@ -194,6 +223,7 @@ def ingest_desk_blocks(desk, seen: set[str]) -> None:
 
 def emit(desk, event: ModeratorEvent) -> None:
     record = event.model_dump()
+    aws.publish_moderator_event(event, store.fund_label(desk))
     store.append_jsonl(store.private_dir(desk) / feedback.EVENTS, record)
     store.append_jsonl(store.workspace_dir(desk) / feedback.EVENTS, record)
     with desk.lock:
@@ -203,11 +233,17 @@ def emit(desk, event: ModeratorEvent) -> None:
 def audit(desk, snapshot: dict | None = None, now: datetime | None = None, opinions: bool = True) -> list[ModeratorEvent]:
     """One pass over a desk. Returns only the events that are new since the last pass."""
     now = now or datetime.now(UTC)
+    # Guardrail calls go over the network, so they run before the locks are taken.
+    screened = guardrail_events(desk, set(store.load_state(desk).get("seen", [])))
     # Same lock order as the order path (desk, then store) so a sweep cannot deadlock an order.
     with desk.lock, store.LOCK:
         state = store.load_state(desk)
         seen = set(state.get("seen", []))
+        for key, event in screened:
+            if event is None:
+                seen.add(key)
         candidates = order_events(desk, now) + claim_events(desk)
+        candidates += [(key, event) for key, event in screened if event is not None]
         if snapshot:
             candidates += position_events(desk, snapshot)
         new = []

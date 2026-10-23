@@ -19,6 +19,7 @@ from backend.app.roles import Role, allow_child, require_tool
 from backend.app.routes.desk import router as desk_router
 from backend.app.routes.funds import router as funds_router
 from backend.app.routes.models import router as models_router
+from backend.app.routes.scores import router as scores_router
 from backend.app.routes.sharing import router as sharing_router
 from backend.app.routes.synthesis import router as synthesis_router
 from backend.app.routes.watchdog import router as watchdog_router
@@ -279,6 +280,7 @@ app.include_router(desk_router)
 app.include_router(models_router)
 app.include_router(sharing_router)
 app.include_router(watchdog_router)
+app.include_router(scores_router)
 app.include_router(synthesis_router)
 
 # The same server serves the built React app and API inside the single container.

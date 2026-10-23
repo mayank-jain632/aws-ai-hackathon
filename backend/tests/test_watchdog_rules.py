@@ -74,7 +74,7 @@ def test_clean_order_is_approved():
     verdict = review()
     assert verdict.decision == "approve"
     assert verdict.blocked_by == []
-    assert verdict.reason.startswith("Approved: all 16 checks passed")
+    assert verdict.reason.startswith("Approved: all 17 checks passed")
 
 
 def test_emergency_stop_blocks_everything():

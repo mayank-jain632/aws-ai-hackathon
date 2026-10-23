@@ -71,10 +71,21 @@ Kushagra's written role requirements take priority over the picture: the roster 
 one root can create more orchestrators and task-focused researchers, and the boxes above are
 context, not a fixed roster. The synthesis boxes are **tools on existing roles**, not new
 roles: `synthesize_strategy` on the strategy role, `plan_paper_orders` and
-`execute_order_plan` on the executor role. The blind backtester implementation is Mayank's
-(lane 2b); synthesis hands it a frozen strategy record (`weights`, `cutoff`, `end`) by
-`strategy_id` and consumes its PASS/FAIL. The significance report is an optional add-on and
-can be replaced by Mayank's walk-forward once it lands.
+`execute_order_plan` on the executor role. The executor's `execute_order_plan` submits a plan
+one order at a time through the guarded adapter, halts at the first blocked or uncertain
+order, and resumes after `alpaca_paper_order` confirms the open order's real fill.
+
+**Two evaluations, one contract.** Synthesis hands every evaluator the same frozen strategy
+record (`weights`, `cutoff`, `end`) by `strategy_id`. The desk gate on `main` runs the
+monthly-rebalance snapshot engine to 2025-06-30 and decides PASS/FAIL against the human
+policy. Mayank's walk-forward harness (D21, D22, accepted) is the leakage-safe evaluation
+shown beside it: weekly decisions from 2025-10-03 on Claude Opus 4.6, whose documented
+cutoff precedes the window, strict point-in-time data, and a memorization audit. Its
+registered adapters `synthesis_seed` and `synthesis_planner` wrap the synthesis seed and
+order planner, and its conformance suite proves they are pure functions of the
+point-in-time view. His frozen run shows the agent pipeline trailing equal weight over 47
+clean weeks; the method is the strength. The significance report stays as an
+allocation-robustness add-on.
 
 ## 4. Known limits to state in the demo
 
