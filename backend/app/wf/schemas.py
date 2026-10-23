@@ -60,6 +60,9 @@ class DecisionOrders(BaseModel):
     date: str
     intents: list[OrderIntent]
     contaminated: bool = False
+    # Reasons an execution policy refused to trade this date (e.g. a planner's "blocked" list).
+    # Informational: the engine records it as blocked, never as a fill.
+    blocked: list[str] = Field(default_factory=list)
 
 
 # ------------------------------------------------------------------------- stage outputs
