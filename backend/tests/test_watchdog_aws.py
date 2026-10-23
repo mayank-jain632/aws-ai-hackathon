@@ -126,7 +126,7 @@ def test_memory_write_and_firm_wide_recall(clients):
     name, call = clients["bedrock-agentcore"].calls[0]
     assert name == "create_event"
     assert call["memoryId"] == "aaron_watchdog_lessons-AbC123" and call["actorId"] == "fund-calder-family-trust"
-    assert call["payload"][0]["conversational"]["role"] == "ASSISTANT"
+    assert call["payload"][0]["conversational"]["role"] == "USER"
     assert aws.recall("limits") == ["Conservative clients get blocked on single orders over 10% of equity."]
     assert clients["bedrock-agentcore"].calls[-1][1]["namespace"] == "/watchdog/lessons"
 

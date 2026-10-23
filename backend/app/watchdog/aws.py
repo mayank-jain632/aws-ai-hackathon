@@ -248,7 +248,8 @@ def remember(fund: str, text: str) -> None:
             actorId=actor(fund),
             sessionId="watchdog-" + datetime.now(UTC).strftime("%Y%m%d"),
             eventTimestamp=datetime.now(UTC),
-            payload=[{"conversational": {"content": {"text": text[:8000]}, "role": "ASSISTANT"}}],
+            # Semantic extraction distills facts from USER turns; assistant-only events yield no records.
+            payload=[{"conversational": {"content": {"text": text[:8000]}, "role": "USER"}}],
         )
 
     send(write)

@@ -268,7 +268,7 @@ def verify(session) -> bool:
             actorId="fund-verification",
             sessionId="watchdog-verify",
             eventTimestamp=time.time(),
-            payload=[{"conversational": {"content": {"text": "Watchdog verification: conservative clients cannot put more than 10% of equity in one order."}, "role": "ASSISTANT"}}],
+            payload=[{"conversational": {"content": {"text": "Watchdog verification: conservative clients cannot put more than 10% of equity in one order."}, "role": "USER"}}],
         )
         return f"event written to {mid}; {len(aws.recall('conservative order size'))} long-term records so far (extraction is asynchronous)"
 
