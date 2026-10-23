@@ -34,3 +34,11 @@ data/gdelt/raw/
 
 # Personal agent notes (not shared)
 CLAUDE.local.md
+
+# LaTeX build files
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
