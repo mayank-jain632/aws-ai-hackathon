@@ -7,7 +7,8 @@ A local agent canvas using React/Vite, FastAPI, and Dexter's actual agent loop. 
 Install Docker Desktop, Node.js 22.12 or newer, and npm. Start Docker Desktop, then run from the project root:
 
 ```sh
-test -f .env.local || cp .env.example .env.local
+test -f .env || cp .env.example .env
+test -f .env.local || touch .env.local
 npm run dev
 ```
 
@@ -48,7 +49,7 @@ region = us-east-1
 output = json
 ```
 
-Keep both files private with `chmod 600`. Refresh them through Workshop Studio when the session expires. Optional `BEDROCK_MODEL_ID` in ignored `.env.local` overrides `us.openai.gpt-5.6-luna`. Keep the existing `EXPECTED_AWS_ACCOUNT` setting for the separate workshop cleanup tools.
+Keep both files private with `chmod 600`. Refresh them through Workshop Studio when the session expires. The Bedrock model is set in code to `us.openai.gpt-5.6-luna`. `.env` contains optional `AWS_REGION` and blank credentials for Dexter’s finance, search, and model providers; `.env.example` is the shared template. No account ID is required by the app. Adding a key does not enable a tool: this stripped-down adapter currently exposes shared file tools and agent delegation.
 
 Credentials stay in the backend. Model requests incur normal Bedrock charges. Running this local version creates no new AgentCore resources.
 

@@ -85,7 +85,7 @@ try {
   const input = JSON.parse(await Bun.stdin.text());
   const { Agent } = await import(pathToFileURL(resolve(dexter, 'src/agent/agent.ts')).href);
   const { InMemoryChatHistory } = await import(pathToFileURL(resolve(dexter, 'src/utils/in-memory-chat-history.ts')).href);
-  const model = `bedrock:${process.env.BEDROCK_MODEL_ID || 'us.openai.gpt-5.6-luna'}`;
+  const model = 'bedrock:us.openai.gpt-5.6-luna';
   const history = new InMemoryChatHistory(model);
   // Restore the upstream history's completed turns without additional summarization calls.
   history.messages = input.history.map((m: { query: string; answer: string }, id: number) => ({ ...m, id, summary: m.answer }));

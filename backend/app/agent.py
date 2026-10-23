@@ -37,7 +37,7 @@ def environment():
             "AWS_CONFIG_FILE", str(Path.home() / ".aws/aws-hackathon-2026.config")
         ),
         AWS_PROFILE="aws-hackathon-2026",
-        AWS_REGION="us-east-1",
+        AWS_REGION=env.get("AWS_REGION", "us-east-1"),
         LANGSMITH_TRACING="false",
     )
     for key in (
@@ -126,7 +126,7 @@ class LocalAgent:
             "parentId": self.parent_id,
             "name": self.name,
             "status": self.state["status"],
-            "model": environment().get("BEDROCK_MODEL_ID", "us.openai.gpt-5.6-luna"),
+            "model": "us.openai.gpt-5.6-luna",
             "messages": self.state["messages"],
             "activity": self.state["activity"],
             "files": self.files(),
