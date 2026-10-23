@@ -12,6 +12,7 @@ Updated 2026-10-23 by Codex
 - Deployment/update script and scoped cleanup preview in `scripts/hosting.py`; no workshop desktops or existing AgentCore sample modified.
 
 **In flight**
+- Directly requested role permissions in managed worktree agent-roles, crossing Lane 1 runtime/tool registry and Lane 4 paper-execution boundary. New role/pipeline modules plus small `agent.py`, `main.py`, research-router, worker, and frontend Agent type edits. One orchestrator, research, adversarial, strategy, blind backtester, paper executor and moderator. No new AWS resources. Other fund-dashboard work remains separate.
 - Directly requested by Kushagra: fund home/dashboard, short detailed mandate setup, per-fund overview, and an existing agent canvas per fund. Working in managed worktree fund-dashboard.
 - New files in `frontend/src/funds/`, `backend/app/funds.py`, and `backend/app/routes/funds.py`. Preserve existing board as the first fund, then keep each fund's agents, files, layout, and discussions separate; all agents inside one fund still share its filesystem.
 - Cross-lane integration: minimal main.py router/lifecycle lookup edits and a worker prompt context line are required to scope private delegation to the owning fund. No trading execution, strategy gate, or shared pipeline schema changes.
