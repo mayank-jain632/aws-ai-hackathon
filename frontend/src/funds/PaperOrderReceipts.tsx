@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from './types'
-import { orderMoney, orderRows, orderTime, plannedTrades, receiptStatus, type OrderPlanRecord, type PaperOrder } from './paperOrders'
+import { needsBrokerRefresh, orderMoney, orderRows, orderTime, plannedTrades, receiptStatus, type OrderPlanRecord, type PaperOrder } from './paperOrders'
 import './paperOrders.css'
 
 export function PaperReceipt({ order }: { order: PaperOrder }) {
@@ -27,7 +27,7 @@ export function PaperOrderReceipts({ fundId }: { fundId: string }) {
   useEffect(() => {
     const controller = new AbortController()
     let inFlight = false
-    async function load() {
+    async function load(reconcile = false) {
       if (inFlight || controller.signal.aborted) return
       inFlight = true; setLoading(true)
       try {
@@ -35,12 +35,21 @@ export function PaperOrderReceipts({ fundId }: { fundId: string }) {
           api<{orders: Record<string, PaperOrder>}>(`/api/funds/${fundId}/desk`, {signal:controller.signal}),
           api<{runs: OrderPlanRecord[]}>(`/api/funds/${fundId}/desk/runs`, {signal:controller.signal}),
         ])
-        if (!controller.signal.aborted) { setOrders(orderRows(desk.orders || {})); setPlans(activity.runs || []); setError('') }
+        let receipts = orderRows(desk.orders || {})
+        let refreshError = ''
+        if (reconcile) {
+          const checks = await Promise.allSettled(receipts.filter(needsBrokerRefresh).map(order => api<PaperOrder>(`/api/funds/${fundId}/desk/orders/${encodeURIComponent(order.client_order_id)}`, {signal:controller.signal})))
+          for (const check of checks) {
+            if (check.status === 'fulfilled') receipts = receipts.map(order => order.client_order_id === check.value.client_order_id ? check.value as typeof order : order)
+            else refreshError = 'Could not refresh every broker status. Showing the latest saved receipts.'
+          }
+        }
+        if (!controller.signal.aborted) { setOrders(receipts); setPlans(activity.runs || []); setError(refreshError) }
       } catch (problem) {
         if (!controller.signal.aborted) { setOrders(null); setError(problem instanceof Error ? problem.message : 'Could not load paper orders.') }
       } finally { inFlight = false; if (!controller.signal.aborted) setLoading(false) }
     }
-    refresh.current = () => { void load() }
+    refresh.current = () => { void load(true) }
     void load()
     const interval = window.setInterval(() => { if (!document.hidden) void load() }, 5000)
     return () => { controller.abort(); window.clearInterval(interval) }
@@ -48,7 +57,8 @@ export function PaperOrderReceipts({ fundId }: { fundId: string }) {
   const intended = plannedTrades(plans, orders || [])
   return <section className="fund-panel paper-orders" aria-label="Paper order receipts">
     <header><div><h3>Paper orders</h3></div><button className="text-button" disabled={loading} onClick={() => refresh.current()}>{loading ? 'Refreshing…' : 'Refresh orders'}</button></header>
-    {error ? <p className="fund-error" role="alert">{error}</p> : orders === null ? <p className="empty-text">Loading paper orders…</p> : <>
+    {error && <p className="fund-error" role="alert">{error}</p>}
+    {orders === null ? !error && <p className="empty-text">Loading paper orders…</p> : <>
       {intended.map(order => <article className="paper-receipt" key={`plan-${order.client_order_id}`}><header><strong>Agent plans to {order.side} {orderMoney(order.notional)} of {order.symbol}</strong><span className="subtle-tag">Prepared · not submitted</span></header><p className="order-state">Saved plan · {orderTime(order.planned_at)}</p>{order.blockers.map(reason => <p className="order-state" key={reason}>{reason}</p>)}</article>)}
       {!orders.length ? <p className="empty-text">No paper orders submitted</p> : orders.map(order => <PaperReceipt key={order.client_order_id} order={order}/>)}
     </>}

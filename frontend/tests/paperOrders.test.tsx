@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { PaperReceipt } from '../src/funds/PaperOrderReceipts'
-import { orderRows, plannedTrades, receiptStatus, type PaperOrder } from '../src/funds/paperOrders'
+import { needsBrokerRefresh, orderRows, plannedTrades, receiptStatus, type PaperOrder } from '../src/funds/paperOrders'
 const queued: PaperOrder = { symbol:'AAPL', side:'buy', notional:1, status:'accepted', broker_id:'actual-broker-id', client_order_id:'actual-client-id', time:'2026-10-23T21:30:00Z', filled_qty:'0', filled_avg_price:null }
 describe('actual paper broker receipts', () => {
   test('accepted orders show their real IDs and never masquerade as fills', () => {
@@ -24,6 +24,11 @@ describe('actual paper broker receipts', () => {
     expect(plannedTrades([plan],[queued])).toHaveLength(0)
     expect(plannedTrades([],[])).toEqual([])
     expect(receiptStatus({...queued,broker_id:undefined,status:'unknown'})).toBe('Submission unconfirmed')
+  })
+  test('broker status refresh targets only existing unresolved orders', () => {
+    expect(needsBrokerRefresh(queued)).toBe(true)
+    expect(needsBrokerRefresh({...queued,status:'filled'})).toBe(false)
+    expect(needsBrokerRefresh({...queued,client_order_id:undefined})).toBe(false)
   })
   test('desk dictionary keys recover the actual client id without generating IDs', () => {
     expect(orderRows({'saved-id':{...queued,client_order_id:undefined}})[0].client_order_id).toBe('saved-id')

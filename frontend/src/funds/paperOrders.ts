@@ -17,6 +17,9 @@ export function plannedTrades(runs: OrderPlanRecord[], receipts: PaperOrder[]) {
   const submitted = new Set(receipts.map(order => order.client_order_id))
   return latest.orders.filter(order => !submitted.has(order.client_order_id)).map(order => ({...order, planned_at:latest.time, blockers:latest.blocked || []}))
 }
+export function needsBrokerRefresh(order: PaperOrder) {
+  return !!order.client_order_id && !['filled','canceled','cancelled','expired','rejected'].includes(order.status)
+}
 export function receiptStatus(order: PaperOrder) {
   if (order.status === 'filled') return 'Filled'
   if (order.status === 'partially_filled') return 'Partially filled'
