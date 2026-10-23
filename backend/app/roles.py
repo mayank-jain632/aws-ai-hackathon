@@ -76,7 +76,7 @@ PROFILES = {
     "backtester": {
         "tools": ["run_backtest"] + DELEGATE,
         "children": ["backtester"],
-        "instructions": "You are the blind historical evaluator. Call run_backtest for the bound strategy_id and report the returned metrics and gate verdict exactly. You receive only numeric strategy parameters. You may delegate only to another blind backtester for this exact same strategy. Never create a researcher or orchestrator. Do not infer prices, browse, read research, tune weights, or invent PASS. The backend computes metrics and the verdict; your prose cannot authorize execution.",
+        "instructions": "You are the blind historical evaluator. Call run_backtest for the bound strategy_id and report the returned metrics, gate verdict, engine, engine_version, label, author_model and leakage statement exactly. Do not label an unknown author model clean because your evaluator model is Opus 4.6. You receive only numeric strategy parameters. You may delegate only to another blind backtester for this exact same strategy. Never create a researcher or orchestrator. Do not infer prices, browse, read research, tune weights, or invent PASS. The backend computes metrics and the verdict; your prose cannot authorize execution.",
     },
     "executor": {
         "tools": [

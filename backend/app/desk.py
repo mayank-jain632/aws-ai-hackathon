@@ -86,6 +86,16 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
 
+ENGINE_VERSIONS = {"wf": "wf-frozen-v1", "legacy": "legacy-monthly-v2"}
+
+
+def selected_engine():
+    engine = os.environ.get("BACKTEST_ENGINE", "wf")
+    if engine not in ENGINE_VERSIONS:
+        raise ValueError("BACKTEST_ENGINE must be wf or legacy; no fallback is available")
+    return engine
+
+
 class Desk:
     def __init__(self, manager):
         self.manager = manager
@@ -105,6 +115,8 @@ class Desk:
                 "events": [],
             }
         )
+        # Old approvals remain visible for audit, but have no evaluation binding.
+        self.state.setdefault("approved_evaluations", {})
 
     def save(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -129,6 +141,7 @@ class Desk:
         with self.lock:
             self.state["policy"] = policy.model_dump()
             self.state["approvals"] = {}
+            self.state["approved_evaluations"] = {}
             self.state["stop"] = True
             self.event(
                 "human_policy", "Policy updated; stop engaged and approvals invalidated"
@@ -153,6 +166,9 @@ class Desk:
                 **body.model_dump(mode="json"),
                 "id": uuid4().hex,
                 "author": author,
+                "author_model": getattr(
+                    getattr(self.manager, "agents", {}).get(author), "model", None
+                ),
                 "created_at": stamp(),
             }
             self.state["strategies"][record["id"]] = record
@@ -167,16 +183,59 @@ class Desk:
             record = {**body.model_dump(), "author": author, "time": stamp()}
             self.state["reviews"][body.strategy_id] = record
             self.state["approvals"].pop(body.strategy_id, None)
+            self.state["approved_evaluations"].pop(body.strategy_id, None)
             self.event("adversarial_review", record)
             return record
 
-    def _author_model(self, record):
-        agent = getattr(self.manager, "agents", {}).get(record.get("author"))
-        return getattr(agent, "model", None)
+    def test_is_current(self, strategy_id):
+        test = self.state["tests"].get(strategy_id, {})
+        engine = selected_engine()
+        unsigned = {k: v for k, v in test.items() if k != "evaluation_id"}
+        return bool(
+            test
+            and test.get("engine") == engine
+            and test.get("engine_version") == ENGINE_VERSIONS[engine]
+            and test.get("policy_hash") == digest(self.state["policy"])
+            and test.get("strategy_hash") == digest(self.strategy(strategy_id))
+            and test.get("evaluation_id") == digest(unsigned)
+        )
+
+    def human_approved(self, strategy_id):
+        return (
+            self.test_is_current(strategy_id)
+            and self.state["approvals"].get(strategy_id) == digest(self.state["policy"])
+            and self.state["approved_evaluations"].get(strategy_id)
+            == self.state["tests"][strategy_id]["evaluation_id"]
+        )
+
+    def approve(self, strategy_id):
+        with self.lock:
+            self.strategy(strategy_id)
+            if not self.test_is_current(strategy_id) or self.state["tests"][strategy_id]["verdict"] != "PASS":
+                raise ValueError("A current backend PASS is required before human approval")
+            if self.state["reviews"].get(strategy_id, {}).get("verdict") != "APPROVE":
+                raise ValueError("An approving adversarial review is required")
+            evaluation_id = self.state["tests"][strategy_id]["evaluation_id"]
+            self.state["approvals"][strategy_id] = digest(self.state["policy"])
+            self.state["approved_evaluations"][strategy_id] = evaluation_id
+            self.event("human_approval", {"strategy_id": strategy_id, "evaluation_id": evaluation_id})
+
+    def _record_test(self, strategy_id, record, result, engine):
+        result.update(
+            engine=engine,
+            engine_version=ENGINE_VERSIONS[engine],
+            strategy_hash=digest(record),
+            author_model=record.get("author_model"),
+        )
+        result["evaluation_id"] = digest(result)
+        self.state["tests"][strategy_id] = result
+        self.state["approvals"].pop(strategy_id, None)
+        self.state["approved_evaluations"].pop(strategy_id, None)
+        self.event("backtest", result)
+        return result
 
     def _evaluate_wf(self, strategy_id, record, policy):
-        """Opt-in (BACKTEST_ENGINE=wf, hub D22): same gate checks and result shape on the
-        leakage-safe walk-forward engine, plus engine/label/leakage fields."""
+        """Evaluate frozen weights with the default walk-forward engine, without fallback."""
         from backend.app.wf.gate import evaluate_with_wf
 
         result = evaluate_with_wf(
@@ -185,18 +244,15 @@ class Desk:
             policy,
             now=stamp(),
             policy_hash=digest(self.state["policy"]),
-            author_model=self._author_model(record),
+            author_model=record.get("author_model"),
         )
-        self.state["tests"][strategy_id] = result
-        self.state["approvals"].pop(strategy_id, None)
-        self.event("backtest", result)
-        return result
+        return self._record_test(strategy_id, record, result, "wf")
 
     def evaluate(self, strategy_id):
         with self.lock:
             record = self.strategy(strategy_id)
             policy = self.policy()
-            if os.environ.get("BACKTEST_ENGINE") == "wf":
+            if selected_engine() == "wf":
                 return self._evaluate_wf(strategy_id, record, policy)
             # Both windows and weights are frozen before the evaluator is created.
             window = data.prices_full(list(record["weights"]) + [data.REFERENCE])
@@ -244,10 +300,7 @@ class Desk:
                 "time": stamp(),
                 "limitations": "Existing monthly-rebalanced snapshot engine; price returns without dividends or costs. Retro-scored and approximate. No statistical-significance claim. This tool exposes only forward-test metrics; research and web are unavailable to the evaluator.",
             }
-            self.state["tests"][strategy_id] = result
-            self.state["approvals"].pop(strategy_id, None)
-            self.event("backtest", result)
-            return result
+            return self._record_test(strategy_id, record, result, "legacy")
 
     def execution_checks(self, strategy_id):
         policy = self.policy()
@@ -257,15 +310,11 @@ class Desk:
         if not policy.trading_allowed:
             raise ValueError("Human mandate does not allow paper trading")
         test = self.state["tests"].get(strategy_id, {})
-        if test.get("verdict") != "PASS" or test.get("policy_hash") != digest(
-            self.state["policy"]
-        ):
+        if test.get("verdict") != "PASS" or not self.test_is_current(strategy_id):
             raise ValueError("A current backend PASS is required")
         if self.state["reviews"].get(strategy_id, {}).get("verdict") != "APPROVE":
             raise ValueError("An approving adversarial review is required")
-        if policy.approval_required and self.state["approvals"].get(
-            strategy_id
-        ) != digest(self.state["policy"]):
+        if policy.approval_required and not self.human_approved(strategy_id):
             raise ValueError("Human strategy approval is required by this mandate")
         # Also honor the fund dashboard mandate when that integration is installed.
         context = json.loads(getattr(self.manager, "context", "") or "{}")
@@ -273,9 +322,7 @@ class Desk:
         if mandate:
             if not mandate.get("trading_allowed") or mandate.get("mode") != "paper":
                 raise ValueError("Fund mandate must allow trading in paper mode")
-            if mandate.get("approval_required", True) and self.state["approvals"].get(
-                strategy_id
-            ) != digest(self.state["policy"]):
+            if mandate.get("approval_required", True) and not self.human_approved(strategy_id):
                 raise ValueError("Fund mandate requires human strategy approval")
             if (
                 set(strategy["weights"]) - set(mandate["universe"])

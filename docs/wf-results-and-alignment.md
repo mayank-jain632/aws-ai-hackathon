@@ -1,14 +1,18 @@
 # Walk-forward results, diagnosis, and fit with the agent flow on `main`
 
-Reference only; decisions live in `hub/DECISIONS.md` (D21, D22 are Proposed). Branch `mayank/wf-walkforward`,
+Reference only; decisions live in `hub/DECISIONS.md` (D21, D22 are Accepted). Branch `mayank/wf-walkforward`,
 frozen at tag `wf-frozen-v1`. Raw outputs: `reports/wf/final/`, `reports/wf/audit_clean/`, `reports/wf/audit_control/`.
+
+The frozen outputs below retain the original experiment. The current snapshot reference now fixes the
+month-start return bug; see `wf-integration-verification.md`. No stored output was rewritten.
 
 ## 1. What was run
 
 Claude Opus 4.6 (`us.anthropic.claude-opus-4-6-v1`, temperature 0) as research, strategy and execution agents.
 55 weekly decisions (Fri 2025-10-03 .. 2026-10-16), equity marked through 2026-10-22. The first 8 are the dev
-window, the other 47 the test window; both come from one frozen run. Opus 4.6's documented training cutoff is
-2025-08 (AWS lists the reliable knowledge cutoff as May 2025), so every decision is at least a month after it.
+window, the other 47 the test window; both come from one frozen run. The team's assumed Opus 4.6 training cutoff is
+2025-08 (AWS lists the reliable knowledge cutoff as May 2025); the assumption is not independently verified.
+Every decision is at least a month after that assumed cutoff.
 Universe: the 10 names on `main`. Daily bars, next-open fills, 5 bps slippage, long-only, price return (no dividends).
 
 ## 2. Results (test window, 47 weeks, run once, not tuned)

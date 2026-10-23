@@ -184,7 +184,7 @@ def strategy_body():
     }
 
 
-def test_backend_gate_and_bound_evaluator(board):
+def test_backend_gate_and_bound_evaluator(board, monkeypatch):
     manager, client = board
     manager.token = "TOKEN"
     assert client.put("/api/desk/policy", json=policy_body()).status_code == 200
@@ -193,6 +193,7 @@ def test_backend_gate_and_bound_evaluator(board):
     )
     assert registered.status_code == 200, registered.text
     sid = registered.json()["id"]
+    assert client.post(f"/api/desk/strategies/{sid}/approve").status_code == 409
     assert (
         client.post(
             "/api/internal/desk/backtest",
@@ -236,6 +237,8 @@ def test_backend_gate_and_bound_evaluator(board):
     client.put("/api/desk/policy", json=policy_body())
     assert desk.state["stop"] is True
     assert not desk.state["approvals"]
+    # The explicit legacy engine still refuses its shorter snapshot boundary.
+    monkeypatch.setenv("BACKTEST_ENGINE", "legacy")
     later = strategy_body() | {"end": "2026-01-01"}
     sid2 = desk.register(StrategyInput(**later), "strategy")["id"]
     with pytest.raises(ValueError, match="Snapshot ends"):

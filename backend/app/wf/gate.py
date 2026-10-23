@@ -47,13 +47,13 @@ def leakage_statement(label: str, cutoff: str, author_model: str | None, model_c
     )
     if label == "model-clean":
         return base + (
-            f"The authoring model ({author_model}) has a documented training cutoff of {model_cutoff}; "
-            f"this window starts {cutoff}, after that cutoff plus a buffer month, so memory of the test "
-            "period is not a plausible explanation."
+            f"The authoring model ({author_model}) uses the team-supplied training-cutoff assumption {model_cutoff}; "
+            f"this window starts {cutoff}, after that cutoff plus a buffer month, so the model-clean label is conditional on that assumption. "
+            "The cutoff is not independently verified and this does not prove absence of model memory."
         )
     if label == "contaminated":
         return base + (
-            f"The authoring model ({author_model}, training cutoff {model_cutoff}) may have seen this "
+            f"The authoring model ({author_model}, team-supplied training-cutoff assumption {model_cutoff}) may have seen this "
             f"window (starts {cutoff}); treat the result as an in-sample illustration, not evidence."
         )
     return base + (

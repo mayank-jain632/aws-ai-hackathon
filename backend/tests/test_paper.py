@@ -12,7 +12,6 @@ from backend.app.desk import (
     ReviewInput,
     StrategyInput,
     desk_for,
-    digest,
 )
 
 
@@ -51,7 +50,7 @@ def approved(tmp_path):
         "reviewer",
     )
     desk.evaluate(sid)
-    desk.state["approvals"][sid] = digest(desk.state["policy"])
+    desk.approve(sid)
     desk.state["stop"] = False
     desk.save()
     return desk, OrderInput(

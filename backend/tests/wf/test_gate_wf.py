@@ -133,7 +133,7 @@ def register(desk: Desk, author: str, cutoff: date, end: date) -> str:
 
 
 @needs_data
-def test_desk_uses_wf_engine_only_when_switched_on(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_desk_uses_wf_engine_when_selected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("BACKTEST_ENGINE", "wf")
     desk, author = make_desk(tmp_path, OPUS46)
     sid = register(desk, author, date(2025, 10, 6), date(2026, 6, 30))
@@ -156,12 +156,96 @@ def test_unknown_author_model_is_not_labelled_clean(tmp_path: Path, monkeypatch:
     assert desk.evaluate(sid)["label"] == "unknown-cutoff"
 
 
-def test_default_engine_is_unchanged(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_default_engine_is_wf(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("BACKTEST_ENGINE", raising=False)
     desk, author = make_desk(tmp_path, OPUS46)
     sid = register(desk, author, date(2023, 1, 3), date(2025, 6, 30))
 
     out = desk.evaluate(sid)
 
-    assert "engine" not in out and "label" not in out
+    assert out["engine"] == "wf" and out["label"] == "contaminated"
     assert out["verdict"] in {"PASS", "FAIL"}
+
+
+@pytest.fixture
+def passing_desk(tmp_path, monkeypatch):
+    monkeypatch.delenv("BACKTEST_ENGINE", raising=False)
+    desk, author = make_desk(tmp_path, OPUS46)
+    desk.set_policy(policy(max_drawdown=1, min_sharpe=-100, min_excess_return=-1,
+                           max_position=0.5, trading_allowed=True))
+    sid = register(desk, author, date(2023, 1, 3), date(2024, 1, 3))
+    from backend.app.desk import ReviewInput
+
+    desk.review(ReviewInput(strategy_id=sid, verdict="APPROVE", critique="Checked frozen inputs and concentration independently."), "reviewer")
+    desk.evaluate(sid)
+    assert desk.state["tests"][sid]["verdict"] == "PASS"
+    desk.approve(sid)
+    desk.state["stop"] = False
+    return desk, sid
+
+
+@needs_data
+def test_approval_is_bound_to_exact_evaluation_and_engine(passing_desk, monkeypatch):
+    desk, sid = passing_desk
+    assert desk.human_approved(sid)
+    desk.execution_checks(sid)
+    monkeypatch.setenv("BACKTEST_ENGINE", "legacy")
+    assert not desk.test_is_current(sid)
+    with pytest.raises(ValueError, match="current backend PASS"):
+        desk.execution_checks(sid)
+    monkeypatch.setenv("BACKTEST_ENGINE", "wf")
+    desk.evaluate(sid)
+    assert not desk.human_approved(sid)
+    with pytest.raises(ValueError, match="Human strategy approval"):
+        desk.execution_checks(sid)
+    desk.approve(sid)
+    desk.state["tests"][sid]["metrics"]["portfolio"]["total_return"] = 999
+    assert not desk.test_is_current(sid)
+
+
+@needs_data
+def test_historical_approval_and_result_are_preserved_but_not_executable(passing_desk):
+    desk, sid = passing_desk
+    test = desk.state["tests"][sid]
+    for key in ("engine", "engine_version", "evaluation_id", "strategy_hash"):
+        test.pop(key)
+    desk.state["approved_evaluations"].clear()
+    desk.save()
+    reloaded = Desk(desk.manager)
+    assert reloaded.state["tests"][sid] == test
+    assert reloaded.state["approvals"][sid] == desk.state["approvals"][sid]
+    assert not reloaded.human_approved(sid)
+    with pytest.raises(ValueError, match="current backend PASS"):
+        reloaded.approve(sid)
+
+
+@needs_data
+def test_author_model_is_frozen_and_unknown_history_stays_unknown(tmp_path, monkeypatch):
+    monkeypatch.delenv("BACKTEST_ENGINE", raising=False)
+    desk, author = make_desk(tmp_path, OPUS46)
+    sid = register(desk, author, date(2025, 10, 6), date(2026, 6, 30))
+    desk.manager.agents[author].model = "us.openai.gpt-6.1-sol"
+    assert desk.evaluate(sid)["author_model"] == OPUS46
+    del desk.state["strategies"][sid]["author_model"]
+    out = desk.evaluate(sid)
+    assert out["author_model"] is None and out["label"] == "unknown-cutoff"
+
+
+@needs_data
+def test_explicit_legacy_and_invalid_engine_have_no_fallback(tmp_path, monkeypatch):
+    desk, author = make_desk(tmp_path, OPUS46)
+    sid = register(desk, author, date(2023, 1, 3), date(2024, 1, 3))
+    monkeypatch.setenv("BACKTEST_ENGINE", "legacy")
+    old = desk.evaluate(sid)
+    assert old["engine"] == "legacy" and old["engine_version"] == "legacy-monthly-v2"
+    monkeypatch.setenv("BACKTEST_ENGINE", "typo")
+    with pytest.raises(ValueError, match="no fallback"):
+        desk.evaluate(sid)
+    monkeypatch.setenv("BACKTEST_ENGINE", "wf")
+    def unavailable(*args, **kwargs):
+        raise ValueError("WF data unavailable")
+    monkeypatch.setattr(gate, "evaluate_with_wf", unavailable)
+    with pytest.raises(ValueError, match="WF data unavailable"):
+        desk.evaluate(sid)
+    assert desk.state["tests"][sid] == old
+    assert not desk.test_is_current(sid)

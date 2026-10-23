@@ -127,3 +127,11 @@ def test_real_data_smoke():
     assert eq.portfolio == pytest.approx(eq.equal_weight)
     assert m.portfolio.total_return == pytest.approx(m.baseline.total_return)
     assert -1 < m.portfolio.max_drawdown <= 0
+
+
+@pytest.mark.parametrize("next_price", [90.0, 110.0])
+def test_month_start_move_survives_rebalance(next_price):
+    dates = pd.to_datetime(["2024-01-30", "2024-01-31", "2024-02-01", "2024-02-02"])
+    closes = pd.DataFrame({"A": [100.0, 100.0, next_price, next_price]}, index=dates)
+    curve = rebalanced_curve(closes, pd.Series({"A": 1.0}))
+    assert curve.tolist() == pytest.approx([1.0, 1.0, next_price / 100, next_price / 100])

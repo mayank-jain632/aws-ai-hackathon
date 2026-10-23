@@ -1,6 +1,6 @@
 """Evaluators: frozen weights + dates -> `EvalResult` (hub D22).
 
-ReferenceEvaluator  the team's blind backtester (`backend.app.backtest.backtest`) unchanged
+ReferenceEvaluator  the team's blind backtester (`backend.app.backtest.backtest`), with month-start marking corrected
 WfEvaluator         the same frozen weights through OUR engine on `data/wf` bars
 
 Both rebalance on the first trading day of each month, so their curves are comparable
@@ -59,7 +59,7 @@ class ReferenceEvaluator:
     ``closes`` / ``rf_annual_pct`` can be injected for tests."""
 
     name = "reference_backtest"
-    version = "1"
+    version = "2"
 
     def __init__(
         self,

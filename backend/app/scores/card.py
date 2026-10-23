@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
-from backend.app.desk import desk_for, digest
+from backend.app.desk import desk_for
 from backend.app.scores import sources as src
 from backend.app.scores.models import (
     AgentRef,
@@ -32,7 +32,7 @@ OWNERS = {
     "execution": "Lane 4 execution: paper executor agent and the Alpaca paper adapter",
     "watchdog": "Lane 4 moderator (Aaron): watchdog gate",
     "synthesis": "Lane 2, Chaithu's synthesis layer (backend/app/synthesis)",
-    "wf": "Lane 2b, Mayank's walk-forward evaluation (reports/wf/)",
+    "wf": "Lane 2b, Mayank's walk-forward evaluation (backend/app/wf and reports/wf/)",
 }
 WATCHDOG = AgentRef(name="Watchdog gate (16 deterministic rules, no model)", role="moderator", attribution="system")
 GATE = AgentRef(name="Backend gate (desk.evaluate)", role="backend", attribution="system")
@@ -420,14 +420,14 @@ def strategy_score(ctx: Context) -> Score:
     ]
     policy = ctx.policy
     if policy and policy.get("approval_required", True):
-        approved = ctx.desk.state["approvals"].get(sid) == digest(policy)
+        approved = ctx.desk.human_approved(sid)
         factors.append(
             Factor(
                 key="approval",
                 label="Human approval under the current policy",
                 value="Approved" if approved else "Not approved yet",
                 status="pass" if approved else "fail",
-                detail="The mandate requires a person to approve this strategy; a policy change voids earlier approvals",
+                detail="The mandate requires a person to approve this strategy; approval is bound to the current policy and exact engine evaluation",
                 agents=[AgentRef(name="Human analyst", role="human", attribution="system")],
                 provenance=Provenance(record=ctx.desk_record(f"approvals[{sid}]")),
             )
@@ -471,8 +471,8 @@ def backtest_score(ctx: Context) -> Score:
     record = ctx.desk_record(f"tests[{ctx.sid}]")
     tickers = ", ".join(ctx.strategy["weights"])
     prices = Citation(
-        id="data/prices", kind="price", title=f"Daily closes for {tickers} and SPY (repository price snapshots)",
-        date=f"{test['cutoff']} to {test['end']}", excerpt="Monthly-rebalanced snapshot engine (backend/app/backtest.py); price returns without dividends or costs.",
+        id="data/wf" if test.get("engine") == "wf" else "data/prices", kind="price", title=f"Daily closes for {tickers} and SPY (repository price snapshots)",
+        date=f"{test['cutoff']} to {test['end']}", excerpt="; ".join(test.get("assumptions", [])) or test.get("limitations", "Historical snapshot; engine not recorded"),
     )
     rows = [
         ("drawdown", "Max drawdown vs policy limit", f"{pct(abs(p['max_drawdown']))} vs limit {pct(policy.get('max_drawdown', 0), 0)}", abs(p["max_drawdown"])),
@@ -492,12 +492,12 @@ def backtest_score(ctx: Context) -> Score:
         )
         for k, lbl, val, num in rows
     ]
-    if ctx.policy and test.get("policy_hash") != digest(ctx.policy):
-        factors.append(Factor(key="stale", label="Policy changed since this test", value="Stale: execution needs a re-test", detail="The policy hash recorded with the test no longer matches the desk policy", provenance=Provenance(record=f"{record}.policy_hash")))
+    if not ctx.desk.test_is_current(ctx.sid):
+        factors.append(Factor(key="stale", label="Evaluation is no longer current", value="Stale: execution needs a re-test", status="fail", detail="The test must match the current policy, frozen strategy and engine version", provenance=Provenance(record=record)))
     factors.append(
         Factor(
             key="metrics", label="Portfolio metrics", value=f"total {pct(p['total_return'])}, CAGR {pct(p['cagr'])}, Sharpe {p['sharpe']:.2f}",
-            detail="Context only", agents=[GATE], provenance=Provenance(record=f"{record}.metrics", time=test["time"], citations=[prices]),
+            detail=f"Engine: {test.get('engine', 'not recorded')} / {test.get('engine_version', 'not recorded')}; label: {test.get('label', 'not recorded')}; author model: {test.get('author_model') or 'not recorded'}. {test.get('leakage', '')}", agents=[GATE], provenance=Provenance(record=f"{record}.metrics", time=test["time"], citations=[prices]),
         )
     )
     value, passed, total = checklist(factors)

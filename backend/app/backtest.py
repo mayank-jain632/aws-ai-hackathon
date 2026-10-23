@@ -41,6 +41,9 @@ def rebalanced_curve(closes: pd.DataFrame, target: pd.Series) -> pd.Series:
     prev_month = None
     px = closes.to_numpy()
     for i in range(len(closes)):
+        # Mark the holdings before sizing a rebalance at today's close.
+        if units is not None:
+            value = float(np.dot(units, px[i]))
         if months[i] != prev_month:  # first trading day of a new month: rebalance
             units = value * target.to_numpy() / px[i]
             prev_month = months[i]

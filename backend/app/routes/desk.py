@@ -11,7 +11,6 @@ from backend.app.desk import (
     StrategyInput,
     StrictModel,
     desk_for,
-    digest,
 )
 from backend.app.paper import account_snapshot, order_status, submit
 from backend.app.roles import PROFILES, require_tool, role_of
@@ -93,8 +92,10 @@ def approve(strategy_id: str, request: Request, fund_id: str | None = None) -> d
             desk.strategy(strategy_id)
         except ValueError as error:
             raise HTTPException(404, str(error)) from error
-        desk.state["approvals"][strategy_id] = digest(desk.policy().model_dump())
-        desk.event("human_approval", strategy_id)
+        try:
+            desk.approve(strategy_id)
+        except ValueError as error:
+            raise HTTPException(409, str(error)) from error
     return {"approved": strategy_id}
 
 
