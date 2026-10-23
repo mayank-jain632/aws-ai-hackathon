@@ -23,6 +23,7 @@ def board(tmp_path, monkeypatch):
                 manager, role, role, "dexter", role
             )
     monkeypatch.setattr(app.state, "manager", manager, raising=False)
+    monkeypatch.delattr(app.state, "funds", raising=False)
     monkeypatch.delenv("APP_ACCESS_PASSWORD", raising=False)
     client = TestClient(app, base_url="http://localhost")
     yield manager, client

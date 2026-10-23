@@ -15,9 +15,9 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.app.access import HostedAccess
 from backend.app.agent import AgentManager
-from backend.app.routes.funds import router as funds_router
 from backend.app.roles import Role, allow_child, require_tool
 from backend.app.routes.desk import router as desk_router
+from backend.app.routes.funds import router as funds_router
 
 
 @asynccontextmanager

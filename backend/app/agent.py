@@ -369,6 +369,10 @@ class AgentManager:
                     self, item["id"], item["name"], item["parentId"], item.get("role")
                 )
 
+        from backend.app.desk import Desk
+
+        self.desk = Desk(self)
+
     def snapshot(self):
         return {
             "agents": [a.snapshot() for a in self.agents.values()],

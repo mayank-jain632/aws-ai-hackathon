@@ -2,12 +2,14 @@
 
 import json
 import os
+import threading
 
 import httpx
 
 from backend.app.desk import digest, stamp
 
 PAPER_URL = "https://paper-api.alpaca.markets"
+BROKER_LOCK = threading.RLock()
 
 
 def broker(method, path, body=None):
@@ -51,7 +53,7 @@ def account_snapshot():
 
 
 def submit(desk, body):
-    with desk.lock:
+    with BROKER_LOCK, desk.lock:
         policy, strategy = desk.execution_checks(body.strategy_id)
         order_key = body.client_order_id
         request_hash = digest(body.model_dump())
@@ -85,6 +87,9 @@ def submit(desk, body):
                 "Wait for existing paper orders to resolve before submitting another"
             )
         equity, cash = float(account["equity"]), float(account["cash"])
+        context = json.loads(getattr(desk.manager, "context", "") or "{}")
+        fund = context.get("mandate")
+        capital = min(equity, fund["capital"]) if fund else equity
         positions = snapshot["positions"]
         if equity <= 0 or any(float(p["qty"]) < 0 for p in positions):
             raise ValueError(
@@ -94,15 +99,13 @@ def submit(desk, body):
             float(p["market_value"]) for p in positions if p["symbol"] == body.symbol
         )
         if body.side == "buy":
-            cap = min(policy.max_position, strategy["weights"][body.symbol]) * equity
+            cap = min(policy.max_position, strategy["weights"][body.symbol], fund["max_position"] / 100 if fund else 1) * capital
             if body.notional > cash or market_value + body.notional > cap + 0.01:
                 raise ValueError(
                     "Buy would exceed cash, mandate position size, or frozen strategy target"
                 )
         elif body.notional > market_value:
             raise ValueError("Sell would create a short position")
-        context = json.loads(getattr(desk.manager, "context", "") or "{}")
-        fund = context.get("mandate")
         if fund:
             if (
                 sum(float(p["market_value"]) for p in positions)
