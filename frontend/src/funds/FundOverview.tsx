@@ -1,5 +1,6 @@
 import { FundSchedule } from './FundSchedule'
 import { FundPerformance } from './FundPerformance'
+import { FundCharts } from '../charts/FundCharts'
 import { ScoresEntry } from '../scores/ScoresEntry'
 import { money, objectives, riskNames, type Fund } from './types'
 
@@ -9,6 +10,7 @@ export function FundOverview({ fund, onCanvas, onPlan, onEdit, onStatus, busy }:
     <section className="fund-value"><div><p className="muted">Net asset value <span className="small-badge">Paper portfolio</span></p><h2>{money(m.nav)}<span>.00</span></h2><p className="value-sub">{money(m.pnl)} total P&amp;L <span>· {m.return_pct.toFixed(2)}% return</span></p></div><div className="value-actions"><button className="primary" disabled={busy || fund.status !== 'active' || !!m.working} onClick={onPlan}>{busy ? 'Starting…' : m.working ? 'Agents working…' : 'Start fund planning'}</button><button className="secondary" onClick={onCanvas}>Open agent canvas</button></div></section>
     <FundSchedule key={`${fund.id}:${JSON.stringify(fund.schedule)}`} fund={fund}/>
     <FundPerformance fund={fund}/>
+    <FundCharts fund={fund}/>
     <ScoresEntry fund={fund}/>
     <div className="overview-stats"><div><span>Available cash</span><strong>{money(m.cash)}</strong><small>100% of portfolio</small></div><div><span>Invested capital</span><strong>{money(m.invested)}</strong><small>{m.positions} open positions</small></div><div><span>Agent team</span><strong>{m.agents}</strong><small>{m.working ? `${m.working} working now` : 'Idle'}</small></div><div><span>Research files</span><strong>{m.files}</strong><small>{m.runs} {m.runs === 1 ? 'run' : 'runs'}</small></div></div>
     <div className="overview-grid"><section className="fund-panel portfolio-panel"><header><div><h3>Portfolio</h3><p>Recorded holdings</p></div><span className="subtle-tag">Cash only</span></header><div className="holdings-header"><span>Asset</span><span>Allocation</span><span>Market value</span></div><div className="holding-row"><span>USD cash</span><span>100.00%</span><strong>{money(m.cash)}</strong></div><p className="data-note">No recorded trades.</p></section>

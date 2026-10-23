@@ -1,0 +1,37 @@
+.fund-charts{padding:8px 0 27px;border-bottom:1px solid var(--fund-line);margin-bottom:25px}
+.fund-charts .performance-heading{padding-left:0;margin-bottom:16px}
+.charts-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:16px;font-size:11px;color:var(--fund-muted)}
+.charts-meta select{max-width:100%;min-width:0;font:inherit;font-size:11px;border:1px solid var(--fund-line);background:#faf7f2;color:var(--fund-ink);padding:5px 8px}
+.charts-meta .subtle-tag.pass{color:var(--ok);border-color:var(--ok)}.charts-meta .subtle-tag.fail{color:var(--danger);border-color:var(--danger)}
+.charts-grid{display:grid;grid-template-columns:1fr;gap:22px}
+@media(min-width:1100px){.charts-grid{grid-template-columns:1fr 1fr}.charts-grid>.wide{grid-column:1/-1}}
+.chart-panel{min-width:0}.chart-panel>header{align-items:flex-start}
+.chart-panel header p{line-height:1.6}
+.chart-body{padding:14px 20px 16px}
+.chart-empty{font-size:11px;line-height:1.8;color:var(--fund-muted);padding:22px 20px}
+.chart-empty ul{margin:8px 0 0;padding-left:18px}
+.chart-headline{display:flex;flex-wrap:wrap;gap:6px 28px;padding:0 20px 6px;border-bottom:1px solid #e5ded5;margin-top:14px;padding-bottom:12px}
+.chart-headline div{display:flex;flex-direction:column;gap:4px}.chart-headline span{font-size:9px;color:var(--fund-muted)}
+.chart-headline strong{font-family:var(--fund-serif);font-size:20px;font-weight:500;font-variant-numeric:tabular-nums}
+.chart-svg{display:block;width:100%;height:auto;overflow:visible;outline:none}
+.chart-svg:focus-visible{outline:2px solid var(--fund-accent);outline-offset:3px}
+.chart-svg text{font-family:'Geist Variable',system-ui,sans-serif;font-size:11px;fill:var(--fund-muted)}
+.chart-svg .grid{stroke:var(--fund-line);stroke-width:1}.chart-svg .axis{stroke:#b9b0a5;stroke-width:1}
+.chart-svg .axis-title{font-size:11px;fill:var(--fund-ink)}
+.chart-svg .direct{font-size:11px;fill:var(--fund-ink);font-weight:500}
+.chart-legend{display:flex;flex-wrap:wrap;gap:6px 16px;list-style:none;margin:10px 0 0;padding:0;font-size:11px;color:var(--fund-ink)}
+.chart-legend li{display:inline-flex;align-items:center;gap:6px}
+.chart-legend i{display:inline-block;width:18px;height:0;border-top:2px solid currentColor}.chart-legend i.box{width:10px;height:10px;border:0}
+.chart-tip{position:absolute;pointer-events:none;z-index:3;background:var(--fund-surface);border:1px solid var(--fund-line);padding:7px 9px;font-size:10px;line-height:1.6;color:var(--fund-ink);white-space:nowrap;transform:translate(-50%,-100%)}
+.chart-tip b{font-weight:500;display:block;margin-bottom:2px}
+.chart-wrap{position:relative}
+.gate-rows{list-style:none;margin:0;padding:6px 20px 14px}
+.gate-row{display:grid;grid-template-columns:150px 1fr 70px;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #e5ded5;font-size:11px}
+.gate-row:last-child{border:0}.gate-row dt,.gate-row .gate-name{font-family:var(--fund-serif);font-size:14px}
+.gate-row small{display:block;font-size:9px;color:var(--fund-muted);margin-top:4px;font-family:'Geist Variable',system-ui,sans-serif}
+.gate-mark{font-size:10px;font-weight:600;text-align:right}.gate-mark.pass{color:var(--ok)}.gate-mark.fail{color:var(--danger)}.gate-mark.na{color:var(--fund-muted);font-weight:400}
+.gate-bar{width:100%;height:26px;overflow:visible}
+@media(max-width:520px){.gate-row{grid-template-columns:1fr 60px}.gate-row .gate-bar{grid-column:1/-1;order:3}}
+.chart-note{font-size:9px;line-height:1.8;color:var(--fund-muted);padding:12px 20px;border-top:1px solid var(--fund-line)}
+.fund-charts .loader{margin:20px}
+.charts-error{font-size:11px;color:#8e5f48;background:#eee0d4;border-left:2px solid #b38469;padding:12px 15px}
