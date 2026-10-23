@@ -1,11 +1,15 @@
 # Sushruth · Lane 4b: firm-wide exposure roll-up
 
-Updated 14:25 by Claude Code
+Updated 14:40 by Claude Code
 
 **Shipped (on main, locally checked, broker not reachable from this machine)**
 - `GET /api/firm/exposure`: exposure across every fund at once, per symbol, per sector and
   per risk band, with cross-fund overlap and a capacity check against the single shared
-  paper account. Human sessions only; a worker token gets 403. D26.
+  paper account. Human sessions only; a worker token gets 403. D27.
+- Honours Kushagra's new fund membership: the roll-up covers the funds the caller belongs
+  to, the same filter `GET /api/funds` uses, and the payload names its `scope`. Without
+  that it would have put another member's fund names, capital and holdings in a
+  "firm-wide" total. Covered by a two-account hosted test.
 - New files: `backend/app/firm.py` (pure aggregation, no I/O), `backend/app/routes/firm.py`,
   `backend/tests/test_firm_exposure.py` (15 tests), `docs/firm-exposure.md`. One
   `app.include_router(firm_router)` line plus its import in `backend/app/main.py`.
@@ -15,7 +19,7 @@ Updated 14:25 by Claude Code
   Archived funds leave firm capital, paused funds stay in it.
 - No firm-level threshold is invented. Every limit used is either the shared account's
   balance or a limit a person already set in a mandate.
-- Checks: 15 new tests pass, 106 passed overall, `npm run check:python` clean. The 4 errors
+- Checks: 16 new tests pass, 141 passed overall, `npm run check:python` clean. The 4 errors
   in `test_delegation_capacity.py` are pre-existing and Windows-only (`os.killpg`); I
   confirmed them on a clean tree before my change.
 

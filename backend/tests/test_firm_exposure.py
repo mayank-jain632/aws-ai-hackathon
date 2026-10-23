@@ -353,3 +353,56 @@ def test_route_refuses_worker_tokens(tmp_path, monkeypatch):
         denied = client.get("/api/firm/exposure", headers={"x-agent-token": "anything"})
     assert denied.status_code == 403
     assert "Workers cannot" in denied.json()["detail"]
+
+
+@pytest.fixture
+def hosted(tmp_path, monkeypatch):
+    """Two demo accounts on a hosted session, so fund membership is enforced."""
+    import json
+
+    import backend.app.funds as funds_module
+    from backend.app import main
+
+    monkeypatch.setenv("APP_ACCESS_PASSWORD", "test-signing-secret")
+    monkeypatch.setenv(
+        "APP_DEMO_ACCOUNTS",
+        json.dumps({"owner@example.com": "owner-pass", "peer@example.com": "peer-pass"}),
+    )
+    monkeypatch.delenv("APP_ORIGIN_TOKEN", raising=False)
+    monkeypatch.setenv("WATCHDOG_INTERVAL_SECONDS", "0")
+    monkeypatch.setattr(funds_module, "ROOT", tmp_path)
+    monkeypatch.setattr(main, "AgentManager", lambda: AgentManager(root=tmp_path / ".local"))
+    monkeypatch.setattr(
+        "backend.app.routes.firm.account_snapshot",
+        lambda: {"account": {"equity": "100000"}},
+    )
+    with TestClient(main.app, base_url="https://localhost") as client:
+        yield client
+
+
+def login(client, email, password):
+    assert (
+        client.post(
+            "/login", data={"email": email, "password": password}, follow_redirects=False
+        ).status_code
+        == 303
+    )
+
+
+def test_firm_view_only_covers_funds_the_caller_is_a_member_of(hosted):
+    login(hosted, "owner@example.com", "owner-pass")
+    hosted.post("/api/funds", json={"name": "Owner fund", "capital": 400000})
+    mine = hosted.get("/api/firm/exposure").json()
+
+    login(hosted, "peer@example.com", "peer-pass")
+    hosted.post("/api/funds", json={"name": "Peer fund", "capital": 50000})
+    theirs = hosted.get("/api/firm/exposure").json()
+
+    # The legacy Team 4 board stays shared with everyone; the owner's new fund does not.
+    assert sorted(f["name"] for f in theirs["by_fund"]) == ["Peer fund", "Team 4 fund"]
+    assert theirs["capital"] == pytest.approx(150000.0)
+    assert "peer@example.com" in theirs["scope"]
+    assert "Owner fund" in [f["name"] for f in mine["by_fund"]]
+    assert "Peer fund" not in [f["name"] for f in mine["by_fund"]]
+    # The shared account is still read, so the capacity check runs for each caller.
+    assert theirs["capacity_checked"] is True

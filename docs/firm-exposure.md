@@ -3,7 +3,11 @@
 `GET /api/firm/exposure` returns exposure across every fund at once. Human sessions only;
 worker tokens get 403. Add `?include_broker=false` to skip the shared-account read.
 
-Proposed in D26. Code is `backend/app/firm.py` (pure aggregation) and
+Fund membership is honoured, the same as `GET /api/funds`: "firm-wide" means every fund the
+caller is a member of, not every fund on the host. The payload says which in `scope`. The
+legacy Team 4 board stays shared with everyone.
+
+Proposed in D27. Code is `backend/app/firm.py` (pure aggregation) and
 `backend/app/routes/firm.py` (the route). Tests: `backend/tests/test_firm_exposure.py`.
 
 ## Why a firm view exists
@@ -74,3 +78,5 @@ reconciliation figure, not as a threshold.
   brokerage subledgers, so `committed` comes from each fund's own order log.
 - Not done: no agent tool (would need a `roles.py` capability), no UI, and the live
   capacity check has not run against real Alpaca credentials from this machine.
+- A roll-up is scoped to one person's memberships, so two advisors can see different firm
+  totals. There is no account-wide view that crosses membership, by design.
