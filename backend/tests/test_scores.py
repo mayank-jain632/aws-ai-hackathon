@@ -1,0 +1,193 @@
+"""Scores and reasoning view (D23): honest rings, recorded reasoning, read-only."""
+
+import json
+from types import SimpleNamespace
+
+import pytest
+from fastapi.testclient import TestClient
+
+from backend.app import agent as runtime
+from backend.app.desk import Policy, ReviewInput, StrategyInput, desk_for
+from backend.app.funds import Mandate
+from backend.app.main import app
+from backend.app.scores import build_scorecard
+from backend.app.scores import sources as src
+from backend.app.watchdog import feedback
+
+MEMO = """# Macro memo
+CPI cooled on 2022-12-13 https://fred.stlouisfed.org/series/CPIAUCSL
+Apple 10-K filed 2022-10-28 https://www.sec.gov/Archives/edgar/data/320193/aapl-10k.htm
+"""
+
+
+@pytest.fixture(autouse=True)
+def isolated(tmp_path, monkeypatch):
+    monkeypatch.setenv("WATCHDOG_DIR", str(tmp_path / "watchdog-global"))
+    monkeypatch.setattr(src, "WF_ROOT", tmp_path / "no-walk-forward")
+
+
+def empty_fund(tmp_path):
+    return SimpleNamespace(registry=tmp_path / "agents.json", paused=False, agents={})
+
+
+def evaluated_fund(tmp_path):
+    manager = empty_fund(tmp_path)
+    (tmp_path / "workspace").mkdir()
+    (tmp_path / "workspace" / "macro.md").write_text(MEMO)
+    desk = desk_for(manager)
+    desk.set_policy(
+        Policy(
+            universe=["AAPL", "MSFT"],
+            max_position=0.7,
+            max_drawdown=0.5,
+            min_sharpe=-100,
+            min_excess_return=-1,
+            max_order_notional=1000,
+            max_daily_orders=10,
+            trading_allowed=True,
+        )
+    )
+    sid = desk.register(
+        StrategyInput(
+            name="Quality tilt",
+            weights={"AAPL": 0.5, "MSFT": 0.5},
+            cutoff="2023-01-01",
+            end="2023-06-30",
+            rationale="Both names carry the strongest cited fundamentals.",
+            memo_paths=["macro.md", "missing.md"],
+            changes_my_mind="Cut if CPI re-accelerates.",
+        ),
+        "strategist",
+    )["id"]
+    desk.review(
+        ReviewInput(strategy_id=sid, verdict="APPROVE", critique="Checked concentration and that every input predates the cutoff."),
+        "reviewer",
+    )
+    desk.evaluate(sid)
+    return manager, desk, sid
+
+
+def by_key(card):
+    return {s.key: s for s in card.scores}
+
+
+def test_rings_without_data_say_not_produced_and_name_the_owner(tmp_path):
+    card = build_scorecard("f1", Mandate(name="Empty fund").model_dump(), empty_fund(tmp_path))
+    assert len(card.scores) == 8
+    for score in card.scores:
+        assert score.status == "not_produced"
+        assert score.value is None and score.raw == "" and score.formula == ""
+        assert score.owner and score.missing
+    statuses = {s.id: s.status for s in card.sources}
+    assert statuses["desk"] == "empty"
+    assert statuses["walk_forward"] == "not_on_main"
+
+
+def test_scored_rings_show_raw_formula_source_and_recorded_reasoning(tmp_path):
+    manager, desk, sid = evaluated_fund(tmp_path)
+    mandate = Mandate(name="Growth", universe=["AAPL", "MSFT", "NVDA"], max_position=40).model_dump()
+    rings = by_key(build_scorecard("f1", mandate, manager))
+
+    backtest = rings["backtest"]
+    test = desk.state["tests"][sid]
+    assert backtest.status == "scored"
+    assert backtest.value == 100 * sum(test["checks"].values()) / 4
+    assert backtest.raw.startswith(test["verdict"]) and "÷ 4" in backtest.formula
+    assert backtest.source.location.endswith("desk.json")
+    assert backtest.factors[0].reasoning == test["limitations"]
+
+    fit = rings["mandate_fit"]
+    position = next(f for f in fit.factors if f.key == "position")
+    assert position.status == "fail" and "cap 40%" in position.value
+    assert fit.value == 100 * sum(f.status == "pass" for f in fit.factors if f.weight) / sum(1 for f in fit.factors if f.weight)
+
+    strategy = rings["strategy"]
+    review = next(f for f in strategy.factors if f.key == "review")
+    assert review.status == "pass" and review.reasoning.startswith("Checked concentration")
+    assert review.agents[0].id == "reviewer"
+    memos = next(f for f in strategy.factors if f.key == "memos")
+    assert memos.status == "fail" and memos.value == "1 of 2 found"
+    kinds = {c.kind: c for c in memos.provenance.citations}
+    assert kinds["fred"].date == "2022-12-13" and kinds["sec"].url.startswith("https://www.sec.gov/")
+
+    for key in ("confidence", "significance", "execution", "watchdog", "sensitivity"):
+        assert rings[key].status == "not_produced", key
+
+
+def test_orders_and_watchdog_verdicts_feed_execution_and_gate(tmp_path):
+    manager, desk, sid = evaluated_fund(tmp_path)
+    desk.state["orders"]["order-1"] = {
+        "strategy_id": sid, "symbol": "AAPL", "side": "buy", "notional": 500.0, "client_order_id": "order-1",
+        "time": "2026-10-23T18:00:00+00:00", "status": "filled", "broker_id": "b-1", "filled_qty": "2", "filled_avg_price": "250",
+    }
+    desk.state["orders"]["order-2"] = {
+        "strategy_id": sid, "symbol": "MSFT", "side": "buy", "notional": 500.0, "client_order_id": "order-2",
+        "time": "2026-10-23T18:01:00+00:00", "status": "unknown", "reason": "Alpaca timed out",
+    }
+    for kind in ("approve", "block"):
+        feedback.append(desk, {"kind": kind, "rules": [] if kind == "approve" else ["position_size"], "reason": f"{kind} reason", "symbol": "AAPL", "side": "buy", "notional": 500.0, "strategy_id": sid})
+    rings = by_key(build_scorecard("f1", Mandate(name="Growth").model_dump(), manager))
+    assert rings["execution"].value == 50.0 and rings["execution"].raw == "1 of 2 paper orders filled at Alpaca"
+    assert rings["watchdog"].value == 50.0
+    blocked = next(f for f in rings["watchdog"].factors if f.status == "fail")
+    assert blocked.reasoning == "block reason" and "position_size" in blocked.value
+
+
+def write_walk_forward(root):
+    """Minimal fixture in the walk-forward run's shapes. Fixture numbers, not results."""
+    run = root / "final"
+    (run / "results_test").mkdir(parents=True)
+    (run / "decisions").mkdir()
+    (run / "manifest.json").write_text(json.dumps({"run_id": "final", "created": "2026-10-23T18:00:00+00:00"}))
+    sig = {"excess_weekly_mean": 0.001, "excess_lo": -0.001, "excess_hi": 0.003, "p_le_zero": 0.2, "sharpe_diff": 0.1, "sharpe_diff_lo": -0.1, "sharpe_diff_hi": 0.3}
+    (run / "results_test" / "stats.json").write_text(json.dumps({"window": "test", "decisions": 3, "significance": {"vs_spy_buy_hold": sig}, "research_ic": {}}))
+    (run / "results_test" / "attribution.csv").write_text(",total_return,costs,n_fills,n_skipped\npipeline,0.01,10,3,1\n")
+    (run / "decisions" / "2026-10-16.json").write_text(json.dumps({
+        "decision_date": "2026-10-16",
+        "memos": [{"analyst": "macro", "views": [{"ticker": "AAPL", "stance": "long", "confidence": 0.8, "note": "Rates easing.", "sources": ["fred:DGS10"]}]}],
+        "sources": [{"id": "fred:DGS10", "kind": "fred", "title": "10y yield", "date": "2026-10-16", "url": None, "excerpt": "4.1%"}],
+        "plan": {"strategy_name": "Fixture", "plans": [{"ticker": "AAPL", "target_weight": 0.5, "conviction": 0.6, "rationale": "Macro tailwind.", "changes_my_mind": "Yield above 5%.", "memo_sources": ["fred:DGS10"]}]},
+    }))
+    (root / "audit_clean").mkdir()
+    (root / "audit_clean" / "audit.json").write_text(json.dumps({"n_dates": 3, "rows": [
+        {"series": "macro", "horizon": "1w", "n_dates": 3, "named_ic": 0.1, "masked_ic": 0.1, "diff": 0.0, "ci_lo": -0.1, "ci_hi": 0.1, "verdict": "no detectable memory effect"},
+        {"series": "strategy_weight", "horizon": "1w", "n_dates": 3, "named_ic": 0.1, "masked_ic": 0.2, "diff": -0.1, "ci_lo": -0.2, "ci_hi": -0.01, "verdict": "masked better"},
+    ]}))
+
+
+def test_walk_forward_fills_empty_rings_as_firm_wide(tmp_path):
+    write_walk_forward(tmp_path / "wf")
+    rings = by_key(build_scorecard("f1", Mandate(name="Empty").model_dump(), empty_fund(tmp_path), wf_root=tmp_path / "wf"))
+    assert rings["confidence"].scope == "firm" and rings["confidence"].value == 60.0
+    plan = rings["confidence"].factors[0]
+    assert plan.reasoning.startswith("Macro tailwind.") and plan.provenance.citations[0].kind == "fred"
+    assert rings["significance"].value == 80.0
+    assert rings["execution"].value == 75.0
+    assert rings["sensitivity"].value == 50.0
+    assert rings["mandate_fit"].status == "not_produced"
+
+
+def test_building_the_card_writes_nothing(tmp_path):
+    manager, _, _ = evaluated_fund(tmp_path)
+    before = {p: p.read_bytes() for p in tmp_path.rglob("*") if p.is_file()}
+    build_scorecard("f1", Mandate(name="Growth").model_dump(), manager)
+    after = {p: p.read_bytes() for p in tmp_path.rglob("*") if p.is_file()}
+    assert after == before
+
+
+def test_route_is_human_only_and_scoped_to_a_fund(tmp_path, monkeypatch):
+    from backend.app import funds
+
+    monkeypatch.setattr(runtime, "ROOT", tmp_path)
+    monkeypatch.setattr(runtime, "LOCAL", tmp_path / ".local/agent")
+    monkeypatch.setattr(funds, "ROOT", tmp_path)
+    monkeypatch.setenv("WATCHDOG_INTERVAL_SECONDS", "0")
+    monkeypatch.delenv("APP_ACCESS_PASSWORD", raising=False)
+    with TestClient(app, base_url="http://localhost") as http:
+        card = http.get("/api/funds/general/scores")
+        assert card.status_code == 200
+        assert {s["key"] for s in card.json()["scores"]} >= {"mandate_fit", "backtest", "watchdog", "sensitivity"}
+        assert http.get("/api/funds/nope/scores").status_code == 404
+        assert http.get("/api/funds/general/scores?strategy_id=nope").status_code == 404
+        token = app.state.manager.token
+        assert http.get("/api/funds/general/scores", headers={"X-Agent-Token": token, "X-Agent-ID": "dexter"}).status_code == 403
