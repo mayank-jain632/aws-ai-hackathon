@@ -1,4 +1,5 @@
 export interface PaperOrder {
+  market_clock?: {is_open: boolean; timestamp?: string; next_open?: string} | null
   client_order_id?: string; broker_id?: string; symbol: string; side: string
   notional: number | string; status: string; time?: string; submitted_at?: string | null
   filled_qty?: string | number | null; filled_avg_price?: string | number | null
@@ -22,11 +23,17 @@ export function needsBrokerRefresh(order: PaperOrder) {
 }
 export function receiptStatus(order: PaperOrder) {
   if (order.status === 'filled') return 'Filled'
+  if (order.status === 'accepted' && order.broker_id) return 'Accepted by Alpaca'
   if (order.status === 'partially_filled') return 'Partially filled'
   if (order.status === 'unknown') return 'Submission unconfirmed'
   if (order.status === 'submitting') return 'Submission in progress'
   if (['canceled','cancelled','expired','rejected'].includes(order.status)) return order.status[0].toUpperCase()+order.status.slice(1)
   return order.broker_id ? 'Submitted to Alpaca' : 'No broker confirmation'
+}
+export function pendingExplanation(order: PaperOrder) {
+  if (Number(order.filled_qty || 0) > 0 || ['filled','canceled','cancelled','expired','rejected'].includes(order.status)) return ''
+  if (!order.broker_id) return 'Not filled'
+  return order.market_clock?.is_open === false ? 'Waiting for market open · Not filled' : 'Awaiting fill · Not filled'
 }
 export function orderMoney(value: number | string | null | undefined) {
   if (value === undefined || value === null || value === '' || !Number.isFinite(Number(value))) return 'Not reported'

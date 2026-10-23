@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from './types'
-import { needsBrokerRefresh, orderMoney, orderRows, orderTime, plannedTrades, receiptStatus, type OrderPlanRecord, type PaperOrder } from './paperOrders'
+import { needsBrokerRefresh, orderMoney, orderRows, orderTime, pendingExplanation, plannedTrades, receiptStatus, type OrderPlanRecord, type PaperOrder } from './paperOrders'
 import './paperOrders.css'
 
 export function PaperReceipt({ order }: { order: PaperOrder }) {
@@ -8,9 +8,9 @@ export function PaperReceipt({ order }: { order: PaperOrder }) {
   const hasFill = quantity !== null && quantity !== undefined && Number(quantity) > 0
   return <article className="paper-receipt">
     <header><strong><span className="order-side">{order.side}</span> {orderMoney(order.notional)} of {order.symbol}</strong><span className="subtle-tag">{receiptStatus(order)}</span></header>
-    <p className="order-state">{order.status || 'Status unavailable'}{!hasFill && order.broker_id && !['filled','canceled','cancelled','expired','rejected'].includes(order.status) ? ' · Awaiting fill' : ''}</p>
+    <p className="order-state">{pendingExplanation(order) || order.status || 'Status unavailable'}</p>
     {hasFill && <p className="order-fill">Filled {String(quantity)} shares at {orderMoney(order.filled_avg_price)}</p>}
-    <details><summary>Order details</summary><dl><dt>Broker order ID</dt><dd>{order.broker_id || 'Not returned'}</dd><dt>Client order ID</dt><dd>{order.client_order_id || 'Not reported'}</dd>
+    <details><summary>Order details</summary><dl><dt>Broker status</dt><dd>{order.status}</dd><dt>Broker order ID</dt><dd>{order.broker_id || 'Not returned'}</dd><dt>Client order ID</dt><dd>{order.client_order_id || 'Not reported'}</dd>
       <dt>{order.submitted_at ? 'Broker submitted' : 'Recorded at'}</dt><dd>{orderTime(order.submitted_at || order.time)}</dd>
       {hasFill ? <><dt>Filled quantity</dt><dd>{String(quantity)}</dd><dt>Average fill price</dt><dd>{orderMoney(order.filled_avg_price)}</dd><dt>Filled at</dt><dd>{orderTime(order.filled_at)}</dd></> : <><dt>Fill</dt><dd>{order.status === 'filled' ? 'Fill details not returned' : 'No fill reported'}</dd></>}
       {order.last_checked_at && <><dt>Status checked</dt><dd>{orderTime(order.last_checked_at)}</dd></>}

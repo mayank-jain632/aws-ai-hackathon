@@ -1,14 +1,14 @@
 import { describe, expect, test } from 'bun:test'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { PaperReceipt } from '../src/funds/PaperOrderReceipts'
-import { needsBrokerRefresh, orderRows, plannedTrades, receiptStatus, type PaperOrder } from '../src/funds/paperOrders'
+import { needsBrokerRefresh, orderRows, pendingExplanation, plannedTrades, receiptStatus, type PaperOrder } from '../src/funds/paperOrders'
 const queued: PaperOrder = { symbol:'AAPL', side:'buy', notional:1, status:'accepted', broker_id:'actual-broker-id', client_order_id:'actual-client-id', time:'2026-10-23T21:30:00Z', filled_qty:'0', filled_avg_price:null }
 describe('actual paper broker receipts', () => {
   test('accepted orders show their real IDs and never masquerade as fills', () => {
     const html = renderToStaticMarkup(<PaperReceipt order={queued}/>)
     expect(html).toContain('actual-broker-id'); expect(html).toContain('actual-client-id')
     expect(html).toContain('accepted'); expect(html).toContain('No fill reported')
-    expect(html).not.toContain('Filled quantity'); expect(html).toContain('Submitted to Alpaca')
+    expect(html).not.toContain('Filled quantity'); expect(html).toContain('Accepted by Alpaca')
   })
   test('actual partial fills and broker timestamps remain distinct from full fills', () => {
     const html = renderToStaticMarkup(<PaperReceipt order={{...queued,status:'partially_filled',filled_qty:'0.5',filled_avg_price:'123.45',filled_at:'2026-10-23T21:31:00Z',submitted_at:'2026-10-23T21:30:01Z'}}/>)
@@ -24,6 +24,11 @@ describe('actual paper broker receipts', () => {
     expect(plannedTrades([plan],[queued])).toHaveLength(0)
     expect(plannedTrades([],[])).toEqual([])
     expect(receiptStatus({...queued,broker_id:undefined,status:'unknown'})).toBe('Submission unconfirmed')
+  })
+  test('closed-market explanation requires actual clock state, never accepted status alone', () => {
+    expect(pendingExplanation(queued)).toBe('Awaiting fill · Not filled')
+    expect(pendingExplanation({...queued,market_clock:{is_open:false}})).toBe('Waiting for market open · Not filled')
+    expect(pendingExplanation({...queued,status:'filled',filled_qty:'1'})).toBe('')
   })
   test('broker status refresh targets only existing unresolved orders', () => {
     expect(needsBrokerRefresh(queued)).toBe(true)
