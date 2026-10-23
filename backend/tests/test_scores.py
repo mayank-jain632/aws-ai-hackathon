@@ -227,3 +227,37 @@ def test_truncated_write_file_activity_still_credits_the_author():
     long_call = json.dumps({"path": "macro.md", "content": "x" * 20000})[:12000]
     agents = {"r1": {"id": "r1", "name": "Macro researcher", "role": "research", "activity": [{"kind": "tool", "label": "write_file", "detail": long_call, "time": "t"}]}}
     assert src.file_authors(src.tool_calls(agents)) == {"macro.md": ["r1"]}
+
+
+@pytest.fixture
+def hosted(tmp_path, monkeypatch):
+    """Hosted login and fund sharing, as in test_sharing.py."""
+    import backend.app.funds as funds_module
+    from backend.app import main
+    from backend.app.agent import AgentManager
+
+    monkeypatch.setenv("APP_ACCESS_PASSWORD", "test-signing-secret")
+    monkeypatch.setenv("APP_DEMO_ACCOUNTS", json.dumps({"owner@example.com": "demo-test-pass", "peer@example.com": "peer-test-pass"}))
+    monkeypatch.delenv("APP_ORIGIN_TOKEN", raising=False)
+    monkeypatch.setenv("WATCHDOG_INTERVAL_SECONDS", "0")
+    monkeypatch.setattr(funds_module, "ROOT", tmp_path)
+    monkeypatch.setattr(main, "AgentManager", lambda: AgentManager(root=tmp_path / ".local"))
+    with TestClient(main.app, base_url="https://localhost") as client:
+        yield client
+
+
+def login(client, email, password):
+    assert client.post("/login", data={"email": email, "password": password}, follow_redirects=False).status_code == 303
+
+
+def test_non_member_gets_the_same_refusal_as_other_fund_routes(hosted):
+    login(hosted, "owner@example.com", "demo-test-pass")
+    fund = hosted.post("/api/funds", json={"name": "Private fund"}).json()["id"]
+    assert hosted.get(f"/api/funds/{fund}/scores").status_code == 200
+    login(hosted, "peer@example.com", "peer-test-pass")
+    scores, agents = hosted.get(f"/api/funds/{fund}/scores"), hosted.get(f"/api/funds/{fund}/agents")
+    assert (scores.status_code, scores.text) == (agents.status_code, agents.text) == (403, "Fund access denied")
+    login(hosted, "owner@example.com", "demo-test-pass")
+    assert hosted.post(f"/api/funds/{fund}/members", json={"email": "peer@example.com"}).status_code == 200
+    login(hosted, "peer@example.com", "peer-test-pass")
+    assert hosted.get(f"/api/funds/{fund}/scores").status_code == 200
