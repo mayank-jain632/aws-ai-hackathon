@@ -1,8 +1,14 @@
 # Sushruth · Lane 4b: firm-wide exposure roll-up
 
-Updated 14:40 by Claude Code
+Updated 14:55 by Claude Code
 
-**Shipped (on main, locally checked, broker not reachable from this machine)**
+**Where this lives: branch `sushruth/firm-exposure`, not `main`.**
+It was briefly on main at `4599ad5` and `2bb325f` and is reverted there by `main`'s next
+commit; the revert removes only my files and the two `include_router` lines. Nothing else
+on main changes, and D27 stays in the log because D28 was appended after it. Pull the
+branch to review or run it.
+
+**Shipped (branch only, locally checked, broker not reachable from this machine)**
 - `GET /api/firm/exposure`: exposure across every fund at once, per symbol, per sector and
   per risk band, with cross-fund overlap and a capacity check against the single shared
   paper account. Human sessions only; a worker token gets 403. D27.
