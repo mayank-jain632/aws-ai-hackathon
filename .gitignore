@@ -31,3 +31,6 @@ backend/.cache/
 data/sec/raw/
 .claude/
 data/gdelt/raw/
+
+# Personal agent notes (not shared)
+CLAUDE.local.md
