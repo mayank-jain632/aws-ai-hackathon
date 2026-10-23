@@ -6,7 +6,12 @@ export interface Mandate {
   rebalance: string; liquidity: string; mode: string; cutoff: string; trading_allowed: boolean
   approval_required: boolean; allow_short: boolean; max_leverage: number; notes: string
 }
+export interface FundScheduleState {
+  enabled: boolean; interval_seconds: number; next_run_at: string | null
+  last_run_at: string | null; last_result: string | null
+}
 export interface Fund extends Mandate {
+  schedule?: FundScheduleState
   id: string; owner: string; status: 'active' | 'paused' | 'archived'; created_at: string; updated_at: string
   portfolio_status: string; holdings: unknown[]; history: unknown[]
   metrics: { nav: number; cash: number; invested: number; pnl: number; return_pct: number; positions: number; agents: number; working: number; files: number; runs: number }

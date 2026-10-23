@@ -12,6 +12,7 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel
 
 from backend.app.agent import AgentManager
+from backend.app.fund_schedule import FundScheduler, busy
 from backend.app.funds import FundStore, Mandate
 from backend.app.sharing import ShareStore
 
@@ -23,8 +24,13 @@ async def lifespan(app):
         app.state.funds.root, json.loads(os.getenv("APP_DEMO_ACCOUNTS", "{}"))
     )
     app.state.sharing.migrate(app.state.funds.records)
-    yield
-    await app.state.funds.close()
+    app.state.fund_scheduler = FundScheduler(app.state.funds)
+    app.state.fund_scheduler.start()
+    try:
+        yield
+    finally:
+        await app.state.fund_scheduler.close()
+        await app.state.funds.close()
 
 
 router = APIRouter(lifespan=lifespan)
@@ -74,7 +80,7 @@ def get_fund(fund_id: str, request: Request) -> dict:
 @router.put("/api/funds/{fund_id}/mandate")
 async def update_mandate(fund_id: str, body: Mandate, request: Request) -> dict:
     runtime = fund(request, fund_id)
-    if any(a.state["status"] == "running" for a in runtime.agents.values()):
+    if busy(runtime):
         raise HTTPException(
             409, "Wait for running agents to finish before changing the mandate"
         )
@@ -84,9 +90,6 @@ async def update_mandate(fund_id: str, body: Mandate, request: Request) -> dict:
     )
     current.save()
     current.runtime(fund_id)
-    (runtime.root / "workspace" / "mandate.md").write_text(
-        "# Fund mandate\n\n" + runtime.context + "\n"
-    )
     runtime.publish()
     return current.detail(fund_id)
 
@@ -104,9 +107,31 @@ async def change_status(fund_id: str, body: StatusUpdate, request: Request) -> d
     current.save()
     runtime.paused = body.status != "active"
     if runtime.paused:
+        await request.app.state.fund_scheduler.disable(
+            fund_id, f"Disabled: fund {body.status}"
+        )
         await runtime.close()
     runtime.publish()
     return current.detail(fund_id)
+
+
+class ScheduleUpdate(BaseModel):
+    enabled: bool
+
+
+@router.put("/api/funds/{fund_id}/schedule")
+async def update_schedule(fund_id: str, body: ScheduleUpdate, request: Request) -> dict:
+    from backend.app.routes.sharing import sharing
+
+    if request.headers.get("x-agent-token"):
+        raise HTTPException(403, "Only teammates can change hourly wakeups")
+    _, actor = sharing(request, fund_id)
+    try:
+        return await request.app.state.fund_scheduler.configure(
+            fund_id, body.enabled, actor
+        )
+    except ValueError as error:
+        raise HTTPException(409, str(error)) from error
 
 
 # Reuse the tested canvas handlers without duplicating their validation and SSE behavior.
@@ -148,6 +173,10 @@ async def stop(fund_id: str, agent_id: str, request: Request):
     from backend.app.main import stop_agent
 
     request.state.fund_manager = fund(request, fund_id)
+    if agent_id == "dexter":
+        await request.app.state.fund_scheduler.disable(
+            fund_id, "Disabled: Dexter stopped by a teammate"
+        )
     return await stop_agent(agent_id, request)
 
 
