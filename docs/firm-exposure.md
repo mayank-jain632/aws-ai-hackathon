@@ -62,18 +62,19 @@ reconciliation figure, not as a threshold.
 
 ## Gaps and handoffs
 
-- `max_sector` is checked nowhere else in the app. `paper.submit` refuses any mandate that
-  sets one (`paper.py`, "Sector-limit enforcement is not connected to the order adapter
-  yet"), and the default mandate sets 40, so **a default fund cannot trade at all**.
-  `firm.SECTORS` and `firm.sector_of` are the classification that check needs; wiring them
-  into the order adapter is the execution owners' call, not done here.
-- `Desk.register` validates `max_position` but not `max_sector`, so an approved book can
-  hold 60% of one sector under a 40% mandate. This roll-up reports it after the fact; the
-  gate is where it should be refused.
-- The sector map is hand-maintained for the snapshot universe by the issuer's primary line
-  of business. It is a static label, not sourced market data and not a GICS licence.
-  Unmapped symbols are reported as `Unclassified` and excluded from sector totals rather
-  than bucketed.
+- Sector limits are now enforced upstream, so the drift findings are a backstop rather
+  than the only check. `desk.check_allocation` applies the cash reserve and sector cap when
+  a strategy is registered, and `paper.submit` and `synthesis/orders.py` apply them on
+  projected holdings. Drift should therefore appear only when recorded orders move a fund
+  past a limit it satisfied at registration, or when a mandate is tightened afterwards.
+  `test_drift_finding_agrees_with_the_desk_allocation_check` pins the two to the same
+  verdict on the same book.
+- The sector map is `backend/app/wf/masking.py`'s `SECTORS`, reused rather than redefined so
+  a firm total cannot disagree with a per-fund limit. It is a static label for the snapshot
+  universe, not sourced market data and not a GICS licence. The gates fail closed on an
+  unknown symbol, which is right before trading; this read-only report instead marks it
+  `Unclassified`, excludes it from sector totals and names it in a finding, so a missing
+  label cannot take the whole firm view down.
 - Per-fund attribution of real holdings is limited by design: one shared account, no
   brokerage subledgers, so `committed` comes from each fund's own order log.
 - Not done: no agent tool (would need a `roles.py` capability), no UI, and the live

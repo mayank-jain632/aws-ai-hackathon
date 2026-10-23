@@ -241,14 +241,14 @@ def test_sector_limit_is_checked_here_because_nothing_else_checks_it():
     ]
     result = roll_up(funds)
     drift = next(f for f in result["findings"] if f["code"] == "mandate_drift_sector")
-    assert "Information technology" in drift["subject"]
+    assert "Information Technology" in drift["subject"]
     assert drift["value"] == pytest.approx(0.60)
     assert drift["limit"] == pytest.approx(0.40)
     assert not [f for f in result["findings"] if f["code"] == "mandate_drift_position"]
 
 
 def test_sectors_aggregate_and_unmapped_symbols_stay_visible():
-    assert sector_of("nvda") == "Information technology"
+    assert sector_of("nvda") == "Information Technology"
     assert sector_of("TSLA") == firm.UNCLASSIFIED
     funds = [
         fund_exposure(
@@ -263,7 +263,7 @@ def test_sectors_aggregate_and_unmapped_symbols_stay_visible():
         )
     ]
     result = roll_up(funds)
-    tech = next(b for b in result["by_sector"] if b["sector"] == "Information technology")
+    tech = next(b for b in result["by_sector"] if b["sector"] == "Information Technology")
     assert tech["exposure"] == pytest.approx(50000.0)
     assert sorted(tech["symbols"]) == ["AAPL", "MSFT", "NVDA"]
     note = next(f for f in result["findings"] if f["code"] == "unclassified_symbols")
@@ -309,8 +309,8 @@ def test_route_reads_every_real_fund_without_a_broker(tmp_path, monkeypatch):
         desk = desk_for(store.runtime(first))
         desk.set_policy(
             Policy(
-                universe=["NVDA", "JPM"],
-                max_position=0.5,
+                universe=["NVDA", "JPM", "XOM", "UNH", "PG"],
+                max_position=0.2,
                 max_drawdown=0.5,
                 min_sharpe=-100,
                 min_excess_return=-1,
@@ -318,13 +318,16 @@ def test_route_reads_every_real_fund_without_a_broker(tmp_path, monkeypatch):
                 max_daily_orders=5,
             )
         )
+        # Must satisfy the fund mandate's own checks, which `register` now applies:
+        # 5% cash reserve (weights sum to at most 0.95), 20% per name, 40% per sector.
+        # One name per sector keeps every sector at 0.19.
         registered = desk.register(
             StrategyInput(
                 name="Core",
-                weights={"NVDA": 0.5, "JPM": 0.5},
+                weights={"NVDA": 0.19, "JPM": 0.19, "XOM": 0.19, "UNH": 0.19, "PG": 0.19},
                 cutoff="2024-06-01",
                 end="2025-06-30",
-                rationale="Two-name placeholder book for the exposure roll-up test.",
+                rationale="Mandate-compliant five-name book for the exposure roll-up test.",
                 memo_paths=["workspace/memo.md"],
                 changes_my_mind="A failing backtest or an adversarial rejection.",
             ),
@@ -406,3 +409,44 @@ def test_firm_view_only_covers_funds_the_caller_is_a_member_of(hosted):
     assert "Peer fund" not in [f["name"] for f in mine["by_fund"]]
     # The shared account is still read, so the capacity check runs for each caller.
     assert theirs["capacity_checked"] is True
+
+
+def test_sector_map_is_the_one_the_gates_use():
+    """Reuse, not a second map: a firm total must never disagree with a per-fund limit."""
+    from backend.app.wf import masking
+
+    assert firm.SECTORS is masking.SECTORS
+
+
+@pytest.mark.parametrize(
+    "weights,allowed",
+    [
+        ({"NVDA": 0.19, "JPM": 0.19, "XOM": 0.19, "UNH": 0.19, "PG": 0.19}, True),
+        ({"NVDA": 0.2, "MSFT": 0.2, "AAPL": 0.2, "JPM": 0.2, "PG": 0.15}, False),
+    ],
+)
+def test_drift_finding_agrees_with_the_desk_allocation_check(weights, allowed):
+    """The roll-up's sector verdict must match `desk.check_allocation` on the same book."""
+    from backend.app.desk import check_allocation
+
+    mandate = {"min_cash": 5, "max_sector": 40}
+    try:
+        check_allocation(weights, mandate)
+        gate_allows = True
+    except ValueError:
+        gate_allows = False
+    assert gate_allows is allowed
+
+    funds = [
+        fund_exposure(
+            "f1",
+            mandate_record(max_position=20.0, max_sector=40.0),
+            desk_state(POLICY, strategies=[("s", weights, True, "PASS")]),
+        )
+    ]
+    sector_drift = [
+        f
+        for f in roll_up(funds)["findings"]
+        if f["code"] == "mandate_drift_sector"
+    ]
+    assert bool(sector_drift) is (not allowed)

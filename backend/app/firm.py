@@ -28,24 +28,16 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 from backend.app.desk import digest
+from backend.app.wf.masking import SECTORS
 
-# Hand-maintained classification for the fixed snapshot universe in `data/common.py`,
-# by the issuer's primary line of business. This is a static label, not sourced market
-# data, and it is not a GICS licence. Anything absent is reported as UNCLASSIFIED rather
-# than folded into a bucket, so a sector total is never quietly wrong.
-SECTORS: dict[str, str] = {
-    "AAPL": "Information technology",
-    "MSFT": "Information technology",
-    "NVDA": "Information technology",
-    "AMZN": "Consumer discretionary",
-    "GOOGL": "Communication services",
-    "JPM": "Financials",
-    "XOM": "Energy",
-    "UNH": "Health care",
-    "PG": "Consumer staples",
-    "CAT": "Industrials",
-    "SPY": "Broad market index",
-}
+# `SECTORS` is the one classification in the repo, from `backend/app/wf/masking.py`, and is
+# what `desk.check_allocation`, `paper.submit` and `synthesis/orders.py` enforce against.
+# Reused rather than redefined so a firm total can never disagree with a per-fund limit.
+#
+# One deliberate difference: those call sites fail closed on an unknown symbol, which is
+# right for a gate that is about to trade. This is a read-only report, so an unmapped
+# symbol becomes UNCLASSIFIED, is excluded from sector totals and is named in a finding.
+# A missing label must not make the whole firm view unavailable.
 UNCLASSIFIED = "Unclassified"
 
 # A fund keeps its capital at risk while paused; an archived fund does not.
@@ -308,9 +300,11 @@ def _capacity_findings(
 def _drift_findings(funds: list[dict]) -> list[Finding]:
     """A fund whose own exposure is past its own mandate limit.
 
-    Approved books are validated against `max_position` when they are registered, so drift
-    here comes from recorded orders. `max_sector` is checked nowhere else in the app:
-    `paper.submit` refuses any mandate that sets one rather than enforcing it.
+    `desk.check_allocation` applies the cash reserve and sector cap at registration, and
+    `paper.submit` and `synthesis/orders.py` apply them to projected holdings, so a compliant
+    book produces nothing here. This is the backstop for the two cases those gates cannot
+    see: recorded orders that moved a fund past a limit it satisfied at registration, and a
+    mandate tightened after a book was approved.
     """
     out: list[Finding] = []
     for fund in funds:
@@ -351,7 +345,8 @@ def _drift_findings(funds: list[dict]) -> list[Finding]:
                         message=(
                             f"{fund['name']} holds {weight:.1%} in {sector}, past the "
                             f"{fund['max_sector']:.0%} sector limit in its own mandate. "
-                            "Nothing else in the app checks a sector limit."
+                            "Registration and the order path enforce this, so recorded "
+                            "orders drifted past it or the mandate was tightened after."
                         ),
                         value=weight,
                         limit=fund["max_sector"],
@@ -444,7 +439,7 @@ def _findings(
                 severity="info",
                 subject=", ".join(unclassified),
                 message=(
-                    "These symbols are outside the hand-maintained sector map, so sector "
+                    "These symbols are outside the shared sector map, so sector "
                     "totals exclude them. Classify them before relying on a sector limit."
                 ),
                 value=float(len(unclassified)),
