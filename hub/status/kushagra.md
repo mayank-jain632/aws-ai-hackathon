@@ -20,6 +20,7 @@ Updated 2026-10-23 by Codex
 - Deployment/update script and scoped cleanup preview in `scripts/hosting.py`; no workshop desktops or existing AgentCore sample modified.
 
 **In flight**
+- Direct visual refinement requested by Kushagra: match the supplied Militia Capital screenshot with ivory, burgundy, serif typography, statement-style performance/metric tables, and restrained Built on AWS branding. Files: frontend/src/funds/* and small AgentWorkspace styles only. Preserve real data, fund isolation, current login/collaboration, and existing canvas. No fabricated chart or returns.
 - Data breadth request in `codex/data-sentiment`: expose all existing native Dexter finance inputs, preserve native Exa/X, add Jev-only OpenRouter sentiment via Decisions API, live FRED macro and optional bounded Apify collection. New modules under `backend/worker/`; coordinated cross-lane registry/allowlist edits in `run.ts`, environment example, hosting secret forwarding and docs. No mode-lock/research API layer. Local provider keys are currently empty; live paid-provider checks need configured keys.
 
 **Blocked, or need from someone**
