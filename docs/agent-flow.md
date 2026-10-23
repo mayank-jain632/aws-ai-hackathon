@@ -65,7 +65,18 @@ flowchart TB
     E --> M[Moderator<br/>in: desk records, paper account, positions vs orders<br/>out: emergency_stop reason]
 ```
 
-## 3. Known limits to state in the demo
+## 3. How this maps onto the roles on `main`
+
+Kushagra's written role requirements take priority over the picture: the roster is flexible,
+one root can create more orchestrators and task-focused researchers, and the boxes above are
+context, not a fixed roster. The synthesis boxes are **tools on existing roles**, not new
+roles: `synthesize_strategy` on the strategy role, `plan_paper_orders` and
+`execute_order_plan` on the executor role. The blind backtester implementation is Mayank's
+(lane 2b); synthesis hands it a frozen strategy record (`weights`, `cutoff`, `end`) by
+`strategy_id` and consumes its PASS/FAIL. The significance report is an optional add-on and
+can be replaced by Mayank's walk-forward once it lands.
+
+## 4. Known limits to state in the demo
 
 - Historical evaluation is the recorded monthly target-weight engine on cached closes: no
   dividends, no costs, fully invested. Significance is a walk-forward across cutoffs with
