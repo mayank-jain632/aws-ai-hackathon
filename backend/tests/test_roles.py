@@ -236,8 +236,10 @@ def test_backend_gate_and_bound_evaluator(board, monkeypatch):
     assert client.post(f"/api/desk/strategies/{sid}/approve").status_code == 200
     desk.execution_checks(sid)
     client.put("/api/desk/policy", json=policy_body())
-    assert desk.state["stop"] is True
+    assert desk.state["stop"] is False
     assert not desk.state["approvals"]
+    with pytest.raises(ValueError, match="current backend PASS"):
+        desk.execution_checks(sid)
     # The explicit legacy engine still refuses its shorter snapshot boundary.
     monkeypatch.setenv("BACKTEST_ENGINE", "legacy")
     later = strategy_body() | {"end": "2026-01-01"}
@@ -463,5 +465,5 @@ def test_agent_paper_policy_and_market_role_permissions(board):
     result = client.post("/api/internal/desk/paper-policy", headers=headers("strategy"), json=criteria)
     assert result.status_code == 200, result.text
     assert result.json()["origin"]["author"] == "strategy" and result.json()["policy_version"]
-    assert desk_for(manager).state["stop"] is True
+    assert desk_for(manager).state["stop"] is False
     assert client.post("/api/internal/desk/market", headers=headers("backtester"), json={"symbols": ["AAPL"]}).status_code == 403

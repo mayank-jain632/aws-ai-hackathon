@@ -677,10 +677,10 @@ class AgentManager:
                 desk.strategy(strategy_id)
                 if (
                     desk.state["reviews"].get(strategy_id, {}).get("verdict")
-                    != "APPROVE"
+                    not in ({"APPROVE", "CHANGES_REQUESTED"} if desk.autonomous_paper() else {"APPROVE"})
                 ):
                     raise ValueError(
-                        "Create an adversarial reviewer and obtain approval before blind evaluation"
+                        "Create an independent adversarial reviewer before blind evaluation; autonomous paper critiques are recorded findings, not a human signoff requirement"
                     )
             child = LocalAgent(
                 self,

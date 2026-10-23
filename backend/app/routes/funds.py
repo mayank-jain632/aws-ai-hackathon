@@ -211,7 +211,8 @@ async def plan(fund_id: str, request: Request) -> dict:
     try:
         await runtime.agents["dexter"].start(
             "Run this fund's research-to-paper-execution workflow under its current mandate. "
-            "This request supersedes any earlier document-only planning task. "
+            "This request supersedes earlier document-only, research-only and no-order planning tasks "
+            "under the saved standing paper authorization, without overriding explicit user Stop. "
             "Read mandate.md and inspect_desk first. Then use create_agent to start "
             "research specialists for distinct evidence families, such as company "
             "fundamentals/filings and macro/market risk. Give each specialist the fund "
@@ -226,7 +227,9 @@ async def plan(fund_id: str, request: Request) -> dict:
             "provenance, including FAIL or blocked outcomes. Do not stop after writing "
             "a plan or checklist. Update fund-plan.md with completed phases, evidence "
             "paths, strategy/evaluation IDs and any concrete blockers. If one phase "
-            "is blocked, complete independent research and review before reporting it. "
+            "needs repair, delegate revision or a successor strategy and continue. Research-quality "
+            "findings are advisory in autonomous paper mode without required approval; record "
+            "them honestly and do not demand external operator adjudication. "
             "Keep trading permission, human approval requirements and emergency stop "
             "unchanged. After the real backtest and final independent review, hand off promptly "
             "to the paper execution agent. Make paper decisions and trades autonomously "

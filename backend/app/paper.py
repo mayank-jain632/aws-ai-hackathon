@@ -175,6 +175,9 @@ def submit(desk, body):
             "status": "submitting",
             "paper": True,
         }
+        review = desk.state.get("reviews", {}).get(body.strategy_id)
+        if review:
+            record["review"] = {**review, "mode": "advisory" if desk.autonomous_paper() else "approval"}
         desk.state["orders"][order_key] = record
         desk.event("paper_order_intent", record.copy())
         try:

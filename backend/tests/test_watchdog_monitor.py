@@ -278,3 +278,18 @@ def test_desk_gate_blocks_reach_the_lessons(desk):
     lessons = feedback.lessons(desk)
     assert "`desk_check`, blocked 1 time" in lessons
     assert "an order by executor-2: An approving adversarial review is required" in lessons
+
+
+def test_quality_findings_and_recoverable_workflow_requests_do_not_trip_fund(desk, monkeypatch):
+    desk.state["stop"] = False
+    write_memo(desk, "memos/quality.md", "Possible future date 2024-01-01 in a historical memo.")
+    register(desk, ["memos/quality.md"])
+    monkeypatch.setattr(monitor.aws, "scan_text", lambda _: {"intervened": True, "findings": ["Quality warning"]})
+    add_blocks(desk, "executor", 8)
+    for event in desk.state["events"]:
+        if event["check"] == "paper_order_blocked":
+            event["result"]["recoverable"] = True
+    events = monitor.audit(desk, now=NOW, opinions=False)
+    assert any(e.details.get("problem") == "guardrail" for e in events)
+    assert not any(e.kind == "retry_loop" for e in events)
+    assert not SWITCH.state()["halted"] and desk.state["stop"] is False

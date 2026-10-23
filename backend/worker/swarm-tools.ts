@@ -17,7 +17,7 @@ export function createSwarmTools() {
   return [
     new DynamicStructuredTool({
       name: 'create_agent',
-      description: 'Create a persistent specialist with an explicit role and task. Set wait_for_result=false to launch it in the background, then coordinate using wait/read_agent_thread. Default true waits for its result and releases your worker slot. Backtester requires strategy_id and receives only numeric parameters. Reuse idle specialists; backend enforces permissions.',
+      description: 'Create a persistent specialist with an explicit role and task. Set wait_for_result=false to launch it in the background, then coordinate using wait/read_agent_thread. Default true waits for its result and releases your worker slot. Backtester requires strategy_id and receives only numeric parameters. OMIT model for backtesters: the backend pins Opus 4.6 even though it is not in the main model choices. Reuse idle specialists; backend enforces permissions.',
       schema: z.object({ name: z.string().min(1).max(60), task: z.string().min(1).max(12000), role: z.enum(['orchestrator', 'research', 'adversarial', 'strategy', 'backtester', 'executor', 'moderator']), strategy_id: z.string().optional(), model: z.enum(modelCatalog.main.map(item => item.id) as [string, ...string[]]).optional(), wait_for_result: z.boolean().default(true) }),
       func: async (input, _manager, config) => agentControl('/create', input, config?.signal),
     }),

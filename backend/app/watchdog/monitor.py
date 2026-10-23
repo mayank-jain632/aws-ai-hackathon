@@ -60,7 +60,7 @@ def order_events(desk, now: datetime) -> list[tuple[str, ModeratorEvent]]:
     blocked = [
         e["result"].get("agent") or "unknown agent"
         for e in desk.state["events"]
-        if e["check"] == "paper_order_blocked" and recent([e["time"]], now)
+        if e["check"] == "paper_order_blocked" and not e["result"].get("recoverable") and recent([e["time"]], now)
     ]
     for agent, count in Counter(blocked).items():
         if count >= RETRY_WARN:

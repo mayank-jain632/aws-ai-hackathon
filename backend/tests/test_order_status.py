@@ -144,6 +144,8 @@ def test_role_token_and_fund_boundaries(tmp_path, monkeypatch):
     for role in ["executor", "moderator", "research", "backtester"]:
         first.agents[role] = runtime.LocalAgent(first, role, role, "dexter", role)
     first.desk.state["orders"][CLIENT_ID] = record()
+    first.desk.state["stop"] = True
+    first.desk.state["stop_source"] = "human"
     monkeypatch.setattr(app.state, "manager", manager, raising=False)
     monkeypatch.setattr(app.state, "funds", store, raising=False)
     monkeypatch.delenv("APP_ACCESS_PASSWORD", raising=False)

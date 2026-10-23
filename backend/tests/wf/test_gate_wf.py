@@ -268,3 +268,22 @@ def test_final_review_is_bound_to_current_evaluation_and_is_independent(passing_
     desk.review(ReviewInput(strategy_id=sid, evaluation_id=current, verdict="APPROVE", critique="Independent review of current metrics and leakage assumptions."), "reviewer")
     desk.approve(sid)
     assert desk.human_approved(sid)
+
+
+@needs_data
+def test_autonomous_paper_records_real_final_critique_without_human_veto(passing_desk):
+    import json
+    desk, sid = passing_desk
+    desk.manager.context = json.dumps({"mandate": {"mode": "paper", "trading_allowed": True, "approval_required": False, "universe": ["AAPL", "MSFT"], "max_position": 50, "max_drawdown": 100, "min_cash": 0, "max_sector": 100, "rebalance": "monthly"}})
+    evaluation_id = desk.state["tests"][sid]["evaluation_id"]
+    desk.review(ReviewInput(strategy_id=sid, evaluation_id=evaluation_id, verdict="CHANGES_REQUESTED", critique="Heuristic memo metadata needs repair; this is not independent historical research."), "reviewer")
+    desk.execution_checks(sid)
+    assert desk.state["reviews"][sid]["verdict"] == "CHANGES_REQUESTED"
+    assert not desk.state["approvals"]
+    desk.state.update(stop=True, stop_source="human")
+    with pytest.raises(ValueError, match="stop"):
+        desk.execution_checks(sid)
+    desk.state["stop"] = False
+    desk.manager.context = desk.manager.context.replace('"approval_required": false', '"approval_required": true')
+    with pytest.raises(ValueError, match="adversarial"):
+        desk.execution_checks(sid)

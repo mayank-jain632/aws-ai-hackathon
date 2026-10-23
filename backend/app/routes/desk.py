@@ -11,6 +11,7 @@ from backend.app.desk import (
     ReviewInput,
     StrategyInput,
     StrictModel,
+    WorkflowPending,
     desk_for,
 )
 from backend.app.paper import account_snapshot, market_snapshot, order_status, submit
@@ -79,6 +80,7 @@ def human_stop(body: StopInput, request: Request, fund_id: str | None = None) ->
     desk = desk_for(current_manager(request, fund_id))
     with desk.lock:
         desk.state["stop"] = body.stopped
+        desk.state["stop_source"] = "human"
         desk.event("human_stop", body.model_dump())
     return {"stopped": body.stopped}
 
@@ -209,6 +211,7 @@ def paper_order(body: OrderInput, request: Request) -> dict:
                     "agent": agent.id,
                     "strategy_id": body.strategy_id,
                     "reason": str(error),
+                    "recoverable": isinstance(error, WorkflowPending),
                 },
             )
         raise HTTPException(422, str(error)) from error
@@ -223,5 +226,6 @@ def worker_stop(body: StopReason, request: Request) -> dict:
     agent, desk = worker(request, "emergency_stop")
     with desk.lock:
         desk.state["stop"] = True
+        desk.state["stop_source"] = "moderator"
         desk.event("moderator_stop", {"agent": agent.id, **body.model_dump()})
     return {"stopped": True, "reason": body.reason}

@@ -17,7 +17,7 @@ def test_agents_freeze_criteria_under_mandate_before_testing(tmp_path):
     assert configured["policy"]["max_position"] == mandate["max_position"] / 100
     assert configured["policy"]["max_drawdown"] == mandate["max_drawdown"] / 100
     assert configured["policy"]["trading_allowed"] == mandate["trading_allowed"]
-    assert configured["origin"]["type"] == "agent" and desk.state["stop"] is True
+    assert configured["origin"]["type"] == "agent" and desk.state["stop"] is False
     desk.state["tests"]["observed"] = {"verdict": "FAIL"}
     assert desk.configure_paper_policy(criteria, "strategy-agent")["policy_version"] == configured["policy_version"]
     with pytest.raises(ValueError, match="frozen"):
@@ -47,3 +47,34 @@ def test_current_alpaca_snapshot_preserves_feed_timestamp_and_staleness(monkeypa
     monkeypatch.setattr(market, "get", lambda *a, **k: (_ for _ in ()).throw(ValueError("unavailable")))
     with pytest.raises(ValueError, match="unavailable"):
         paper.market_snapshot(["AAPL"])
+
+
+@pytest.mark.parametrize("source", ["human", "moderator"])
+def test_paper_configuration_preserves_explicit_stop_and_does_not_rearm_after_clear(tmp_path, source):
+    mandate = Mandate(name="Standing paper fund").model_dump()
+    assert mandate["mode"] == "paper" and mandate["trading_allowed"] and not mandate["approval_required"]
+    manager = SimpleNamespace(registry=tmp_path / "agents.json", context=json.dumps({"mandate": mandate}))
+    desk = Desk(manager)
+    desk.state.update(stop=True, stop_source=source)
+    desk.save()
+    desk = Desk(manager)
+    criteria = PaperCriteria(min_sharpe=-5, min_excess_return=-1, max_order_notional=100, max_daily_orders=5, rationale="Choose paper criteria before observing evaluation results.")
+    desk.configure_paper_policy(criteria, "strategy")
+    assert desk.state["stop"] is True and desk.state["stop_source"] == source
+    desk.state.update(stop=False, stop_source="human")
+    desk.configure_paper_policy(criteria.model_copy(update={"max_daily_orders": 6}), "strategy")
+    assert desk.state["stop"] is False
+    desk.set_policy(desk.policy())
+    assert desk.state["stop"] is False
+
+
+def test_legacy_explicit_stop_survives_old_automatic_policy_stop_source(tmp_path):
+    mandate = Mandate(name="Standing paper fund").model_dump()
+    manager = SimpleNamespace(registry=tmp_path / "agents.json", context=json.dumps({"mandate": mandate}))
+    desk = Desk(manager)
+    desk.state.update(stop=True, stop_source="human_policy")
+    desk.state["events"] = [{"check": "human_stop", "result": {"stopped": True}}, {"check": "human_policy", "result": "Old automatic policy stop"}]
+    desk.save()
+    loaded = Desk(manager)
+    loaded.authorize_initial_paper()
+    assert loaded.state["stop"] is True and loaded.state["stop_source"] == "human"

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from backend.app.agent import ROOT, AgentManager
 
@@ -46,13 +46,22 @@ class Mandate(BaseModel):
     benchmark: Literal["SPY"] = "SPY"
     rebalance: Literal["weekly", "monthly", "quarterly"] = "monthly"
     liquidity: Literal["daily", "monthly", "quarterly"] = "monthly"
-    mode: Literal["historical", "paper"] = "historical"
+    mode: Literal["historical", "paper"] = "paper"
     cutoff: str = Field(default="2024-06-01", pattern=r"^\d{4}-\d{2}-\d{2}$")
-    trading_allowed: bool = False
-    approval_required: bool = True
+    trading_allowed: bool = True
+    approval_required: bool = False
     allow_short: bool = False
     max_leverage: float = Field(default=1, ge=1, le=2, allow_inf_nan=False)
     notes: str = Field(default="", max_length=2000)
+
+    @model_validator(mode="before")
+    @classmethod
+    def historical_defaults(cls, values):
+        if isinstance(values, dict) and values.get("mode") == "historical":
+            values = {**values}
+            values.setdefault("trading_allowed", False)
+            values.setdefault("approval_required", True)
+        return values
 
     @field_validator("name")
     @classmethod
@@ -160,13 +169,14 @@ class FundStore:
                         else "Live research uses current evidence. A saved historical cutoff is inactive. Historical evaluation is a separate, explicitly dated experiment; do not mix its results with live evidence."
                     ),
                     "workflow": "Reuse saved specialists, inspect actual threads and artifacts, challenge findings independently, register immutable strategies and evaluate with a bound blind backtester. Record completed and incomplete phases, evidence paths, IDs, concrete blockers and next actions in fund-plan.md. Old document-only planning requests do not limit the current delegated workflow.",
-                    "human_gates": "For PAPER workflows the orchestrator or strategist must choose very low pass criteria, as authorized, and record the actual criteria and limits within this server mandate using the authorized backend tool. Freeze the chosen policy before blind testing; never tune thresholds after seeing results or treat prose as a configured policy. Only current backend evaluation and approval records establish eligibility. This does not authorize changing the mandate, trading permission, human approval requirements or emergency stop. Missing unsupported enforcement remains a concrete blocker.",
+                    "human_gates": "For PAPER workflows the orchestrator or strategist must choose very low pass criteria, as authorized, and record the actual criteria and limits within this server mandate using the authorized backend tool. Freeze the chosen policy before blind testing; never tune thresholds after seeing results or treat prose as a configured policy. A current backend PASS and an actual independent final review establish eligibility. In autonomous paper funds without required human approval, record review findings as advisory and resolve or revise through agents; do not wait for operator adjudication of research metadata. This does not authorize changing the mandate, trading permission, human approval requirements or emergency stop. Missing unsupported enforcement remains a concrete blocker.",
                     "supervision": "Monitor existing child progress using available thread/status and wait tools, follow up on results, and advance useful independent work. Completion, human blockers and stopped work are distinct; do not claim a phase finished from an iteration limit or a written checklist.",
                 },
             },
             indent=2,
         )
         runtime.paused = self.records[fund_id]["status"] != "active"
+        runtime.desk.authorize_initial_paper()
         self.write_mandate(runtime)
         return runtime
 

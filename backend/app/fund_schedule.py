@@ -8,8 +8,8 @@ from datetime import UTC, datetime, timedelta
 HOUR = timedelta(hours=1)
 AUTHORIZED_FUND = "8789dfb8011d462b"
 logger = logging.getLogger(__name__)
-WAKEUP = """Resume this saved fund's authorized research/evaluation workflow. This is an
-hourly progress check, not a new investment mandate or permission to trade. Read the
+WAKEUP = """Resume this saved fund's authorized autonomous paper workflow. This hourly
+continuation uses the saved mandate and standing paper authorization; it is not a new mandate. Read the
 current server mandate, mandate.md, fund-plan.md and the saved agent roster/threads.
 Earlier document-only planning instructions are superseded by the current delegated
 workflow. Verify what actually finished, reuse existing specialists, investigate
@@ -21,7 +21,7 @@ research as historical evidence. For PAPER workflows, choose very low pass crite
 through the authorized backend tool, and freeze them before blind testing. Never
 relax criteria after observing results. Report missing approvals or unsupported
 enforcement and continue independent research; never invent prices, returns or approvals. Keep mandate, trading permissions, stop and human
-approval gates unchanged. This wakeup does not authorize order submission.
+approval settings unchanged. Continue through actual research/reviews/evaluation to paper execution when saved gates permit, without redundant permission requests. Research-quality findings are advisory in autonomous paper mode; repair or revise through agents instead of waiting for operator adjudication. Never clear an explicit user or moderator stop.
 """
 
 
