@@ -1,5 +1,7 @@
 """Fund creation, mandate management, and scoped existing canvas API."""
 
+import json
+import os
 from collections.abc import AsyncIterable
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -11,11 +13,16 @@ from pydantic import BaseModel
 
 from backend.app.agent import AgentManager
 from backend.app.funds import FundStore, Mandate
+from backend.app.sharing import ShareStore
 
 
 @asynccontextmanager
 async def lifespan(app):
     app.state.funds = FundStore(app.state.manager)
+    app.state.sharing = ShareStore(
+        app.state.funds.root, json.loads(os.getenv("APP_DEMO_ACCOUNTS", "{}"))
+    )
+    app.state.sharing.migrate(app.state.funds.records)
     yield
     await app.state.funds.close()
 
@@ -36,13 +43,24 @@ def fund(request, fund_id):
 
 @router.get("/api/funds")
 def list_funds(request: Request) -> dict:
-    return {"funds": store(request).list()}
+    current = request.app.state.sharing
+    email = getattr(request.state, "user", "local")
+    return {
+        "funds": [
+            item
+            for item in store(request).list()
+            if current.can_access(item["id"], email)
+        ]
+    }
 
 
 @router.post("/api/funds", status_code=201)
 async def create_fund(body: Mandate, request: Request) -> dict:
     try:
-        return store(request).create(body, getattr(request.state, "user", "Local team"))
+        owner = getattr(request.state, "user", "local")
+        created = store(request).create(body, owner)
+        request.app.state.sharing.create(created["id"], owner)
+        return created
     except ValueError as error:
         raise HTTPException(409, str(error)) from error
 
@@ -103,6 +121,7 @@ async def fund_events(
     from backend.app.main import events
 
     request.state.fund_manager = runtime
+    request.state.fund_id = request.path_params["fund_id"]
     async for event in events(request):
         yield event
 

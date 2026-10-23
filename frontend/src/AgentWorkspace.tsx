@@ -39,6 +39,7 @@ export default function AgentWorkspace({ fundId, fundName }: { fundId: string; f
   useEffect(() => {
     void request('/api/me').then(setIdentity).catch(() => {})
     const stream = new EventSource(`${base}/events`)
+    stream.addEventListener('access_revoked', () => { stream.close(); window.location.hash = '/' })
     stream.onmessage = event => { const board = JSON.parse(event.data); setAgents(board.agents); setPositions(board.positions || {}); setViewers(board.viewers || 1); setConnected(true) }
     stream.onerror = () => { setConnected(false); void fetch('/api/me').then(response => { if (response.status === 401) window.location.assign('/login') }).catch(() => {}) }
     return () => stream.close()

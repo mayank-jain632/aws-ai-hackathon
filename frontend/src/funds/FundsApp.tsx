@@ -70,6 +70,6 @@ export default function FundsApp() {
           <div className="fund-card-footer"><div><strong>{money(fund.metrics.nav)}</strong><span>{fund.metrics.agents} {fund.metrics.agents === 1 ? 'agent' : 'agents'}</span></div><ShareFundButton fundId={fund.id} name={fund.name}/></div>
         </article>)}</div>
         {!visible.length && <div className="fund-list-empty"><h3>{query ? 'No matching funds' : showArchived ? 'No archived funds' : 'No funds yet'}</h3>{!query && !showArchived && <button className="primary" onClick={() => setSetup('new')}>Create fund</button>}</div>}
-        <footer className="home-footer">All funds are shared with your team. Previews update automatically.</footer></div>}
+        <footer className="home-footer">Your funds and funds shared with you. Previews update automatically.</footer></div>}
     </main>{setup && <FundSetup initial={setup === 'edit' && selected ? selected : undefined} onClose={() => setSetup(null)} onSave={save}/>}</div>
 }

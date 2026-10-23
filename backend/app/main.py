@@ -19,6 +19,7 @@ from backend.app.roles import Role, allow_child, require_tool
 from backend.app.routes.desk import router as desk_router
 from backend.app.routes.funds import router as funds_router
 from backend.app.routes.models import router as models_router
+from backend.app.routes.sharing import router as sharing_router
 from backend.app.routes.watchdog import router as watchdog_router
 
 
@@ -145,13 +146,26 @@ async def events(request: Request) -> AsyncIterable[ServerSentEvent]:
     queue = asyncio.Queue(maxsize=8)
     current.subscribers.add(queue)
     current.publish()
+
+    def permitted():
+        sharing = getattr(request.app.state, "sharing", None)
+        fund_id = getattr(request.state, "fund_id", "general")
+        email = getattr(request.state, "user", "local")
+        return not sharing or sharing.can_access(fund_id, email)
+
     try:
+        if not permitted():
+            yield ServerSentEvent(event="access_revoked", data={})
+            return
         yield ServerSentEvent(data=current.snapshot())
         while True:
             try:
                 snapshot = await asyncio.wait_for(queue.get(), timeout=10)
             except TimeoutError:
                 snapshot = current.snapshot()
+            if not permitted():
+                yield ServerSentEvent(event="access_revoked", data={})
+                break
             yield ServerSentEvent(data=snapshot)
     finally:
         current.subscribers.discard(queue)
@@ -262,6 +276,7 @@ async def delegate(action: str, body: AgentTask, request: Request) -> dict:
 app.include_router(funds_router)
 app.include_router(desk_router)
 app.include_router(models_router)
+app.include_router(sharing_router)
 app.include_router(watchdog_router)
 
 # The same server serves the built React app and API inside the single container.
