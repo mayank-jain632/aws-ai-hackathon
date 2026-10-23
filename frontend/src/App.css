@@ -99,3 +99,11 @@
 @media (prefers-reduced-motion:reduce) { .pulse { animation:none; } }
 
 .model-row select { max-width: 220px; border: 0; background: transparent; color: inherit; font: inherit; padding: 3px; }
+
+.tree-navigator{position:absolute;z-index:2;top:24px;left:22px;width:205px;max-width:calc(100% - 44px);border:1px solid var(--line);border-radius:9px;background:var(--surface);box-shadow:var(--shadow)}
+.tree-navigator summary{cursor:pointer;padding:12px;font-size:12px;list-style-position:inside}.tree-navigator summary span{color:var(--ink-3);margin-left:6px}.tree-navigator nav{max-height:min(55vh,470px);overflow:auto;border-top:1px solid var(--line)}
+.tree-navigator nav button{display:block;width:100%;text-align:left;padding:10px 12px;border:0;border-bottom:1px solid var(--line);background:transparent;overflow-wrap:anywhere}.tree-navigator nav button:hover,.tree-navigator nav button[aria-current=true]{background:var(--accent-soft)}.tree-navigator nav strong{display:block;font-size:12px;font-weight:500}.tree-navigator nav span{display:block;font-size:10px;color:var(--ink-3);margin-top:4px}
+.agent-context{margin:0 24px 15px;font-size:11px;color:var(--ink-2);max-height:35vh;overflow:auto}.agent-context summary{cursor:pointer;padding:9px 0;border-top:1px solid var(--line)}.agent-context dl{margin:8px 0}.agent-context dt{font-size:10px;color:var(--ink-3);margin:12px 0 4px}.agent-context dd{margin:0;line-height:1.6;overflow-wrap:anywhere}.agent-context .context-text{white-space:pre-wrap;max-height:150px;overflow:auto}.board-hint{left:260px}
+@media(max-width:800px){.tree-navigator{top:88px}}
+
+.context-file{display:block;border:0;background:transparent;text-align:left;color:var(--accent);font:inherit;padding:3px 0;overflow-wrap:anywhere}.progress-note{color:var(--ink-3);font-size:10px;line-height:1.6;margin-top:12px}

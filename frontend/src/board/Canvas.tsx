@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import type { Agent, BoardPositions } from '../types'
 import { layoutTree } from './tree'
+import { agentStatus, currentTask, treeRows } from './agentView'
 
 type Camera = { x: number; y: number; zoom: number }
 type Position = { x: number; y: number }
 type Gesture = { id: string | null; x: number; y: number; camera: Camera; position: Position }
-const statusLabel = { idle: 'Ready', running: 'Working', stopped: 'Stopped', error: 'Needs attention' }
 
 export function Canvas({ agents, connected, selectedId, onSelect, onDeselect, positions, onPosition, onReset }: {
   positions: BoardPositions; onPosition: (id: string, position: Position, final: boolean) => void; onReset: () => void
@@ -17,6 +17,7 @@ export function Canvas({ agents, connected, selectedId, onSelect, onDeselect, po
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set())
   const [viewport, setViewport] = useState({ width: window.innerWidth, height: window.innerHeight - 74 })
   const board = useRef<HTMLElement>(null)
+  const navigator = useRef<HTMLDetailsElement>(null)
   useEffect(() => {
     const observer = new ResizeObserver(entries => {
       const { width, height } = entries[0].contentRect
@@ -34,9 +35,10 @@ export function Canvas({ agents, connected, selectedId, onSelect, onDeselect, po
   const locations = tree.visible.map(agent => positionFor(agent.id))
   const minX = Math.min(...locations.map(p => p.x), 0)
   const maxX = Math.max(...locations.map(p => p.x + 300), 300)
+  const minY = Math.min(...locations.map(p => p.y), 0)
   const maxY = Math.max(...locations.map(p => p.y + 170), 250)
-  const zoom = Math.max(0.2, Math.min(1, (viewport.width - 100) / (maxX - minX), (viewport.height - 100) / maxY))
-  const autoView: Camera = { zoom, x: minX - (viewport.width / zoom - (maxX - minX)) / 2, y: -40 / zoom }
+  const zoom = Math.max(0.05, Math.min(1, (viewport.width - 60) / (maxX - minX), (viewport.height - 100) / (maxY - minY)))
+  const autoView: Camera = { zoom, x: minX - (viewport.width / zoom - (maxX - minX)) / 2, y: minY - (viewport.height / zoom - (maxY - minY)) / 2 }
   const camera = view || autoView
 
   function toggleBranch(id: string) {
@@ -84,16 +86,41 @@ export function Canvas({ agents, connected, selectedId, onSelect, onDeselect, po
   }
 
   function zoomBy(factor: number) {
-    setCamera({ ...camera, zoom: Math.max(0.2, Math.min(2, camera.zoom * factor)) })
+    setCamera({ ...camera, zoom: Math.max(0.05, Math.min(2, camera.zoom * factor)) })
   }
 
-  function fit() {
-    onReset()
+  function focusAgent(id: string) {
+    const next = new Set(collapsed)
+    const seen = new Set<string>()
+    let parent = agents.find(agent => agent.id === id)?.parentId
+    while (parent && !seen.has(parent)) {
+      seen.add(parent); next.delete(parent)
+      parent = agents.find(agent => agent.id === parent)?.parentId
+    }
+    const target = positions[id] || layoutTree(agents, next).positions[id]
+    setCollapsed(next)
+    if (target) {
+      const zoom = Math.max(0.6, camera.zoom)
+      setCamera({ zoom, x: target.x + 150 - viewport.width / zoom / 2, y: target.y + 85 - viewport.height / zoom / 2 })
+    }
+    onSelect(id)
+    if (navigator.current) navigator.current.open = false
+  }
+
+  function fit(reset = false) {
+    if (reset) onReset()
+    setCollapsed(new Set())
     setCamera(null)
   }
 
   return (
     <section ref={board} className="board" aria-label="Agent tree canvas">
+      <details className="tree-navigator" ref={navigator}>
+        <summary>Agents <span>{agents.length}</span></summary>
+        <nav aria-label="Full fund agent tree">{treeRows(agents).map(({agent, depth}) => <button key={agent.id} aria-current={selectedId === agent.id ? 'true' : undefined} style={{paddingLeft: 12 + Math.min(depth, 8) * 12}} onClick={() => focusAgent(agent.id)} title={currentTask(agent) || 'No task assigned'}>
+          <strong>{depth ? '↳ ' : ''}{agent.name}</strong><span>{agent.role} · {agentStatus(agent)}</span>
+        </button>)}</nav>
+      </details>
       <div className="tools" role="toolbar" aria-label="Canvas tools">
         <button className={tool === 'select' ? 'active' : ''} aria-label="Select and move agents" aria-pressed={tool === 'select'} onClick={() => setTool('select')}><svg viewBox="0 0 24 24"><path d="M5 3l14 10-7 1-3 7z" /></svg></button>
         <button className={tool === 'hand' ? 'active' : ''} aria-label="Pan canvas" aria-pressed={tool === 'hand'} onClick={() => setTool('hand')}><svg viewBox="0 0 24 24"><path d="M8 12V6a2 2 0 014 0v6-8a2 2 0 014 0v8-5a2 2 0 014 0v9c0 4-2 6-6 6h-1c-2 0-4-1-5-3l-4-6a2 2 0 013-2l3 3" /></svg></button>
@@ -103,7 +130,7 @@ export function Canvas({ agents, connected, selectedId, onSelect, onDeselect, po
         const px = event.clientX - rect.left, py = event.clientY - rect.top
         setCamera(previous => {
           const old = previous || camera
-          const zoom = Math.max(0.2, Math.min(2, old.zoom * Math.exp(-event.deltaY * 0.002)))
+          const zoom = Math.max(0.05, Math.min(2, old.zoom * Math.exp(-event.deltaY * 0.002)))
           return { zoom, x: old.x + px / old.zoom - px / zoom, y: old.y + py / old.zoom - py / zoom }
         })
       }}>
@@ -123,13 +150,14 @@ export function Canvas({ agents, connected, selectedId, onSelect, onDeselect, po
             return <g key={agent.id} data-agent={agent.id} transform={`translate(${position.x}, ${position.y})`} role="button" tabIndex={0} aria-label={`Open ${agent.name} agent`} onKeyDown={event => {
               if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(agent.id) }
             }}>
+              <title>{agent.name} · {agent.role} · {agentStatus(agent)}{currentTask(agent) ? `\n${currentTask(agent)}` : ''}</title>
               {selected ? <rect className="selection" x="-6" y="-6" width="312" height="182" rx="14" /> : null}
               <rect className="agent-body" width="300" height="170" rx="10" />
               <rect x="18" y="20" width="34" height="34" rx="9" fill="#e9edfc" />
               <text className="agent-icon" x="35" y="43" textAnchor="middle">{agent.name[0]}</text>
               <text className="agent-name" x="64" y="43">{agent.name.length > 22 ? agent.name.slice(0, 21) + '…' : agent.name}</text>
               <circle className={`status-dot ${agent.status}`} cx="24" cy="84" r="4" />
-              <text className="agent-status" x="36" y="89">{connected ? agent.status === 'running' && agent.waitingUntil ? 'Waiting' : agent.status === 'running' && (agent.monitoring || agent.waitingForAgents) ? 'Monitoring' : statusLabel[agent.status] : 'Connecting…'}</text>
+              <text className="agent-status" x="36" y="89">{connected ? agentStatus(agent) : 'Connecting…'}</text>
               <text className="agent-description" x="19" y="117">{agent.role === 'backtester' ? 'Backtester · historical test only' : `${agent.role || 'Agent'} · shared workspace`}</text>
               <line x1="0" x2="300" y1="137" y2="137" stroke="#e2e6ed" />
               <text className="agent-footer" x="19" y="158">{agent.files.length} {agent.files.length === 1 ? 'file' : 'files'}</text>
@@ -140,7 +168,7 @@ export function Canvas({ agents, connected, selectedId, onSelect, onDeselect, po
           })}
         </g>
       </svg>
-      <div className="zoom-controls" aria-label="Zoom controls"><button aria-label="Zoom out" onClick={() => zoomBy(0.8)}>−</button><span>{Math.round(camera.zoom * 100)}%</span><button aria-label="Zoom in" onClick={() => zoomBy(1.25)}>+</button><span className="divider" /><button aria-label="Arrange tree" title="Arrange tree and fit view" onClick={fit}>↺</button></div>
+      <div className="zoom-controls" aria-label="Zoom controls"><button aria-label="Zoom out" onClick={() => zoomBy(0.8)}>−</button><span>{Math.round(camera.zoom * 100)}%</span><button aria-label="Zoom in" onClick={() => zoomBy(1.25)}>+</button><span className="divider" /><button aria-label="Fit all agents" title="Expand all branches and fit view" onClick={() => fit()}>⊡</button><button aria-label="Arrange tree" title="Reset saved positions and arrange tree" onClick={() => fit(true)}>↺</button></div>
       <div className="board-hint">{agents.length} {agents.length === 1 ? 'agent' : 'agents'} · Drag to move · Scroll to zoom</div>
     </section>
   )

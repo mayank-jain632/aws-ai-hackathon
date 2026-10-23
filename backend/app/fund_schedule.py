@@ -17,9 +17,10 @@ incomplete phases and continue useful independent work. Record dated evidence,
 artifact paths, strategy/evaluation IDs, blockers and concrete next actions in
 fund-plan.md. Distinguish the investment horizon from explicit evaluation dates.
 In live paper mode an old saved historical cutoff is inactive; do not relabel live
-research as historical evidence. If a human policy or approval is missing, report
-exactly what is needed and continue independent research; never invent thresholds,
-prices, returns or approvals. Keep mandate, trading permissions, stop and human
+research as historical evidence. For PAPER workflows, choose very low pass criteria as authorized and record them within the saved mandate
+through the authorized backend tool, and freeze them before blind testing. Never
+relax criteria after observing results. Report missing approvals or unsupported
+enforcement and continue independent research; never invent prices, returns or approvals. Keep mandate, trading permissions, stop and human
 approval gates unchanged. This wakeup does not authorize order submission.
 """
 

@@ -171,7 +171,7 @@ def test_generated_mandate_is_current_and_has_no_scheduler_or_owner_data(tmp_pat
     assert context["mandate"]["approval_required"] is False
     text = (runtime.root / "workspace" / "mandate.md").read_text()
     assert "not a backtest end date" in text
-    assert "missing desk policy requires human" in text
+    assert "Freeze the chosen policy before blind testing" in text
     assert store.records[detail["id"]]["cutoff"] == "2024-06-01"
 
 

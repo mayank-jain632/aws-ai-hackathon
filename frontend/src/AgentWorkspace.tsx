@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Canvas } from './board/Canvas'
+import { AgentProgress } from './board/AgentProgress'
+import { agentStatus } from './board/agentView'
 import type { Agent, BoardPositions, Position } from './types'
 import './App.css'
 
@@ -107,15 +109,16 @@ export default function AgentWorkspace({ fundId, fundName }: { fundId: string; f
         }} onDeselect={() => setSelected(false)} />
         {selected ? (
           <aside className="agent-panel" aria-label={`${agent?.name || 'Agent'} details`}>
-            <div className="panel-heading"><div className="avatar">{agent?.name[0] || 'D'}</div><div className="panel-title"><h1>{agent?.name || 'Dexter'}</h1><p>{running ? 'Working on your request' : agent?.parentId ? `Subagent of ${agents.find(item => item.id === agent.parentId)?.name || 'Dexter'}` : 'Main agent'}</p></div><button className="icon-button close" aria-label="Close agent details" onClick={() => setSelected(false)}>×</button></div>
-            <div className="model-row"><span className={`state ${agent?.status || 'idle'}`}>{running ? agent?.waitingUntil ? 'Waiting' : agent?.monitoring || agent?.waitingForAgents ? 'Monitoring' : 'Working' : agent?.status === 'error' ? 'Needs attention' : agent?.status === 'stopped' ? 'Stopped' : 'Ready'}</span><select aria-label="Agent model" value={agent?.model || ''} disabled={!agent || running || sending || agent.role === 'backtester'} onChange={event => void changeModel(event.target.value)}>{agent?.modelChoices?.map(model => <option key={model.id} value={model.id}>{model.name}{agent.role === 'backtester' ? ' · fixed' : ''}</option>)}</select></div>
+            <div className="panel-heading"><div className="avatar">{agent?.name[0] || 'D'}</div><div className="panel-title"><h1>{agent?.name || 'Dexter'}</h1><p>{running && agent ? agentStatus(agent) : agent?.parentId ? `Subagent of ${agents.find(item => item.id === agent.parentId)?.name || 'Dexter'}` : 'Main agent'}</p></div><button className="icon-button close" aria-label="Close agent details" onClick={() => setSelected(false)}>×</button></div>
+            <div className="model-row"><span className={`state ${agent?.status || 'idle'}`}>{agent ? agentStatus(agent) : 'Connecting…'}</span><select aria-label="Agent model" value={agent?.model || ''} disabled={!agent || running || sending || agent.role === 'backtester'} onChange={event => void changeModel(event.target.value)}>{agent?.modelChoices?.map(model => <option key={model.id} value={model.id}>{model.name}{agent.role === 'backtester' ? ' · fixed' : ''}</option>)}</select></div>
+            {agent && <AgentProgress agent={agent} agents={agents} onOpenFile={path => { setTab('files'); void openFile(path) }}/>}
             <div className="tabs" role="tablist" aria-label="Agent details">
               {(['chat', 'activity', 'files'] as const).map(name => <button key={name} id={`tab-${name}`} role="tab" aria-selected={tab === name} aria-controls="agent-content" onClick={() => setTab(name)}>{name[0].toUpperCase() + name.slice(1)}{name === 'files' && agent?.files.length ? <span className="count">{agent.files.length}</span> : null}</button>)}
             </div>
             <div id="agent-content" className="panel-content" role="tabpanel" aria-labelledby={`tab-${tab}`}>
               {tab === 'chat' ? <>
                 {!agent?.messages.length ? <div className="empty-chat"><h2>Start a task</h2><p>Ask for research, a file, or a subagent.</p><button className="suggestion" onClick={() => { setDraft('Create a research agent named Scout. Ask it to read mandate.md and write research-plan.md with the data needed to research this fund. Do not trade or invent market data.'); textarea.current?.focus() }}>Create research agent</button></div> : agent.messages.map(message => <div key={message.id} className={`message ${message.role}`}><span className="message-author">{message.role === 'user' ? message.source || 'You' : agent?.name}</span><div>{message.text}</div></div>)}
-                {running ? <div className="working" role="status"><span className="pulse" />{agent?.name} is working… <button onClick={() => setTab('activity')}>View activity</button></div> : null}
+                {running ? <div className="working" role="status"><span className="pulse" />{agent?.name}: {agent ? agentStatus(agent).toLowerCase() : 'working'}… <button onClick={() => setTab('activity')}>View activity</button></div> : null}
                 {lastError ? <div className="error-box" role="alert"><strong>The run couldn’t finish</strong><p>{lastError.detail}</p><small>If the workshop token expired, refresh your dedicated AWS credentials and send the message again.</small></div> : null}
                 <div ref={bottom} />
               </> : null}
@@ -125,7 +128,7 @@ export default function AgentWorkspace({ fundId, fundName }: { fundId: string; f
             {error ? <p className="request-error" role="alert">{error}</p> : null}
             <form className="composer" onSubmit={send}>
               <textarea ref={textarea} aria-label={`Message ${agent?.name || 'agent'}`} placeholder={`Give ${agent?.name || 'the agent'} a task…`} value={draft} maxLength={12000} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void send(event) } }} />
-              <div className="composer-footer"><span>Shared files</span>{running ? <button type="button" className="stop-button" onClick={() => void stop()}>■ Stop</button> : <button className="send-button" aria-label="Send message" disabled={!draft.trim() || !connected || sending}>↑</button>}</div>
+              <div className="composer-footer"><span>Shared files</span>{running ? <button type="button" className="stop-button" onClick={() => void stop()}>■ Stop{agents.some(item => item.parentId === selectedId) ? ' branch' : ''}</button> : <button className="send-button" aria-label="Send message" disabled={!draft.trim() || !connected || sending}>↑</button>}</div>
             </form>
           </aside>
         ) : null}
