@@ -1,6 +1,6 @@
 # Aaron · Lane 4 (moderator half): watchdog and moderator
 
-Updated 13:20 by Claude Code
+Updated 13:33 by Claude Code
 
 **Shipped** (on `main`, locally checked, broker mocked; reference in `docs/watchdog.md`)
 - Pre-trade gate `backend/app/watchdog/` (D17, D19): 16 deterministic rules, no LLM in the path. Emergency stop, trading permission, client universe, ticker exists in our data, backend PASS (buys), quantity/cash/no-short sanity, per-order size, position size, top-three concentration, account and tested drawdown, price band vs last close, rapid fire, duplicate under a new id, same-day wash trade, daily turnover, daily order count. The most serious block leads the reason
@@ -19,6 +19,7 @@ Updated 13:20 by Claude Code
 - Fractions are 0..1. Risk-band guardrails (concentration, turnover, order share of equity, price band) are in `rules.GUARDRAILS`; a mandate field overrides them
 
 **In flight**
+- Scores and reasoning view (D23), branch `aaron/scores-ui`, pushed straight to `main` per slice. `GET /api/funds/{fund_id}/scores` returns one read-only scorecard: rings for mandate fit, trade confidence, strategy, backtest, significance, execution, watchdog gate and sensitivity. Click a ring for factors (value, weight, producing agent and role); click a factor for the recorded reasoning text and provenance (cited sources, file or record, time). A ring with no data says "not produced yet" and names the owning lane. Checkpoints 14:10 endpoint and rings, 14:40 both drilldowns, 15:00 synthesis and walk-forward wiring plus demo path
 - Nothing else in the 15:00 freeze scope. If time allows: run the demo on the hosted canvas once Lane 5 deploys this commit
 
 **Blocked, or need from someone**
@@ -27,5 +28,7 @@ Updated 13:20 by Claude Code
 - Not verified: a live Bedrock second opinion (no workshop credentials on this machine; the call is exercised with a stub), the built-container registry listing, a real Alpaca order through the gate, hosted rollout. AgentCore Memory (PRD P1) not built; it needs an accepted decision for the new resource
 
 **Files I am working in right now**
+- Scores view: `backend/app/scores/`, `backend/app/routes/scores.py`, `backend/tests/test_scores.py`, `frontend/src/scores/`
+- Cross-lane mount points: one `include_router` line in `backend/app/main.py`; in `frontend/src/funds/FundOverview.tsx` (Kushagra's core-product chat), one `<ScoresEntry fund={fund}/>` element and its import, nothing else
 - `backend/app/watchdog/`, `backend/app/routes/watchdog.py`, `backend/worker/watchdog-tools.ts`, `backend/tests/test_watchdog_*.py`, `scripts/watchdog_demo.py`, `docs/watchdog.md`
 - Small hooks: `backend/app/main.py`, `backend/app/paper.py`, `backend/worker/run.ts`, `backend/app/roles.py`
