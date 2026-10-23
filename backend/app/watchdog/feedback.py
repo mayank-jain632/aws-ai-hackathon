@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections import Counter
 from uuid import uuid4
 
-from backend.app.watchdog import store
+from backend.app.watchdog import aws, store
 from backend.app.watchdog.models import Verdict, utcnow
 from backend.app.watchdog.rules import money
 
@@ -85,7 +85,14 @@ def record_verdict(desk, verdict: Verdict) -> dict:
             "agent_id": order.agent_id,
         },
     )
+    fund = store.fund_label(desk)
+    aws.publish_verdict(verdict, fund)
     if kind != "approve":
+        aws.remember(
+            fund,
+            f"Watchdog {kind.replace('_', ' ')} for {verdict.client} ({verdict.risk} mandate): "
+            f"{order.side} {money(order.notional)} {order.symbol}. {verdict.reason}",
+        )
         refresh_lessons(desk)
     return entry
 

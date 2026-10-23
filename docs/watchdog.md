@@ -68,6 +68,12 @@ It sets up a conservative client (Calder Family Trust, 25% position cap) with a 
 
 On the hosted canvas, set a fund's desk policy and approve a strategy as `docs/agent-roles.md` describes, ask the executor for an oversized buy, then trip the stop with `PUT /api/watchdog/halt`.
 
+## Live data and AWS
+
+- **Live market data.** Before each order the gate reads, with the hosted Alpaca paper keys: asset status and tradability, the latest IEX trade against the previous close, the market clock, and the account's one-month equity peak (`watchdog/market.py`, cached 15 seconds to 10 minutes). Venue tradability replaces the 2025 snapshot universe; a market buy into a move over twice the risk band's price band is blocked; market hours are reported. If Alpaca is unreachable the gate uses the snapshot and says so.
+- **AWS** (`watchdog/aws.py`), on when credentials exist and `WATCHDOG_AWS` is not `0`: the Bedrock Guardrail `aaron-watchdog` screens each new strategy's rationale and memos for prompt injection and limit evasion; AgentCore Memory `aaron_watchdog_lessons` stores every block and near miss and feeds firm-wide lessons back through `watchdog_lessons`; CloudWatch namespace `Team4/Watchdog` counts verdicts by rule and gauges the firm-wide stop, with alarm `aaron-watchdog-firm-wide-halt`; EventBridge source `team4.watchdog` carries blocks, moderator events and stop changes to the log group `/aws/events/aaron-watchdog`. All AWS writes leave the order path through a background thread; a failed AWS call never changes a verdict.
+- **Provisioning.** `./workshop-run uv run python scripts/watchdog_aws.py` previews; `--apply` creates Aaron's resources (D25); `--verify` makes one live call per service; `--policy` prints the hosted-role statement for D26; `--cleanup --apply` removes everything. Project-wide AWS options are in `docs/aws-integration-review.md`.
+
 ## Not verified
 
-A live Bedrock second opinion, a real Alpaca order through the gate, the registry listing in the built container, and a hosted rollout. All tests mock the broker; the Bedrock path is exercised with a stubbed `run_structured`. AgentCore Memory persistence (PRD P1) is not built; it would need an accepted decision for the new AWS resource.
+Live Alpaca market data, the Guardrail, AgentCore Memory, CloudWatch and EventBridge have only run against stubs: nothing is provisioned yet, and the hosted role lacks the D26 permissions. A live Bedrock second opinion has not run from this machine. D24 records one real $1 AAPL paper order on the hosted app; the scores view notes say the watchdog's verdict on it is in that fund's desk records (not checked from this session).

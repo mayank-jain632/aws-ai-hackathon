@@ -45,6 +45,11 @@ def write_text(path: Path, text: str) -> None:
         tmp.replace(path)
 
 
+def fund_label(desk) -> str:
+    context = json.loads(getattr(desk.manager, "context", "") or "{}")
+    return (context.get("mandate") or {}).get("name", "Team 4 board")
+
+
 def load_state(desk) -> dict:
     path = private_dir(desk) / "state.json"
     return json.loads(path.read_text()) if path.exists() else {}

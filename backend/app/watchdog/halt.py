@@ -49,7 +49,11 @@ class HaltSwitch:
             entry = {"halted": halted, "reason": reason, "by": by, "time": utcnow()}
             state.update(entry)
             state["history"] = (state.get("history", []) + [entry])[-100:]
-            return self._write(state)
+            self._write(state)
+        from backend.app.watchdog import aws
+
+        aws.publish_halt(state)
+        return state
 
     def trip(self, reason: str, by: str) -> dict:
         return self._set(True, reason, by)

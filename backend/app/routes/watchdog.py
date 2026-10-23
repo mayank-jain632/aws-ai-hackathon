@@ -15,7 +15,15 @@ from pydantic import Field
 from backend.app.desk import StrictModel, desk_for
 from backend.app.paper import account_snapshot
 from backend.app.routes.desk import current_manager, human, worker
-from backend.app.watchdog import SWITCH, feedback, gate, halt_reason, monitor, store
+from backend.app.watchdog import (
+    SWITCH,
+    aws,
+    feedback,
+    gate,
+    halt_reason,
+    monitor,
+    store,
+)
 from backend.app.watchdog.models import WatchOrder, WatchPortfolio
 from backend.app.watchdog.rules import review_order
 
@@ -41,7 +49,12 @@ def status(desk) -> dict:
         "feedback": feedback.entries(desk, 50),
         "events": store.read_jsonl(store.private_dir(desk) / feedback.EVENTS, 50),
         "lessons": feedback.lessons(desk),
+        "firm_memory": aws.recall(FIRM_QUERY),
+        "aws": aws.enabled(),
     }
+
+
+FIRM_QUERY = "Order limits the trading agents keep breaking, and how to stay inside them"
 
 
 @router.get("/api/watchdog")
@@ -103,7 +116,11 @@ def dry_run(body: ReviewInput, request: Request, fund_id: str | None = None) -> 
 @router.get("/api/internal/watchdog/lessons")
 def lessons_for_agent(request: Request) -> dict:
     _, desk = worker(request, "watchdog_lessons")
-    return {"lessons": feedback.lessons(desk), "halted_reason": halt_reason(desk)}
+    return {
+        "lessons": feedback.lessons(desk),
+        "firm_memory": aws.recall(FIRM_QUERY),
+        "halted_reason": halt_reason(desk),
+    }
 
 
 def run_audit(desk) -> dict:
