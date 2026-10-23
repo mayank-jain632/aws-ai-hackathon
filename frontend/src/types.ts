@@ -2,6 +2,7 @@ export type AgentStatus = 'idle' | 'running' | 'stopped' | 'error'
 export interface AgentMessage { id: string; role: 'user' | 'assistant'; text: string; source?: string }
 export interface Activity { id: string; time: string; label: string; detail: string; kind: string }
 export interface Agent {
+  modelChoices: { id: string; name: string }[]
   waitingForAgents?: boolean; queued?: boolean
   role: 'orchestrator' | 'research' | 'adversarial' | 'strategy' | 'backtester' | 'executor' | 'moderator'; tools: string[]
   id: string; parentId: string | null; name: string; status: AgentStatus; model: string

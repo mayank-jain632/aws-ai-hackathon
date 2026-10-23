@@ -62,3 +62,15 @@ The server sets `LOCAL_AGENT_ROLE` and `AGENT_ALLOWED_TOOLS`; standalone diagnos
 ## Alpaca deployment verification
 
 On 2026-10-23, AWS-Hack paper account `PA33F249I` was connected locally and to the existing AWS Secrets Manager environment. The existing EC2 service reloaded the credentials without changing its image. Both the deployed backend and a real hosted Bedrock/Dexter `alpaca_paper_account` call returned ACTIVE/USD, $100,000 cash/equity, no positions and no open orders. CloudFront login and health passed. No orders were submitted; strategy evaluation, human approvals and execution guards still apply. Account balances are a verification snapshot, not a continuing performance claim.
+
+## Agent models
+
+GPT-6.1 Sol is the default. Claude Opus 5.5 is the alternate for orchestrators and non-blind specialists. Use the model selector in the existing agent panel while the agent is idle. Choices persist per agent and fund. New specialists inherit their parent's choice unless `create_agent.model` explicitly selects the other main model. Existing agents without a saved choice migrate to the configured default without losing conversations or files.
+
+Backtesters and their blind descendants always use Claude Opus 4.6. Human selection and delegation cannot change that pin. The selected profile also drives nested native finance calls; there is no silent provider/model fallback.
+
+`backend/model-catalog.json` holds the verified Bedrock US profile IDs used by Python, Bun and deployment IAM. `MAIN_AGENT_MODEL` sets the default for agents without a saved choice. `GET /api/agent-models` lists the catalog. A person can `PUT /api/funds/{fund_id}/agents/{agent_id}/model` with `{"model":"us.openai.gpt-6.1-sol"}`; the original board also supports `/api/agents/{agent_id}/model`. Running agents reject changes. Worker credentials cannot use this human control.
+
+Availability check on 2026-10-23: the AWS catalog lists all three profiles, but actual Dexter invocations using the workshop participant credentials explicitly deny both Sol 6.1 and Opus 5.5 in IAM. Their configuration is implemented, but successful inference is blocked with those credentials. A real Opus 4.6 bound evaluator completed its authenticated `run_backtest` against cached historical prices with zero orders. The hosting script includes all three profiles and retains Luna for the separate watchdog second opinion; this does not override workshop restrictions or prove hosted access. No new model rollout is claimed.
+
+[AWS lists Opus 4.6's knowledge cutoff as May 2025](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-opus-4-6.html). That overlaps the existing historical test window. The pin does not eliminate model-memory leakage. Numeric-only evaluator input, restricted tools and deterministic backend metrics remain necessary.

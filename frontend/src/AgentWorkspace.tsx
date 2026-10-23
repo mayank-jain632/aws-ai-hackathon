@@ -57,6 +57,15 @@ export default function AgentWorkspace({ fundId, fundName }: { fundId: string; f
     finally { setSending(false) }
   }
 
+  async function changeModel(model: string) {
+    setSending(true); setError('')
+    try {
+      const updated: Agent = await request(`${base}/agents/${selectedId}/model`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model }) })
+      setAgents(previous => previous.map(item => item.id === updated.id ? updated : item))
+    } catch (e) { setError(e instanceof Error ? e.message : 'Could not change the model.') }
+    finally { setSending(false) }
+  }
+
   async function stop() {
     setError('')
     try { setAgents((await request(`${base}/agents/${selectedId}/stop`, { method: 'POST' })).agents) }
@@ -98,7 +107,7 @@ export default function AgentWorkspace({ fundId, fundName }: { fundId: string; f
         {selected ? (
           <aside className="agent-panel" aria-label={`${agent?.name || 'Agent'} details`}>
             <div className="panel-heading"><div className="avatar">{agent?.name[0] || 'D'}</div><div className="panel-title"><h1>{agent?.name || 'Dexter'}</h1><p>{running ? 'Working on your request' : agent?.parentId ? `Subagent of ${agents.find(item => item.id === agent.parentId)?.name || 'Dexter'}` : 'Main agent'}</p></div><button className="icon-button close" aria-label="Close agent details" onClick={() => setSelected(false)}>×</button></div>
-            <div className="model-row"><span className={`state ${agent?.status || 'idle'}`}>{running ? 'Working' : agent?.status === 'error' ? 'Needs attention' : agent?.status === 'stopped' ? 'Stopped' : 'Ready'}</span><span>Bedrock · {agent?.model === 'us.openai.gpt-5.6-luna' ? 'GPT-5.6 Luna' : agent?.model}</span></div>
+            <div className="model-row"><span className={`state ${agent?.status || 'idle'}`}>{running ? 'Working' : agent?.status === 'error' ? 'Needs attention' : agent?.status === 'stopped' ? 'Stopped' : 'Ready'}</span><select aria-label="Agent model" value={agent?.model || ''} disabled={!agent || running || sending || agent.role === 'backtester'} onChange={event => void changeModel(event.target.value)}>{agent?.modelChoices?.map(model => <option key={model.id} value={model.id}>{model.name}{agent.role === 'backtester' ? ' · fixed' : ''}</option>)}</select></div>
             <div className="tabs" role="tablist" aria-label="Agent details">
               {(['chat', 'activity', 'files'] as const).map(name => <button key={name} id={`tab-${name}`} role="tab" aria-selected={tab === name} aria-controls="agent-content" onClick={() => setTab(name)}>{name[0].toUpperCase() + name.slice(1)}{name === 'files' && agent?.files.length ? <span className="count">{agent.files.length}</span> : null}</button>)}
             </div>

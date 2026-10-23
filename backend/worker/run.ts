@@ -1,5 +1,6 @@
 // Uses the pinned upstream Dexter loop, Bedrock, shared file tools, and recursive agent delegation.
 import { plugin } from 'bun';
+import modelCatalog from '../model-catalog.json';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -26,7 +27,7 @@ plugin({
               streaming, maxTokens: 2048,
             });
           }
-          ${needle}`).replace('return getProviderById(modelProvider)?.fastModel ?? fallbackModel;', "return fallbackModel.startsWith('bedrock:') ? fallbackModel : (getProviderById(modelProvider)?.fastModel ?? fallbackModel);").replace('yield chunk as AIMessageChunk;', `
+          ${needle}`).replaceAll('const provider = resolveProvider(model);', "const provider = model.startsWith('bedrock:') ? { id: 'bedrock', displayName: 'Bedrock' } : resolveProvider(model);").replace('return getProviderById(modelProvider)?.fastModel ?? fallbackModel;', "return fallbackModel.startsWith('bedrock:') ? fallbackModel : (getProviderById(modelProvider)?.fastModel ?? fallbackModel);").replace('yield chunk as AIMessageChunk;', `
           if (model.startsWith('bedrock:') && Array.isArray(chunk.content) && chunk.content.every(b => b.type === 'text')) {
             chunk.content = chunk.content.map(b => b.text).join('');
           }
@@ -74,7 +75,7 @@ plugin({
         const createAgent = new DynamicStructuredTool({
           name: 'create_agent',
           description: 'Create a specialist with an explicit role and self-contained task. Backtester requires strategy_id and receives only numeric parameters. Non-blind specialists can create any registered role. Blind backtesters can only create same-strategy backtesters. Backend enforces role permissions. Waits for result; reuse idle specialists.',
-          schema: z.object({ name: z.string().min(1).max(60), task: z.string().min(1).max(12000), role: z.enum(['orchestrator', 'research', 'adversarial', 'strategy', 'backtester', 'executor', 'moderator']), strategy_id: z.string().optional().describe('Required for backtester; immutable registered strategy ID.') }),
+          schema: z.object({ name: z.string().min(1).max(60), task: z.string().min(1).max(12000), role: z.enum(['orchestrator', 'research', 'adversarial', 'strategy', 'backtester', 'executor', 'moderator']), strategy_id: z.string().optional().describe('Required for backtester; immutable registered strategy ID.'), model: z.enum(${JSON.stringify(modelCatalog.main.map(item => item.id))}).optional().describe('Optional main model choice. Defaults to parent model. Omit for backtesters, which always use Opus 4.6.') }),
           func: async (input, _manager, config) => control('create', input, config?.signal),
         });
         const listAgents = new DynamicStructuredTool({
@@ -106,15 +107,18 @@ plugin({
 
 const emit = (event: Record<string, unknown>) => process.stdout.write(JSON.stringify(event) + '\n');
 try {
+  const modelId = process.env.LOCAL_AGENT_MODEL || (role === 'backtester' ? modelCatalog.backtester : modelCatalog.default);
+  const modelChoices = role === 'backtester' ? [modelCatalog.backtester] : modelCatalog.main.map(item => item.id);
+  if (!modelChoices.includes(modelId)) throw new Error('Model is not allowed for this agent role');
+  const model = 'bedrock:' + modelId;
   if (process.argv.includes('--list-tools')) {
     const { getTools } = await import(pathToFileURL(resolve(dexter, 'src/tools/registry.ts')).href);
-    emit({ type: 'tools', role, tools: getTools('bedrock:us.openai.gpt-5.6-luna').map((tool: { name: string }) => tool.name) });
+    emit({ type: 'tools', role, model: modelId, tools: getTools(model).map((tool: { name: string }) => tool.name) });
     process.exit(0);
   }
   const input = JSON.parse(await Bun.stdin.text());
   const { Agent } = await import(pathToFileURL(resolve(dexter, 'src/agent/agent.ts')).href);
   const { InMemoryChatHistory } = await import(pathToFileURL(resolve(dexter, 'src/utils/in-memory-chat-history.ts')).href);
-  const model = 'bedrock:us.openai.gpt-5.6-luna';
   const history = new InMemoryChatHistory(model);
   // Restore the upstream history's completed turns without additional summarization calls.
   history.messages = input.history.map((m: { query: string; answer: string }, id: number) => ({ ...m, id, summary: m.answer }));

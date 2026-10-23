@@ -14,6 +14,7 @@ from uuid import uuid4
 
 from dotenv import dotenv_values
 
+from backend.app.models import choices, select_model
 from backend.app.roles import PROFILES, allow_child
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -82,7 +83,13 @@ def bun_binary():
 
 class LocalAgent:
     def __init__(
-        self, manager, agent_id="dexter", name="Dexter", parent_id=None, role=None
+        self,
+        manager,
+        agent_id="dexter",
+        name="Dexter",
+        parent_id=None,
+        role=None,
+        model=None,
     ):
         self.manager = manager
         self.id = agent_id
@@ -107,6 +114,16 @@ class LocalAgent:
             if self.state_path.exists()
             else {"messages": [], "activity": []}
         )
+        # Older releases did not persist a choice. Migrate their Luna default.
+        saved_model = self.state.get("model")
+        if saved_model == "us.openai.gpt-5.6-luna":
+            saved_model = None
+        self.model = select_model(
+            self.role,
+            requested=model,
+            inherited=saved_model or environment().get("MAIN_AGENT_MODEL"),
+        )
+        self.state["model"] = self.model
         if self.state.get("status") == "running":
             self.state["status"] = "stopped"
         self.state.setdefault("status", "idle")
@@ -158,7 +175,8 @@ class LocalAgent:
             "tools": PROFILES[self.role]["tools"],
             "name": self.name,
             "status": self.state["status"],
-            "model": "us.openai.gpt-5.6-luna",
+            "model": self.model,
+            "modelChoices": choices(self.role),
             "messages": self.state["messages"],
             "activity": self.state["activity"],
             "files": self.files(),
@@ -184,6 +202,15 @@ class LocalAgent:
             }
         )
         self.state["activity"] = self.state["activity"][-100:]
+
+    async def set_model(self, model):
+        async with self.lock:
+            if self.task and not self.task.done():
+                raise ValueError("Stop the agent before changing its model")
+            self.model = select_model(self.role, requested=model)
+            self.state["model"] = self.model
+            self.activity("Model selected", self.model)
+            self.publish()
 
     async def start(self, prompt, source="You"):
         async with self.lock:
@@ -260,6 +287,7 @@ class LocalAgent:
                     if self.role == "backtester"
                     else self.name,
                     "LOCAL_AGENT_ROLE": self.role,
+                    "LOCAL_AGENT_MODEL": self.model,
                     "AGENT_ALLOWED_TOOLS": json.dumps(PROFILES[self.role]["tools"]),
                     "AGENT_ROLE_INSTRUCTIONS": PROFILES[self.role]["instructions"],
                     "DEXTER_STATE_DIR": str(self.local / ".dexter"),
@@ -467,7 +495,9 @@ class AgentManager:
             and agent.process.returncode is None
         )
 
-    async def create(self, parent_id, name, task, role="research", strategy_id=None):
+    async def create(
+        self, parent_id, name, task, role="research", strategy_id=None, model=None
+    ):
         async with self.lock:
             parent = self.agents[parent_id]
             allow_child(parent, role)
@@ -494,7 +524,14 @@ class AgentManager:
                     raise ValueError(
                         "Create an adversarial reviewer and obtain approval before blind evaluation"
                     )
-            child = LocalAgent(self, uuid4().hex[:12], name.strip(), parent_id, role)
+            child = LocalAgent(
+                self,
+                uuid4().hex[:12],
+                name.strip(),
+                parent_id,
+                role,
+                select_model(role, requested=model, inherited=parent.model),
+            )
             if role == "backtester":
                 child.state["strategy_id"] = strategy_id
             self.agents[child.id] = child
@@ -543,6 +580,7 @@ class AgentManager:
             "id": child.id,
             "name": child.name,
             "status": child.state["status"],
+            "model": child.model,
             "answer": answer,
             "files": child.files(),
         }

@@ -18,6 +18,7 @@ from backend.app.agent import AgentManager
 from backend.app.roles import Role, allow_child, require_tool
 from backend.app.routes.desk import router as desk_router
 from backend.app.routes.funds import router as funds_router
+from backend.app.routes.models import router as models_router
 from backend.app.routes.watchdog import router as watchdog_router
 
 
@@ -51,6 +52,7 @@ class AgentTask(BaseModel):
     agent_id: str = Field(default="", max_length=60)
     role: Role = "research"
     strategy_id: str | None = Field(default=None, max_length=64)
+    model: str | None = Field(default=None, max_length=100)
 
 
 def manager(request: Request) -> AgentManager:
@@ -201,6 +203,7 @@ def list_workers(request: Request) -> dict:
                 else a.name,
                 "parentId": a.parent_id,
                 "role": a.role,
+                "model": a.model,
                 "status": a.state["status"],
             }
             for a in current.agents.values()
@@ -222,7 +225,12 @@ async def delegate(action: str, body: AgentTask, request: Request) -> dict:
         async with current.delegating(caller):
             if action == "create":
                 child = await current.create(
-                    caller.id, body.name, body.task, body.role, body.strategy_id
+                    caller.id,
+                    body.name,
+                    body.task,
+                    body.role,
+                    body.strategy_id,
+                    body.model,
                 )
             else:
                 child = get_agent(request, body.agent_id)
@@ -253,6 +261,7 @@ async def delegate(action: str, body: AgentTask, request: Request) -> dict:
 
 app.include_router(funds_router)
 app.include_router(desk_router)
+app.include_router(models_router)
 app.include_router(watchdog_router)
 
 # The same server serves the built React app and API inside the single container.

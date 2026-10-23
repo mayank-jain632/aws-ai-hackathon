@@ -100,7 +100,7 @@ region = us-east-1
 output = json
 ```
 
-Keep both files private with `chmod 600`. Refresh them through Workshop Studio when the session expires. The Bedrock model is set in code to `us.openai.gpt-5.6-luna`. `.env` contains optional `AWS_REGION` and blank credentials for Dexter’s finance, search, and model providers; `.env.example` is the shared template. No account ID is required by the app. Configure the provider keys listed in Agent tools to use Dexter's native finance and search integrations.
+Keep both files private with `chmod 600`. Refresh them through Workshop Studio when the session expires. Canvas agents default to `us.openai.gpt-6.1-sol`, offer Opus 5.5 in the idle-agent model selector, and pin backtesters to Opus 4.6. `MAIN_AGENT_MODEL` configures new-agent defaults; saved per-agent choices persist. Current workshop participant IAM explicitly denies Sol 6.1 and Opus 5.5 inference despite listing them in the catalog; Opus 4.6 evaluation was verified. See [agent models and access limits](docs/agent-roles.md#agent-models). `.env` contains optional `AWS_REGION` and blank credentials for Dexter’s finance, search, and model providers; `.env.example` is the shared template. No account ID is required by the app. Configure the provider keys listed in Agent tools to use Dexter's native finance and search integrations.
 
 Credentials stay in the backend. Model requests incur normal Bedrock charges. Running this local version creates no new AgentCore resources.
 

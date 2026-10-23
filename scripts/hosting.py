@@ -162,6 +162,7 @@ def main():
             or key
             in {
                 "X_BEARER_TOKEN",
+                "MAIN_AGENT_MODEL",
                 "ALPACA_SECRET_KEY",
                 "APCA_API_KEY_ID",
                 "APCA_API_SECRET_KEY",
@@ -240,9 +241,18 @@ def main():
             RoleName=NAME, AssumeRolePolicyDocument=json.dumps(trust), Tags=TAGS
         )
         save(role=NAME)
-    model = session.client("bedrock").get_inference_profile(
-        inferenceProfileIdentifier="us.openai.gpt-5.6-luna"
-    )
+    catalog = json.loads((ROOT / "backend/model-catalog.json").read_text())
+    # Keep Luna for the existing moderator second-opinion path.
+    profile_ids = [item["id"] for item in catalog["main"]] + [
+        catalog["backtester"],
+        "us.openai.gpt-5.6-luna",
+    ]
+    models = [
+        session.client("bedrock").get_inference_profile(
+            inferenceProfileIdentifier=model_id
+        )
+        for model_id in profile_ids
+    ]
     policy = {
         "Version": "2012-10-17",
         "Statement": [
@@ -252,10 +262,16 @@ def main():
                     "bedrock:InvokeModel",
                     "bedrock:InvokeModelWithResponseStream",
                 ],
-                "Resource": [
-                    model["inferenceProfileArn"],
-                    *[m["modelArn"] for m in model["models"]],
-                ],
+                "Resource": sorted(
+                    {
+                        arn
+                        for model in models
+                        for arn in [
+                            model["inferenceProfileArn"],
+                            *[m["modelArn"] for m in model["models"]],
+                        ]
+                    }
+                ),
             },
             {
                 "Effect": "Allow",
