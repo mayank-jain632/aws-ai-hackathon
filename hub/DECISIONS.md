@@ -13,19 +13,9 @@ Entry format:
 
 ## Open questions (need a human call)
 
-When the team answers one, delete it here and log the answer below as a decision.
+When the team answers one, delete it here and log the answer below as a decision. Questions that one lane can settle on its own live in `hub/PRD.md` section 12 instead.
 
-- **Q1. How does the agent market work?** D4 says agents trade a market when the user allows it. Open: is the market a simulation replayed over historical prices or a live paper market, what does the user's permission look like, and what data from the trades and from human-agent conversations feeds back into the system?
-- **Q2. What does a human do besides chat with agents?** Grant or revoke trading permission, set a mandate or risk limit, post their own view, override a position?
-- **Q3. What is the one demo moment?** `PLAN.md` says the cutoff drag. The canvas suggests a live agent tree. Pick one to rehearse.
-- **Q4. How do we answer "isn't the model just remembering that NVDA went up?"** The cutoff filter protects the data, not the model. A masked-ticker run against a named-ticker run is one answer.
-- **Q5. Which AWS AI services do we show beyond Bedrock Converse?** Candidates: AgentCore Runtime, Gateway, Memory, Observability; Comprehend; Chronos. Judges score this directly.
-- **Q6. Which new data inputs come first?** Judges said breadth of data inputs is the goal. Candidates with setup times are in `docs/research/finance-track-brief.md`.
-- **Q7. One cutoff or all of them?** Report a single date, or run every cutoff and report how often we beat equal weight.
-- **Q8. Lanes for six people.** Who owns the canvas, the data inputs, the agent tools, the market, evaluation, and the slides and pitch?
-- **Q9. Feature freeze time.** Suggested 3:30 PM, leaving 30 minutes to rehearse.
-- **Q10. Demo from AgentCore Runtime or from the local Docker sandbox?** Credentials expire hourly, so a cached local run is the safer fallback either way.
-- **Q11. One model or several?** Every call uses `gpt-5.6-luna` today. Mixing model families across agents shows more of Bedrock.
+- **Q11. One model or several?** Every call uses `gpt-5.6-luna` today. Mixing model families across agents shows more of Bedrock. See `docs/reference/aws-services-and-allowed-models.md` for what the event allows.
 
 ## Log
 
@@ -66,3 +56,13 @@ When the team answers one, delete it here and log the answer below as a decision
 **Hosting:** Dedicated Team 4 EC2 instance, CloudFront HTTPS, encrypted EBS state, ECR image, Secrets Manager environment, scoped IAM role with Bedrock access, and Systems Manager management. Resource inventory and passwords are excluded from Git. `scripts/hosting.py --cleanup` previews removal.
 **Authorization:** This deployment and push were explicitly requested by Kushagra in the active chat, including the choice that overrides D6 for this implementation. This entry is Proposed because agents do not change hub decisions to Accepted; a human can record formal team acceptance separately. The implementation is not an inference of team consensus.
 **Affects:** frontend, backend/app/main.py, README.md, default run instructions, demo accounts and shared board, AWS resources. No live-money trading, historical experiment change, or additional financial data source is introduced.
+
+### D8 · Accepted · 12:55 · Aaron (PRD owner, from the 11:24 team brainstorm)
+**Decision:** `hub/PRD.md` v0.1 is the product direction: a research, strategy, blind backtest gate, and execution pipeline that trades for six client mandates in three risk bands, watched by a moderator with an emergency stop, for a wealth management analyst. On `main`, the hosted canvas from D7 is the runtime and The Desk modules from D6 become the canvas agents' tools. Feature freeze and demo prep start at 3:00 PM.
+**Why:** It turns the brainstorm into one plan, and it ends the back-and-forth between D6 and D7 by keeping both: D7's hosted runtime and D6's working pipeline.
+**Affects:** every lane. Answers Q1, Q2, Q3, Q5, Q6, Q8, and Q9; Q4 and Q7 become PRD P1 items; Q10 goes to lane 5. Chaithu's planned next-phase PRD (analysis variables, statistical significance) is folded into PRD sections 5 to 7 so there is only one PRD.
+
+### D9 · Accepted · 12:55 · Aaron
+**Decision:** Every coding agent follows `hub/BUILDING.md`: run `scripts/hub-sync.sh` before each slice of work, at least every 15 minutes during long tasks, and before every push; claim work over 20 minutes in your status file first; put new work in new files; regenerate lockfiles instead of hand-merging them.
+**Why:** Six people's agents push to `main` at once, and a 40-minute task built on a stale `main` lands as conflicts or as code that calls something that changed.
+**Affects:** every session in every tool.
