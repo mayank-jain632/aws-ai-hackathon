@@ -49,19 +49,27 @@ def status(desk) -> dict:
         "feedback": feedback.entries(desk, 50),
         "events": store.read_jsonl(store.private_dir(desk) / feedback.EVENTS, 50),
         "lessons": feedback.lessons(desk),
-        "firm_memory": aws.recall(FIRM_QUERY),
+        "fund_memory": aws.recall(desk, FUND_QUERY),
         "aws": aws.enabled(),
     }
 
 
-FIRM_QUERY = "Order limits the trading agents keep breaking, and how to stay inside them"
+FUND_QUERY = "Order limits the trading agents keep breaking, and how to stay inside them"
+
+
+def human_desk(request, fund_id=None):
+    human(request)
+    sharing = getattr(request.app.state, "sharing", None)
+    user = getattr(request.state, "user", None)
+    if sharing and user and not sharing.can_access(fund_id or "general", user):
+        raise HTTPException(403, "You do not have access to this fund")
+    return desk_for(current_manager(request, fund_id))
 
 
 @router.get("/api/watchdog")
 @router.get("/api/funds/{fund_id}/watchdog")
 def watchdog_status(request: Request, fund_id: str | None = None) -> dict:
-    human(request)
-    return status(desk_for(current_manager(request, fund_id)))
+    return status(human_desk(request, fund_id))
 
 
 class HaltInput(StrictModel):
@@ -93,8 +101,7 @@ class ReviewInput(StrictModel):
 @router.post("/api/funds/{fund_id}/watchdog/review")
 def dry_run(body: ReviewInput, request: Request, fund_id: str | None = None) -> dict:
     """Review a proposed order against the fund's mandate without sending anything."""
-    human(request)
-    desk = desk_for(current_manager(request, fund_id))
+    desk = human_desk(request, fund_id)
     try:
         policy = desk.policy()
         if body.portfolio is not None:
@@ -118,7 +125,7 @@ def lessons_for_agent(request: Request) -> dict:
     _, desk = worker(request, "watchdog_lessons")
     return {
         "lessons": feedback.lessons(desk),
-        "firm_memory": aws.recall(FIRM_QUERY),
+        "fund_memory": aws.recall(desk, FUND_QUERY),
         "halted_reason": halt_reason(desk),
     }
 
@@ -137,8 +144,7 @@ def run_audit(desk) -> dict:
 @router.post("/api/watchdog/audit")
 @router.post("/api/funds/{fund_id}/watchdog/audit")
 def audit_now(request: Request, fund_id: str | None = None) -> dict:
-    human(request)
-    return run_audit(desk_for(current_manager(request, fund_id)))
+    return run_audit(human_desk(request, fund_id))
 
 
 @router.post("/api/internal/watchdog/audit")

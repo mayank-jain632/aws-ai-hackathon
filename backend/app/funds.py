@@ -132,6 +132,7 @@ class FundStore:
         if fund_id not in self.managers:
             self.managers[fund_id] = AgentManager(root=self.root / "funds" / fund_id)
         runtime = self.managers[fund_id]
+        runtime.fund_id = fund_id
         mandate = dict(self.records[fund_id])
         if mandate["mode"] == "paper":
             # Preserve the saved date for later mode changes, but do not present

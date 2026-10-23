@@ -89,7 +89,7 @@ def record_verdict(desk, verdict: Verdict) -> dict:
     aws.publish_verdict(verdict, fund)
     if kind != "approve":
         aws.remember(
-            fund,
+            desk,
             f"Watchdog {kind.replace('_', ' ')} for {verdict.client} ({verdict.risk} mandate): "
             f"{order.side} {money(order.notional)} {order.symbol}. {verdict.reason}",
         )

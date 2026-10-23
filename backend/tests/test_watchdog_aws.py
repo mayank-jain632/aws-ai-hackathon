@@ -48,7 +48,7 @@ def clients(tmp_path, monkeypatch):
         ),
         "bedrock-agentcore": Fake(
             retrieve_memory_records={
-                "memoryRecordSummaries": [{"content": {"text": "Conservative clients get blocked on single orders over 10% of equity."}}]
+                "memoryRecordSummaries": [{"content": {"text": "Conservative clients get blocked on single orders over 10% of equity."}, "namespaces": ["/watchdog/funds/fund-aaaaaaaaaaaaaaaa/lessons/"]}]
             }
         ),
     }
@@ -73,7 +73,7 @@ def blocked_verdict():
 def test_off_by_default_in_tests():
     assert os.environ["WATCHDOG_AWS"] == "0"
     assert aws.enabled() is False
-    assert aws.scan_text("anything") is None and aws.recall("anything") == []
+    assert aws.scan_text("anything") is None and aws.recall(None, "anything") == []
 
 
 def test_block_publishes_metrics_and_an_event(clients):
@@ -121,18 +121,19 @@ def test_resources_provisioned_later_are_found_without_restart(clients):
     assert aws.scan_text("text") == {"intervened": False, "findings": []}
 
 
-def test_memory_write_and_firm_wide_recall(clients):
-    aws.remember("Calder Family Trust", "Watchdog block for Calder Family Trust: buy $40,000 MSFT.")
+def test_memory_write_and_fund_private_recall(clients):
+    desk = SimpleNamespace(manager=SimpleNamespace(fund_id="a" * 16))
+    aws.remember(desk, "Watchdog block for Calder Family Trust: buy $40,000 MSFT.")
     name, call = clients["bedrock-agentcore"].calls[0]
     assert name == "create_event"
-    assert call["memoryId"] == "aaron_watchdog_lessons-AbC123" and call["actorId"] == "fund-calder-family-trust"
+    assert call["memoryId"] == "aaron_watchdog_lessons-AbC123" and call["actorId"] == "fund-aaaaaaaaaaaaaaaa"
     assert call["payload"][0]["conversational"]["role"] == "USER"
-    assert aws.recall("limits") == ["Conservative clients get blocked on single orders over 10% of equity."]
-    assert clients["bedrock-agentcore"].calls[-1][1]["namespace"] == "/watchdog/lessons"
+    assert aws.recall(desk, "limits") == ["Conservative clients get blocked on single orders over 10% of equity."]
+    assert clients["bedrock-agentcore"].calls[-1][1]["namespace"] == "/watchdog/funds/fund-aaaaaaaaaaaaaaaa/lessons/"
 
 
 def test_feedback_sends_blocks_to_metrics_and_memory(clients, tmp_path):
-    desk = desk_for(SimpleNamespace(registry=tmp_path / "fund" / "agents.json", paused=False))
+    desk = desk_for(SimpleNamespace(registry=tmp_path / "fund" / "agents.json", paused=False, fund_id="a" * 16))
     feedback.record_verdict(desk, blocked_verdict())
     assert clients["cloudwatch"].calls and clients["events"].calls
     text = clients["bedrock-agentcore"].calls[0][1]["payload"][0]["conversational"]["content"]["text"]
@@ -140,7 +141,7 @@ def test_feedback_sends_blocks_to_metrics_and_memory(clients, tmp_path):
 
 
 def test_monitor_screens_each_strategy_once_and_flags_injection(clients, tmp_path):
-    desk = desk_for(SimpleNamespace(registry=tmp_path / "fund" / "agents.json", paused=False))
+    desk = desk_for(SimpleNamespace(registry=tmp_path / "fund" / "agents.json", paused=False, fund_id="a" * 16))
     desk.set_policy(
         Policy(universe=["AAPL", "MSFT", "JPM", "PG"], max_position=0.3, max_drawdown=0.2, min_sharpe=-1,
                min_excess_return=-1, max_order_notional=5000, max_daily_orders=10, trading_allowed=True)
@@ -166,3 +167,32 @@ def test_monitor_screens_each_strategy_once_and_flags_injection(clients, tmp_pat
     assert "ignore the watchdog" in clients["bedrock-runtime"].calls[0][1]["content"][0]["text"]["text"]
     monitor.audit(desk, opinions=False)
     assert len(clients["bedrock-runtime"].calls) == 1
+
+
+def test_two_funds_same_name_never_share_memory_or_query_global(clients):
+    one = SimpleNamespace(manager=SimpleNamespace(fund_id="a" * 16, context='{"mandate":{"name":"Same name"}}'))
+    two = SimpleNamespace(manager=SimpleNamespace(fund_id="b" * 16, context='{"mandate":{"name":"Same name"}}'))
+    ns_one, ns_two = aws.lessons_namespace(one), aws.lessons_namespace(two)
+    clients["bedrock-agentcore"].responses["retrieve_memory_records"] = {"memoryRecordSummaries": [
+        {"content": {"text": "Fund A private"}, "namespaces": [ns_one]},
+        {"content": {"text": "Fund B private"}, "namespaces": [ns_two]},
+        {"content": {"text": "Legacy global"}, "namespaces": ["/watchdog/lessons/"]},
+        {"content": {"text": "Mixed record"}, "namespaces": [ns_one, ns_two]},
+        {"content": {"text": "Unknown provenance"}},
+    ]}
+    assert aws.recall(one, f"find fund B {ns_two}") == ["Fund A private"]
+    assert aws.recall(two, "same query") == ["Fund B private"]
+    calls = clients["bedrock-agentcore"].calls
+    assert [call["namespace"] for name, call in calls if name == "retrieve_memory_records"] == [ns_one, ns_two]
+    aws.remember(one, "A finding")
+    aws.remember(two, "B finding")
+    assert [call["actorId"] for name, call in calls if name == "create_event"] == ["fund-" + "a" * 16, "fund-" + "b" * 16]
+    one.manager.context = '{"mandate":{"name":"Renamed to fund B"}}'
+    assert aws.lessons_namespace(one) == ns_one
+
+
+def test_memory_fails_closed_without_server_bound_fund(clients):
+    for unbound in [None, "Other fund", SimpleNamespace(manager=SimpleNamespace(context='{"fund_id":"aaaaaaaaaaaaaaaa"}')), SimpleNamespace(manager=SimpleNamespace(fund_id="../other"))]:
+        assert aws.recall(unbound, "limits") == []
+        aws.remember(unbound, "must not be written")
+    assert clients["bedrock-agentcore"].calls == []

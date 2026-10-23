@@ -7,8 +7,8 @@ WATCHDOG_GUARDRAIL_ID / WATCHDOG_MEMORY_ID when set. Names follow D25 (owner-nam
 - Guardrail `aaron-watchdog`: prompt-attack filter plus a denied topic for evading trading
   limits. ApplyGuardrail screens agent-written strategy rationales and memos.
 - AgentCore Memory `aaron_watchdog_lessons`: every block and near miss becomes an event; a
-  semantic strategy distills them into firm-wide long-term records that agents in any fund
-  can recall, without any fund reading another fund's files.
+  semantic strategy distills them under the server-bound fund actor. Reads only return
+  that fund's namespace; legacy global records are never used.
 - CloudWatch namespace `Team4/Watchdog`: reviewed, blocked and near-miss counts by rule, and
   a FirmWideHalt gauge that the provisioned alarm watches.
 - EventBridge source `team4.watchdog` on the default bus: blocks, moderator events and stop
@@ -41,7 +41,7 @@ NAMESPACE = "Team4/Watchdog"
 EVENT_SOURCE = "team4.watchdog"
 GUARDRAIL_NAME = "aaron-watchdog"
 MEMORY_NAME = "aaron_watchdog_lessons"
-LESSONS_NAMESPACE = "/watchdog/lessons"
+LESSONS_NAMESPACE = "/watchdog/funds/{actorId}/lessons/"
 SCAN_CHARS = 20_000
 CONFIG = Config(retries={"total_max_attempts": 3, "mode": "adaptive"}, connect_timeout=3, read_timeout=10)
 AWS_ERRORS = (BotoCoreError, ClientError)
@@ -232,12 +232,24 @@ def find_memory() -> str | None:
     return None
 
 
-def actor(fund: str) -> str:
-    return "fund-" + (re.sub(r"[^a-zA-Z0-9-]+", "-", fund).strip("-").lower() or "board")
+def actor(desk) -> str | None:
+    """Use only the server-assigned fund identity, never a label or tool argument."""
+    fund_id = getattr(getattr(desk, "manager", None), "fund_id", None)
+    if not isinstance(fund_id, str) or not re.fullmatch(r"general|[a-f0-9]{16}", fund_id):
+        return None
+    return "fund-" + fund_id
 
 
-def remember(fund: str, text: str) -> None:
-    """Append one watchdog finding to long-term memory, off the request path."""
+def lessons_namespace(desk) -> str | None:
+    scoped_actor = actor(desk)
+    return LESSONS_NAMESPACE.format(actorId=scoped_actor) if scoped_actor else None
+
+
+def remember(desk, text: str) -> None:
+    """Append a finding under this desk's canonical actor, off the request path."""
+    scoped_actor = actor(desk)
+    if not scoped_actor:
+        return
 
     def write():
         mid = memory_id()
@@ -245,7 +257,7 @@ def remember(fund: str, text: str) -> None:
             return
         client("bedrock-agentcore").create_event(
             memoryId=mid,
-            actorId=actor(fund),
+            actorId=scoped_actor,
             sessionId="watchdog-" + datetime.now(UTC).strftime("%Y%m%d"),
             eventTimestamp=datetime.now(UTC),
             # Semantic extraction distills facts from USER turns; assistant-only events yield no records.
@@ -255,9 +267,10 @@ def remember(fund: str, text: str) -> None:
     send(write)
 
 
-def recall(query: str, top_k: int = 5) -> list[str]:
-    """Firm-wide lessons the memory has distilled so far. Empty when off or not ready."""
-    if not enabled():
+def recall(desk, query: str, top_k: int = 5) -> list[str]:
+    """Retrieve only this fund's lessons. Never read legacy global records."""
+    namespace = lessons_namespace(desk)
+    if not namespace or not enabled():
         return []
     try:
         mid = memory_id()
@@ -265,11 +278,16 @@ def recall(query: str, top_k: int = 5) -> list[str]:
             return []
         response = client("bedrock-agentcore").retrieve_memory_records(
             memoryId=mid,
-            namespace=LESSONS_NAMESPACE,
+            namespace=namespace,
             searchCriteria={"searchQuery": query, "topK": top_k},
             maxResults=top_k,
         )
     except AWS_ERRORS as error:
         log.warning("memory recall failed: %s", error)
         return []
-    return [r["content"]["text"] for r in response.get("memoryRecordSummaries", []) if r.get("content", {}).get("text")]
+    return [
+        r["content"]["text"]
+        for r in response.get("memoryRecordSummaries", [])
+        if r.get("content", {}).get("text") and r.get("namespaces")
+        and set(r["namespaces"]) == {namespace}
+    ]

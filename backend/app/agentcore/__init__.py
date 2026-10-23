@@ -84,25 +84,31 @@ def recent(limit: int = 20) -> list[dict]:
     return list(RECENT)[-limit:]
 
 
-def recalled_lessons(context: dict) -> list[str]:
-    """Lessons from the watchdog's AgentCore Memory (D26). Any failure means no lessons, never an error."""
+def recalled_lessons(desk, context: dict) -> list[str]:
+    """Recall only this desk's lessons; a failure must not break the review."""
     from backend.app.watchdog import aws
 
     order = context.get("order", {})
     rules = ", ".join(context.get("rules", []))
     try:
-        return aws.recall(f"{order.get('side', '')} {order.get('symbol', '')} blocked on {rules}: lessons about these limits")
+        return aws.recall(desk, f"{order.get('side', '')} {order.get('symbol', '')} blocked on {rules}: lessons about these limits")
     except Exception as error:  # noqa: BLE001 a failed recall must not break the review
         log.warning("AgentCore Memory recall failed, sending no lessons: %s", error)
         return []
 
 
-def second_opinion(system: str, context: dict, model_cls, fund: str) -> dict | None:
+def second_opinion(system: str, context: dict, model_cls, desk) -> dict | None:
     """The hosted agent's opinion validated against `model_cls`, or None to use the local path."""
     if not enabled():
         return None
-    lessons = recalled_lessons(context)
-    session = session_for(fund)
+    from backend.app.watchdog import aws, store
+
+    scoped_actor = aws.actor(desk)
+    if not scoped_actor:
+        return None
+    fund = store.fund_label(desk)
+    lessons = recalled_lessons(desk, context)
+    session = session_for(scoped_actor)
     payload = {"system": system, "context": context, "lessons": lessons, "schema": model_cls.model_json_schema(), "fund": fund}
     record = {
         "time": datetime.now(UTC).isoformat(timespec="seconds"),

@@ -24,6 +24,7 @@ import json
 import sys
 import time
 from pathlib import Path
+from types import SimpleNamespace
 
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
@@ -128,7 +129,7 @@ def apply(session, account: str, *, core_only: bool = False) -> dict:
     if not memory:
         memory = control.create_memory(
             name=aws.MEMORY_NAME,
-            description="Team 4 watchdog lessons shared across funds and sessions.",
+            description="Team 4 watchdog lessons private to each canonical fund actor.",
             eventExpiryDuration=30,
             memoryStrategies=[
                 {
@@ -263,14 +264,15 @@ def verify(session) -> bool:
     def memory():
         mid = aws.memory_id()
         require(mid, "memory not ACTIVE yet")
+        desk = SimpleNamespace(manager=SimpleNamespace(fund_id="0000000000000000"))
         aws.client("bedrock-agentcore").create_event(
             memoryId=mid,
-            actorId="fund-verification",
+            actorId=aws.actor(desk),
             sessionId="watchdog-verify",
             eventTimestamp=time.time(),
             payload=[{"conversational": {"content": {"text": "Watchdog verification: conservative clients cannot put more than 10% of equity in one order."}, "role": "USER"}}],
         )
-        return f"event written to {mid}; {len(aws.recall('conservative order size'))} long-term records so far (extraction is asynchronous)"
+        return f"event written to {mid}; {len(aws.recall(desk, 'conservative order size'))} long-term records so far (extraction is asynchronous)"
 
     check("AgentCore Memory", memory)
     check(

@@ -3,13 +3,14 @@
 import io
 import json
 import re
+from types import SimpleNamespace
 
 import pytest
 from botocore.exceptions import ClientError
 
 from backend.app import agentcore
 from backend.app.agents import base
-from backend.app.watchdog import aws, opinion
+from backend.app.watchdog import aws, opinion, store
 
 ARN = "arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/aaron_watchdog_opinion-AbC123"
 CONTEXT = {
@@ -23,6 +24,7 @@ CONTEXT = {
     "strategy_rationale": "",
     "strategy_weights": {"MSFT": 0.25},
 }
+DESK = SimpleNamespace(manager=SimpleNamespace(fund_id="a" * 16, context=json.dumps({"mandate": {"name": "Calder Family Trust"}})))
 OPINION = {"foul_play": False, "concern": "medium", "explanation": "A sizing mistake.", "suggested_fix": "Size to the 25% cap."}
 
 
@@ -42,7 +44,7 @@ def hosted(tmp_path, monkeypatch):
     monkeypatch.setenv("AGENTCORE_OPINION_ARN", ARN)
     monkeypatch.setenv("AGENTCORE_LOG", str(tmp_path / "invocations.jsonl"))
     monkeypatch.setattr(base, "mock_mode", lambda: False)
-    monkeypatch.setattr(aws, "recall", lambda query, top_k=5: ["Conservative clients get blocked on single orders over 10% of equity."])
+    monkeypatch.setattr(aws, "recall", lambda desk, query, top_k=5: ["Conservative clients get blocked on single orders over 10% of equity."])
     agentcore.RECENT.clear()
 
     def use(fake):
@@ -55,16 +57,16 @@ def hosted(tmp_path, monkeypatch):
 def test_off_without_runtime_arn(monkeypatch):
     monkeypatch.delenv("AGENTCORE_OPINION_ARN", raising=False)
     monkeypatch.setattr(agentcore, "client", lambda: pytest.fail("must not call AWS"))
-    assert agentcore.second_opinion("system", CONTEXT, opinion.SecondOpinion, "Calder Family Trust") is None
+    assert agentcore.second_opinion("system", CONTEXT, opinion.SecondOpinion, DESK) is None
 
 
 def test_invokes_runtime_with_lessons_schema_and_trace(hosted):
     fake = hosted(FakeRuntime({"opinion": OPINION, "model": "us.openai.gpt-5.6-luna", "attempts": 1, "usage": {"inputTokens": 700, "outputTokens": 400}}))
-    result = agentcore.second_opinion(opinion.SYSTEM, CONTEXT, opinion.SecondOpinion, "Calder Family Trust")
+    result = agentcore.second_opinion(opinion.SYSTEM, CONTEXT, opinion.SecondOpinion, DESK)
 
     call = fake.calls[0]
     assert call["agentRuntimeArn"] == ARN
-    assert len(call["runtimeSessionId"]) >= 33 and call["runtimeSessionId"].startswith("watchdog-opinion-calder-family-trust-")
+    assert len(call["runtimeSessionId"]) >= 33 and call["runtimeSessionId"].startswith("watchdog-opinion-fund-aaaaaaaaaaaaaaaa-")
     trace_hex = re.fullmatch(r"00-([0-9a-f]{32})-[0-9a-f]{16}-01", call["traceParent"]).group(1)
     payload = json.loads(call["payload"])
     assert payload["system"] == opinion.SYSTEM and payload["context"] == CONTEXT
@@ -86,17 +88,17 @@ def test_invokes_runtime_with_lessons_schema_and_trace(hosted):
 )
 def test_bad_reply_or_aws_error_falls_back(hosted, fake):
     hosted(fake)
-    assert agentcore.second_opinion(opinion.SYSTEM, CONTEXT, opinion.SecondOpinion, "Calder Family Trust") is None
+    assert agentcore.second_opinion(opinion.SYSTEM, CONTEXT, opinion.SecondOpinion, DESK) is None
     assert agentcore.recent()[-1]["ok"] is False
 
 
 def test_memory_failure_sends_no_lessons_instead_of_raising(hosted, monkeypatch):
-    def broken(query, top_k=5):
+    def broken(desk, query, top_k=5):
         raise RuntimeError("memory down")
 
     monkeypatch.setattr(aws, "recall", broken)
     fake = hosted(FakeRuntime({"opinion": OPINION, "model": "us.openai.gpt-5.6-luna"}))
-    assert agentcore.second_opinion(opinion.SYSTEM, CONTEXT, opinion.SecondOpinion, "Calder Family Trust")["explanation"] == "A sizing mistake."
+    assert agentcore.second_opinion(opinion.SYSTEM, CONTEXT, opinion.SecondOpinion, DESK)["explanation"] == "A sizing mistake."
     assert json.loads(fake.calls[0]["payload"])["lessons"] == []
 
 
@@ -106,7 +108,7 @@ def test_status_route_is_people_only(hosted, monkeypatch):
     from backend.app.main import app
 
     hosted(FakeRuntime({"opinion": OPINION, "model": "us.openai.gpt-5.6-luna"}))
-    agentcore.second_opinion(opinion.SYSTEM, CONTEXT, opinion.SecondOpinion, "Calder Family Trust")
+    agentcore.second_opinion(opinion.SYSTEM, CONTEXT, opinion.SecondOpinion, DESK)
     monkeypatch.delenv("APP_ACCESS_PASSWORD", raising=False)
     with TestClient(app, base_url="http://localhost") as http:
         body = http.get("/api/agentcore").json()
@@ -117,12 +119,12 @@ def test_status_route_is_people_only(hosted, monkeypatch):
 
 def test_opinion_prefers_runtime_then_local_bedrock(hosted, monkeypatch):
     monkeypatch.setattr(opinion, "context_for", lambda desk, entry: CONTEXT)
-    monkeypatch.setattr(opinion.store, "fund_label", lambda desk: "Calder Family Trust")
+    monkeypatch.setattr(store, "fund_label", lambda desk: "Calder Family Trust")
     monkeypatch.setattr(base, "run_structured", lambda *a: opinion.SecondOpinion(**{**OPINION, "explanation": "local"}))
 
     hosted(FakeRuntime({"opinion": OPINION, "model": "us.openai.gpt-5.6-luna"}))
-    assert opinion.second_opinion(None, {})["source"].startswith("agentcore:")
+    assert opinion.second_opinion(DESK, {})["source"].startswith("agentcore:")
 
     hosted(FakeRuntime(error=ClientError({"Error": {"Code": "AccessDeniedException", "Message": "no"}}, "InvokeAgentRuntime")))
-    local = opinion.second_opinion(None, {})
+    local = opinion.second_opinion(DESK, {})
     assert local["explanation"] == "local" and local["source"].startswith("bedrock:")
