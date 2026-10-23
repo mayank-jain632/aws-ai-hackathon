@@ -1,21 +1,31 @@
 # Sushruth · Lane 4b: firm-wide exposure roll-up
 
-Updated 14:05 by Claude Code. Earlier stamps in this file said 14:25 to 14:55; those were
-estimates, not clock readings, and were wrong. This one is checked.
+Updated 14:30 by Claude Code
 
 **Where this lives: branch `sushruth/firm-exposure`, not `main`.**
 It was briefly on main at `4599ad5` and `2bb325f`, reverted at Sushruth's instruction in
-`5b42f19`. The branch is now re-applied on top of current `main` (through Aaron's
-`70f8c7c`), so it is current with the walk-forward harness, synthesis layer, scores view
-and AgentCore work. Re-landing it means reverting the revert, not a rebase: the original
-commits are ancestors of `main`, so `git rebase main` silently drops the whole feature.
-Not merged, and not in the hosted image, so by D31 it is not in the demo unless the team
-merges it before the 2:50 push deadline.
+`5b42f19`. The branch is rebased onto `main` at `a694705`, so it is current with the
+walk-forward harness, synthesis layer, scores view and AgentCore work. Re-landing it means
+reverting the revert, not a rebase: the original commits are ancestors of `main`, so
+`git rebase main` silently drops the whole feature. Held, not queued to merge, so under
+D31 it is not in the demo. `main`'s copy of this file is only a pointer here; the detail
+lives in this copy and `docs/firm-exposure.md`.
 
-**Checked against current main at 14:05**
-- 16 firm tests pass; 386 passed and 1 skipped for the whole suite with this branch, versus
-  370 on main alone. `npm run check:python` clean. The 4 `test_delegation_capacity.py`
-  errors are pre-existing and Windows-only (`os.killpg`), confirmed on a clean tree.
+**Checked at 14:30 on the branch, rebased onto `a694705`**
+- 16 firm tests pass on their own. Whole suite on the branch: 399 passed, 1 failed, 1
+  skipped, 4 errors. On `main` alone at the same commit: 383 passed, 1 failed, 1 skipped,
+  4 errors. So the branch adds 16 passing tests and no new failure.
+- The 1 failure is `test_scores.py::test_frozen_walk_forward_gets_its_own_panel_...`, which
+  fails the same way on `main` without this branch. It asserts
+  `endswith("results_test/attribution.csv")` against a path that comes back with Windows
+  separators, so it is a path-separator assumption rather than a logic break and should
+  pass on Linux or macOS. Aaron's file, left alone; another agent may be in it.
+- The 4 `test_delegation_capacity.py` errors are pre-existing and Windows-only
+  (`os.killpg`), confirmed on a clean tree.
+- `npm run check:python` clean. `npm run lint` and `npm run build` cannot run on this
+  machine: `frontend/node_modules` is not installed. This change touches no frontend file,
+  and I did not run `npm install` because regenerating lockfiles is not mine to do (D9).
+- Re-checked after rebasing onto `a694705`: 16 firm tests still pass, ruff still clean, and none of the commits since `da3efee` touch `funds.py`, `desk.py`, `paper.py`, `sharing.py` or `main.py`.
 - Nothing it reads has changed: `Mandate.capital`/`max_position`/`max_sector`, the
   `desk.json` keys, and the test record's `verdict`/`policy_hash` are all intact.
 - No duplication. Nobody else aggregates across funds; I checked `scores/`, `synthesis/`
@@ -44,9 +54,6 @@ merges it before the 2:50 push deadline.
   Archived funds leave firm capital, paused funds stay in it.
 - No firm-level threshold is invented. Every limit used is either the shared account's
   balance or a limit a person already set in a mandate.
-- Checks: 16 new tests pass, 141 passed overall, `npm run check:python` clean. The 4 errors
-  in `test_delegation_capacity.py` are pre-existing and Windows-only (`os.killpg`); I
-  confirmed them on a clean tree before my change.
 
 **Verified, and the limits of that**
 - Ran the roll-up in process against the real local `.local/funds.json`: it read the real
@@ -60,14 +67,17 @@ merges it before the 2:50 push deadline.
   and three real sector breaches.
 
 **Two gaps this surfaced, not mine to fix**
-- `max_sector` is enforced nowhere. `Desk.register` validates `max_position` only, so an
-  approved book can hold 60% of one sector under a 40% mandate, and `paper.py:133` refuses
-  any mandate that sets a sector limit instead of enforcing it. Since the default mandate
-  sets 40, **a fund created with defaults cannot trade at all.** `firm.SECTORS` and
-  `firm.sector_of` are the classification that check needs.
+- `max_sector` is enforced nowhere, and two lanes now refuse to trade rather than check it:
+  `paper.py:135` and Chaithu's `synthesis/orders.py:52` ("sector limit has no enforcement
+  engine yet"). `Desk.register` validates `max_position` only, so an approved book can hold
+  60% of one sector under a 40% mandate. Since the default mandate sets 40, **a fund created
+  with defaults cannot trade at all.** `firm.SECTORS` and `firm.sector_of` are the only
+  sector classification in the repo and are what both call sites need.
 - Chaithu / Mayank (order placers and engines): if several funds hold approved books, the
-  first one to execute consumes capital the others were already approved to use. The
-  capacity findings name this; the fix belongs in the order path.
+  first one to execute consumes capital the others were already approved to use. This is
+  sharper for `execute_order_plan`, which submits a whole plan through `paper.submit` in
+  sequence and inherits only per-fund checks. The capacity findings name it; the fix
+  belongs in the order path.
 
 **Blocked, or need from someone**
 - Aaron (lane 4): I reused your risk bands and read desks read-only. I did not touch
