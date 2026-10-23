@@ -176,3 +176,8 @@ When the team answers one, delete it here and log the answer below as a decision
 **Instruction:** After the missing Guardrail and AgentCore Memory were reported, Kushagra explicitly authorized provisioning them on the team's behalf ("we shud do that... for them"), relayed by the coordinator.
 **Implementation:** Hosting owner creates only the two missing resources in hosting account 709515537151 after checking for existing names, with Project=AWS-Hackathon and Owner=Kushagra. Private inventory records exact IDs/ARNs and created ownership. `scripts/hosting_watchdog.py --cleanup` previews removal, `--cleanup --apply` removes only resources this script created. Existing watchdog names/configuration are reused; no new runtime, alarm, log group or EventBridge rule is created. Deployment forwards exact IDs and scopes hosted IAM to those ARNs, the existing metrics namespace and existing default event bus. Real deployed checks are recorded separately from local tests.
 **Affects:** Lane 5 deployment and cleanup, existing watchdog hooks. This records direct human authorization, not formal team acceptance; Aaron's separate-account resources are untouched.
+
+### D31 · Accepted · 13:58 · Aaron, relaying the new team cutoff
+**Decision:** Code cutoff is 3:15 PM. Anything not merged to `main` and in the hosted image by then is not in the demo. Ship final feature pushes by about 2:50 so the deployment owner can redeploy the latest `main` and verify it before 3:15; after 2:50, push only fixes for something broken.
+**Why:** The schedule moved; a redeploy plus a smoke check needs about 20 minutes.
+**Affects:** every lane, and Lane 5's final redeploy timing.
