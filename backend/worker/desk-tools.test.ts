@@ -26,3 +26,19 @@ test('order tool preserves stable ID and surfaces backend denial', async () => {
     await expect(tool.invoke({ strategy_id: 'id', symbol: 'AAPL', side: 'buy', notional: 10, client_order_id: 'stable-order-001' })).rejects.toThrow('Emergency stop');
   } finally { globalThis.fetch = original; }
 });
+
+test('paper status lookup uses GET and only the stable recorded order ID', async () => {
+  const tool = createDeskTools().find(t => t.name === 'alpaca_paper_order')!;
+  const original = globalThis.fetch;
+  globalThis.fetch = (async (url, options) => {
+    expect(String(url)).toBe('http://127.0.0.1:8000/api/internal/desk/orders/stable-order-001');
+    expect(options?.method).toBe('GET');
+    expect(options?.body).toBeUndefined();
+    return Response.json({ status: 'filled', client_order_id: 'stable-order-001' });
+  }) as typeof fetch;
+  try {
+    const result = await tool.invoke({ client_order_id: 'stable-order-001' });
+    expect(JSON.parse(String(result)).status).toBe('filled');
+    await expect(tool.invoke({ client_order_id: '../another-fund/order' })).rejects.toThrow();
+  } finally { globalThis.fetch = original; }
+});

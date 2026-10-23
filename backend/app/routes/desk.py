@@ -13,7 +13,7 @@ from backend.app.desk import (
     desk_for,
     digest,
 )
-from backend.app.paper import account_snapshot, submit
+from backend.app.paper import account_snapshot, order_status, submit
 from backend.app.roles import PROFILES, require_tool, role_of
 
 router = APIRouter(tags=["agent roles and desk"])
@@ -149,6 +149,19 @@ def paper_account(request: Request) -> dict:
         raise HTTPException(422, str(error)) from error
     except httpx.HTTPError as error:
         raise HTTPException(502, "Alpaca paper account request failed") from error
+
+
+@router.get("/api/internal/desk/orders/{client_order_id}")
+def paper_order_status(client_order_id: str, request: Request) -> dict:
+    _, desk = worker(request, "alpaca_paper_order")
+    try:
+        return order_status(desk, client_order_id)
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+    except httpx.HTTPError as error:
+        raise HTTPException(
+            502, "Alpaca paper order status request failed; do not resubmit"
+        ) from error
 
 
 @router.post("/api/internal/desk/order")

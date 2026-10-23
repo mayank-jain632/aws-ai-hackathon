@@ -85,18 +85,19 @@ PROFILES = {
             "get_market_data",
             "inspect_desk",
             "alpaca_paper_account",
+            "alpaca_paper_order",
             "submit_paper_order",
             "watchdog_lessons",
         ]
         + DELEGATE,
         "children": ROLES,
-        "instructions": "Execute only backend-approved strategies in the Alpaca paper sandbox. Inspect the desk and account first; use current web context to identify reasons to defer, never to replace the frozen strategy or PASS. Submit bounded orders with a stable unique client_order_id and check returned broker status. Submitted is not filled. Backend checks trading permission, review, gate, approval, position/order limits and stop before every order. Never retry an uncertain submission with a new ID. Read watchdog_lessons before your first order each run; a watchdog block is final, so change the order instead of resubmitting it.",
+        "instructions": "Execute only backend-approved strategies in the Alpaca paper sandbox. Inspect the desk and account first; use current web context to identify reasons to defer, never to replace the frozen strategy or PASS. Submit bounded orders with a stable unique client_order_id and check returned broker status. Submitted is not filled. Backend checks trading permission, review, gate, approval, position/order limits and stop before every order. After a submission, use alpaca_paper_order with its stable client_order_id to reconcile the actual broker status and fill. Lookup remains available while stopped. Never retry an uncertain submission with a new ID. Read watchdog_lessons before your first order each run; a watchdog block is final, so change the order instead of resubmitting it.",
     },
     "moderator": {
-        "tools": ["inspect_desk", "alpaca_paper_account", "emergency_stop", "watchdog_lessons", "watchdog_audit"]
+        "tools": ["inspect_desk", "alpaca_paper_account", "alpaca_paper_order", "emergency_stop", "watchdog_lessons", "watchdog_audit"]
         + DELEGATE,
         "children": ROLES,
-        "instructions": "Inspect recorded gates, orders and current paper account. Check mandate violations and failures; call emergency_stop if unsafe. You can engage the stop but only a person can clear it. Report broker positions separately from submitted orders; do not claim fills that are not reported. You cannot trade or change strategy.",
+        "instructions": "Inspect recorded gates, orders and current paper account. Check mandate violations and failures; call emergency_stop if unsafe. You can engage the stop but only a person can clear it. Report broker positions separately from submitted orders; use alpaca_paper_order to reconcile recorded orders and do not claim fills that are not reported. You cannot trade or change strategy.",
     },
 }
 

@@ -1,8 +1,10 @@
 """Alpaca paper-only adapter. Brokerage credentials never enter model tool arguments."""
 
 import json
+import math
 import os
 import threading
+from urllib.parse import quote, urlencode
 
 import httpx
 from dotenv import dotenv_values
@@ -170,3 +172,67 @@ def submit(desk, body):
         )
         desk.event("paper_order_response", record.copy())
         return record
+
+
+def order_status(desk, client_order_id):
+    """Reconcile a recorded fund order using GET only, even while stopped."""
+    with BROKER_LOCK, desk.lock:
+        record = desk.state["orders"].get(client_order_id)
+        if record is None:
+            raise ValueError("Unknown paper order in this fund")
+        if record.get("broker_id"):
+            path = "/v2/orders/" + quote(str(record["broker_id"]), safe="")
+        else:
+            # An uncertain POST may have succeeded. Look up the stable ID;
+            # never submit again or generate another ID to resolve uncertainty.
+            path = "/v2/orders:by_client_order_id?" + urlencode(
+                {"client_order_id": client_order_id}
+            )
+        result = broker("GET", path)
+        try:
+            if not isinstance(result, dict):
+                raise TypeError("Broker order response is not an order object")
+            matches = (
+                result.get("client_order_id") == client_order_id
+                and result.get("symbol") == record["symbol"]
+                and result.get("side") == record["side"]
+                and bool(result.get("id"))
+                and (not record.get("broker_id") or result["id"] == record["broker_id"])
+                and math.isclose(
+                    float(result["notional"]), record["notional"], abs_tol=0.005
+                )
+            )
+            status = result.get("status")
+            quantity = float(result.get("filled_qty") or 0)
+            price = float(result.get("filled_avg_price") or 0)
+            valid = (
+                isinstance(status, str)
+                and 0 < len(status) <= 64
+                and status.isascii()
+                and status.replace("_", "").isalnum()
+                and math.isfinite(quantity)
+                and quantity >= 0
+                and math.isfinite(price)
+                and price >= 0
+                and (status != "filled" or (quantity > 0 and price > 0))
+            )
+        except (KeyError, TypeError, ValueError):
+            matches, valid = False, False
+        if not matches or not valid:
+            raise ValueError(
+                "Broker order response does not match the recorded order or fill"
+            )
+        previous_status = record["status"]
+        record.update(
+            status=status,
+            broker_id=result["id"],
+            filled_qty=result.get("filled_qty"),
+            filled_avg_price=result.get("filled_avg_price"),
+            filled_at=result.get("filled_at"),
+            broker_updated_at=result.get("updated_at"),
+            last_checked_at=stamp(),
+        )
+        if "reason" in record:
+            record["previous_uncertainty"] = record.pop("reason")
+        desk.event("paper_order_status", {"previous_status": previous_status, **record})
+        return record.copy()
