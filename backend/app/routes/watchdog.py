@@ -60,7 +60,7 @@ class HaltInput(StrictModel):
 def set_halt(body: HaltInput, request: Request) -> dict:
     """Firm-wide stop across every fund. Workers cannot reach this route."""
     human(request)
-    who = getattr(request.state, "user", "local person")
+    who = getattr(request.state, "user", "") or "analyst (local session)"
     if body.halted:
         return SWITCH.trip(body.reason, who)
     return SWITCH.reset(body.reason, who)

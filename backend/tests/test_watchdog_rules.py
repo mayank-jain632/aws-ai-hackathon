@@ -239,3 +239,9 @@ def test_oversized_order_for_conservative_client_reads_clearly():
     assert verdict.decision == "block"
     assert {"order_size", "position_size", "turnover"} <= set(verdict.blocked_by)
     assert "conservative mandate caps any one position at 10.0%" in verdict.reason
+
+
+def test_most_serious_block_leads_the_reason():
+    verdict = review(o=order(symbol="NVDA", notional=40_000), m=mandate(risk="conservative", max_position=0.10))
+    assert verdict.blocked_by[0] == "position_size"
+    assert verdict.reason.endswith("It also breaks the order size and turnover limits.")

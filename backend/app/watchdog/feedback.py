@@ -37,7 +37,14 @@ ADVICE = {
     "wash_trade": "Do not buy and sell the same ticker on the same day.",
     "turnover": "Spread rebalancing across days. Daily turnover is capped by risk band.",
     "daily_orders": "The mandate caps orders per day. Batch trades instead of sending many small ones.",
+    "desk_check": "The desk's own gates refused the order (policy, review, approval, strategy target or cash). Fix the named cause before resubmitting.",
 }
+
+
+def describe(e: dict) -> str:
+    if not e.get("symbol"):
+        return "an order"
+    return f"{e['side']} {money(e['notional'])} {e['symbol']}"
 
 
 def log_path(desk):
@@ -135,7 +142,7 @@ def distill(desk) -> str:
         lines += ["## Recent blocks, newest first", ""]
         for e in reversed(blocks[-5:]):
             who = f" by {e['agent_id']}" if e.get("agent_id") else ""
-            line = f"- {e['time'][11:16]} UTC, {e['side']} {money(e['notional'])} {e['symbol']}{who}: {e['reason']}"
+            line = f"- {e['time'][11:16]} UTC, {describe(e)}{who}: {e['reason']}"
             if e["id"] in opinions:
                 line += f" Reviewer note: {opinions[e['id']]['explanation']}"
             lines.append(line)

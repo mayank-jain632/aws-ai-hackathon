@@ -47,6 +47,25 @@ DUPLICATE_WINDOW_SECONDS = 300
 NEAR_MISS = 0.9
 DEAD_STATUSES = {"rejected", "canceled", "cancelled", "expired", "blocked"}
 QTY_PRICE_TOLERANCE = 0.05
+# When several rules block, the most serious one leads the reason an analyst reads.
+PRIORITY = [
+    "emergency_stop",
+    "trading_permission",
+    "universe",
+    "known_ticker",
+    "backtest_pass",
+    "quantity_sanity",
+    "position_size",
+    "drawdown",
+    "concentration",
+    "order_size",
+    "price_band",
+    "duplicate",
+    "wash_trade",
+    "rapid_fire",
+    "turnover",
+    "daily_orders",
+]
 
 
 def known_symbols() -> set[str]:
@@ -399,10 +418,14 @@ def review_order(
         rule_turnover(order, mandate, portfolio, now),
         rule_daily_orders(mandate, portfolio, now),
     ]
-    blocked = [r for r in results if r.severity == "block"]
+    blocked = sorted((r for r in results if r.severity == "block"), key=lambda r: PRIORITY.index(r.rule))
     near = [r for r in results if r.severity == "near_miss"]
     if blocked:
-        reason = " ".join(r.message for r in blocked)
+        reason = blocked[0].message
+        if len(blocked) > 1:
+            others = [r.rule.replace("_", " ") for r in blocked[1:]]
+            listed = others[0] if len(others) == 1 else ", ".join(others[:-1]) + " and " + others[-1]
+            reason += f" It also breaks the {listed} limit{'s' if len(others) > 1 else ''}."
     else:
         reason = f"Approved: all {len(results)} checks passed."
         if near:

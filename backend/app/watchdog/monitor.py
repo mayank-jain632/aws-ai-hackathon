@@ -166,6 +166,32 @@ def record_outcomes(desk, state: dict) -> None:
             seen[o["client_order_id"]] = status
 
 
+def ingest_desk_blocks(desk, seen: set[str]) -> None:
+    """Orders the desk's own gates refused never reach review_order; log them for lessons too."""
+    fund = gate.fund_mandate(desk) or {}
+    for e in desk.state["events"]:
+        result = e.get("result") if isinstance(e.get("result"), dict) else {}
+        reason = result.get("reason", "")
+        if e["check"] != "paper_order_blocked" or reason.startswith("Watchdog blocked"):
+            continue
+        key = f"deskblock:{e['time']}:{result.get('agent')}"
+        if key in seen:
+            continue
+        seen.add(key)
+        feedback.append(
+            desk,
+            {
+                "kind": "block",
+                "client": fund.get("name", "Team 4 board"),
+                "risk": fund.get("risk", "balanced"),
+                "rules": ["desk_check"],
+                "reason": reason,
+                "agent_id": result.get("agent"),
+                "strategy_id": result.get("strategy_id"),
+            },
+        )
+
+
 def emit(desk, event: ModeratorEvent) -> None:
     record = event.model_dump()
     store.append_jsonl(store.private_dir(desk) / feedback.EVENTS, record)
@@ -193,6 +219,7 @@ def audit(desk, snapshot: dict | None = None, now: datetime | None = None, opini
             new.append(event)
             if event.kind in {"runaway", "retry_loop"} and event.severity == "critical":
                 SWITCH.trip(event.message, "watchdog")
+        ingest_desk_blocks(desk, seen)
         record_outcomes(desk, state)
         state["seen"] = sorted(seen)[-2000:]
         state["last_audit"] = now.isoformat()

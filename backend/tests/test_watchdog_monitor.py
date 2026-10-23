@@ -248,3 +248,27 @@ def test_sweep_covers_board_and_funds(desk, tmp_path):
     counts = monitor.sweep(app)
     assert len(counts) == 2
     assert counts[str(other.path.parent)] == 1
+
+
+def test_desk_gate_blocks_reach_the_lessons(desk):
+    desk.state["events"].append(
+        {
+            "time": NOW.isoformat(),
+            "check": "paper_order_blocked",
+            "result": {"agent": "executor-2", "strategy_id": "s9", "reason": "An approving adversarial review is required"},
+        }
+    )
+    desk.state["events"].append(
+        {
+            "time": NOW.isoformat(),
+            "check": "paper_order_blocked",
+            "result": {"agent": "executor-2", "strategy_id": "s9", "reason": "Watchdog blocked this order: x"},
+        }
+    )
+    monitor.audit(desk, now=NOW)
+    monitor.audit(desk, now=NOW)
+    desk_blocks = [e for e in feedback.entries(desk) if e.get("rules") == ["desk_check"]]
+    assert len(desk_blocks) == 1
+    lessons = feedback.lessons(desk)
+    assert "`desk_check`, blocked 1 time" in lessons
+    assert "an order by executor-2: An approving adversarial review is required" in lessons

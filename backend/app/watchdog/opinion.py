@@ -63,20 +63,26 @@ def context_for(desk, entry: dict) -> dict:
 def rule_based(context: dict) -> dict:
     blocks = [o for o in context["recent_orders_from_same_agent_and_strategy"] if o["kind"] == "block"]
     repeated = len(blocks) >= 3
-    pattern = bool(PATTERN_RULES & set(context["rules"]))
+    patterns = sorted(PATTERN_RULES & set(context["rules"]))
     order = context["order"]
-    first = context["rules"][0] if context["rules"] else ""
+    rules = [r.replace("_", " ") for r in context["rules"]]
+    verb = "stopped" if context["verdict"] == "block" else "flagged"
     explanation = (
-        f"The watchdog {'stopped' if context['verdict'] == 'block' else 'flagged'} a {order['side']} of "
-        f"{money(order['notional'])} {order['symbol']} for {context['client']}. {context['watchdog_reason']}"
+        f"The watchdog {verb} a {order['side']} of {money(order['notional'])} {order['symbol']} "
+        f"for {context['client']} on the {rules[0]} limit"
+        + (f" and {len(rules) - 1} other{'s' if len(rules) > 2 else ''}." if len(rules) > 1 else ".")
     )
     if repeated:
-        explanation += f" The same agent has been blocked {len(blocks)} times on this strategy, which looks like it is retrying instead of adjusting."
+        explanation += f" The same agent has been blocked {len(blocks)} times on this strategy and keeps retrying instead of adjusting, which is a pattern, not a slip."
+    elif patterns:
+        explanation += f" The {', '.join(p.replace('_', ' ') for p in patterns)} pattern is how limits get gamed, so treat it as deliberate until the agent explains it."
+    else:
+        explanation += " This looks like an honest sizing mistake: no repeats and no pattern of gaming the limits."
     return {
-        "foul_play": repeated or pattern,
-        "concern": "high" if repeated or pattern else ("medium" if context["verdict"] == "block" else "low"),
+        "foul_play": repeated or bool(patterns),
+        "concern": "high" if repeated or patterns else ("medium" if context["verdict"] == "block" else "low"),
         "explanation": explanation,
-        "suggested_fix": feedback.ADVICE.get(first, "Keep orders inside the client's mandate."),
+        "suggested_fix": feedback.ADVICE.get(context["rules"][0] if context["rules"] else "", "Keep orders inside the client's mandate."),
     }
 
 
@@ -95,7 +101,9 @@ def review_flagged(desk, limit: int = 3) -> list[dict]:
     """Second opinions for the newest flagged entries that do not have one yet."""
     log = feedback.entries(desk)
     reviewed = {e["about"] for e in log if e["kind"] == "opinion"}
-    pending = [e for e in log if e["kind"] in {"block", "near_miss"} and e["id"] not in reviewed]
+    pending = [
+        e for e in log if e["kind"] in {"block", "near_miss"} and e.get("symbol") and e["id"] not in reviewed
+    ]
     done = [feedback.record_opinion(desk, e["id"], second_opinion(desk, e)) for e in pending[-limit:]]
     if done:
         feedback.refresh_lessons(desk)

@@ -95,6 +95,7 @@ def submit(desk, body):
             raise ValueError(
                 "Wait for existing paper orders to resolve before submitting another"
             )
+        watchdog_gate.enforce(desk, body, policy, snapshot)
         equity, cash = float(account["equity"]), float(account["cash"])
         context = json.loads(getattr(desk.manager, "context", "") or "{}")
         fund = context.get("mandate")
@@ -133,7 +134,6 @@ def submit(desk, body):
                 raise ValueError(
                     "Sector-limit enforcement is not connected to the order adapter yet"
                 )
-        watchdog_gate.enforce(desk, body, policy, snapshot)
         # Recheck immediately before the broker call, then persist intent before I/O.
         desk.execution_checks(body.strategy_id)
         record = {
