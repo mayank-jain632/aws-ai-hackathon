@@ -23,7 +23,7 @@ Updated 2026-10-23 by Codex
 
 **In flight**
 - Hosted end-to-end redeployment requested in this chat: syncing current role/fund code, verifying login/fund flows and native providers, and fixing Bedrock non-stream text normalization, live mandate cutoff context, and deployment secret forwarding. Cross-lane runtime edits are restricted to these observed deployment defects. Provider secrets remain outside Git.
-- Direct visual refinement requested by Kushagra: match the supplied Militia Capital screenshot with ivory, burgundy, serif typography, statement-style performance/metric tables, and restrained Built on AWS branding. Files: frontend/src/funds/* and small AgentWorkspace styles only. Preserve real data, fund isolation, current login/collaboration, and existing canvas. No fabricated chart or returns.
+- Fund visual refinement finished: ivory, burgundy, serif headings, financial metric definitions, honest empty performance/monthly-return tables, and Built on AWS branding. Existing fund setup and canvas flows preserved. Frontend build/lint, Python lint and 28 backend tests pass. Browser checked at desktop size. Pending deployment with the coordinated final image; no new AWS resources or provider claims.
 
 **Blocked, or need from someone**
 - Role workflow still needs a configured human desk policy/test thresholds and Alpaca paper credentials, plus hosted rollout/provider verification. Current evaluator is the existing fully invested monthly target-weight backtest, not generated-code strategies, Alpaca historical execution, walk-forward significance or complete in/out-of-sample evaluation. Model-memory and research provenance remain limitations. No new risk-band thresholds or experiment defaults were invented.
