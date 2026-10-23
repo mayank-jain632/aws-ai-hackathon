@@ -15,8 +15,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from backend.app import agentcore
 from backend.app.agents import base
-from backend.app.watchdog import feedback
+from backend.app.watchdog import feedback, store
 from backend.app.watchdog.rules import money
 
 PATTERN_RULES = {"duplicate", "wash_trade", "rapid_fire"}
@@ -90,6 +91,8 @@ def second_opinion(desk, entry: dict) -> dict:
     context = context_for(desk, entry)
     if base.mock_mode():
         return {**rule_based(context), "source": "rule-based (mock mode, no model call)"}
+    if hosted := agentcore.second_opinion(SYSTEM, context, SecondOpinion, store.fund_label(desk)):  # D28, local path below is the fallback
+        return hosted
     try:
         result = base.run_structured(SYSTEM, json.dumps(context, indent=2), SecondOpinion)
     except Exception as error:  # noqa: BLE001 a failed review must not break monitoring
