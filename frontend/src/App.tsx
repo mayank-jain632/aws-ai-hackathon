@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Canvas } from './board/Canvas'
-import type { Agent } from './types'
+import type { Agent, BoardPositions, Position } from './types'
 import './App.css'
 
 type Tab = 'chat' | 'activity' | 'files'
@@ -9,12 +9,17 @@ async function request(path: string, options?: RequestInit) {
   const response = await fetch(path, options)
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
-    throw new Error(typeof body.detail === 'string' ? body.detail : 'Could not reach the local backend.')
+    throw new Error(typeof body.detail === 'string' ? body.detail : 'Could not reach the backend.')
   }
   return response.json()
 }
 
 export default function App() {
+  const [positions, setPositions] = useState<BoardPositions>({})
+  const [viewers, setViewers] = useState(0)
+  const [identity, setIdentity] = useState({ email: 'local', hosted: false })
+  const lastLayoutWrite = useRef(0)
+  const writes = useRef<Promise<unknown>>(Promise.resolve())
   const [agents, setAgents] = useState<Agent[]>([])
   const [selectedId, setSelectedId] = useState('dexter')
   const agent = agents.find(item => item.id === selectedId) || null
@@ -31,9 +36,10 @@ export default function App() {
   const running = agent?.status === 'running'
 
   useEffect(() => {
+    void request('/api/me').then(setIdentity).catch(() => {})
     const stream = new EventSource('/api/events')
-    stream.onmessage = event => { setAgents(JSON.parse(event.data).agents); setConnected(true) }
-    stream.onerror = () => setConnected(false)
+    stream.onmessage = event => { const board = JSON.parse(event.data); setAgents(board.agents); setPositions(board.positions || {}); setViewers(board.viewers || 1); setConnected(true) }
+    stream.onerror = () => { setConnected(false); void fetch('/api/me').then(response => { if (response.status === 401) window.location.assign('/login') }).catch(() => {}) }
     return () => stream.close()
   }, [])
 
@@ -65,16 +71,27 @@ export default function App() {
     } catch (e) { if (current === fileRequest.current) setError(e instanceof Error ? e.message : 'Could not open the file.') }
   }
 
+  function writeLayout(body: object) {
+    writes.current = writes.current.catch(() => {}).then(() => request('/api/board/layout', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })).catch(() => setError('Could not sync the canvas. Check your connection.'))
+  }
+
+  function moveAgent(id: string, position: Position, final: boolean) {
+    setPositions(previous => ({ ...previous, [id]: position }))
+    if (!final && Date.now() - lastLayoutWrite.current < 100) return
+    lastLayoutWrite.current = Date.now()
+    writeLayout({ agent_id: id, position })
+  }
+
   const lastError = agent?.status === 'error' ? [...agent.activity].reverse().find(item => item.kind === 'error') : null
 
   return (
     <main className="app">
       <header className="topbar">
         <div className="brand"><span className="brand-mark">⌘</span><div><strong>Agent canvas</strong><span>AWS hackathon</span></div></div>
-        <div className="connection"><i className={connected ? 'online' : ''} />{connected ? 'Local sandbox' : 'Reconnecting…'}</div>
+        <div className="connection"><i className={connected ? 'online' : ''} />{connected ? `Shared board · ${viewers} online` : 'Reconnecting…'}{identity.hosted ? <><span style={{ marginLeft: 12 }}>{identity.email.split('@')[0]}</span><a href="/logout" style={{ marginLeft: 12, color: 'inherit' }}>Sign out</a></> : null}</div>
       </header>
       <div className="workspace">
-        <Canvas agents={agents} connected={connected} selectedId={selected ? selectedId : null} onSelect={id => {
+        <Canvas positions={positions} onPosition={moveAgent} onReset={() => { setPositions({}); writeLayout({ reset: true }) }} agents={agents} connected={connected} selectedId={selected ? selectedId : null} onSelect={id => {
           setSelectedId(id); setSelected(true); setFile(null); fileRequest.current++; setError(''); setTab('chat')
         }} onDeselect={() => setSelected(false)} />
         {selected ? (

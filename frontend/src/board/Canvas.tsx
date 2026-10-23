@@ -1,7 +1,7 @@
 // Adapted from takehome-kushagra-bharti's SVG camera, pointer-captured gestures,
 // selection, and screen-space toolbar. Agent execution is separate from layout.
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
-import type { Agent } from '../types'
+import type { Agent, BoardPositions } from '../types'
 import { layoutTree } from './tree'
 
 type Camera = { x: number; y: number; zoom: number }
@@ -9,7 +9,8 @@ type Position = { x: number; y: number }
 type Gesture = { id: string | null; x: number; y: number; camera: Camera; position: Position }
 const statusLabel = { idle: 'Ready', running: 'Working', stopped: 'Stopped', error: 'Needs attention' }
 
-export function Canvas({ agents, connected, selectedId, onSelect, onDeselect }: {
+export function Canvas({ agents, connected, selectedId, onSelect, onDeselect, positions, onPosition, onReset }: {
+  positions: BoardPositions; onPosition: (id: string, position: Position, final: boolean) => void; onReset: () => void
   agents: Agent[]; connected: boolean; selectedId: string | null; onSelect: (id: string) => void; onDeselect: () => void
 }) {
   const [view, setCamera] = useState<Camera | null>(null)
@@ -25,19 +26,11 @@ export function Canvas({ agents, connected, selectedId, onSelect, onDeselect }: 
     return () => observer.disconnect()
   }, [])
   const tree = layoutTree(agents, collapsed)
-  const [positions, setPositions] = useState<Record<string, Position>>(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('agent-canvas.tree-positions.v1') || '{}') as Record<string, Position>
-      return Object.fromEntries(Object.entries(saved).filter(([, position]) => {
-        const p = position as Position
-        return p && Number.isFinite(p.x) && Number.isFinite(p.y)
-      }))
-    } catch { return {} }
-  })
+  const [dragging, setDragging] = useState<{ id: string; position: Position } | null>(null)
   const [tool, setTool] = useState<'select' | 'hand'>('select')
   const gesture = useRef<Gesture | null>(null)
-  const positionRef = useRef(positions)
-  const positionFor = (id: string) => positions[id] || tree.positions[id] || { x: 0, y: 0 }
+  const positionRef = useRef<Position>({ x: 0, y: 0 })
+  const positionFor = (id: string) => (dragging?.id === id ? dragging.position : positions[id]) || tree.positions[id] || { x: 0, y: 0 }
   const locations = tree.visible.map(agent => positionFor(agent.id))
   const minX = Math.min(...locations.map(p => p.x), 0)
   const maxX = Math.max(...locations.map(p => p.x + 300), 300)
@@ -62,7 +55,7 @@ export function Canvas({ agents, connected, selectedId, onSelect, onDeselect }: 
     const node = (event.target as Element).closest('[data-agent]')
     const id = node?.getAttribute('data-agent') || null
     const moving = Boolean(id) && tool === 'select' && event.button === 0
-    if (moving && id) onSelect(id)
+    if (moving && id) { onSelect(id); positionRef.current = positionFor(id) }
     else if (tool === 'select' && event.button === 0) onDeselect()
     gesture.current = { id: moving ? id : null, x: event.clientX, y: event.clientY, camera, position: id ? positionFor(id) : { x: 0, y: 0 } }
     setCamera(camera)
@@ -75,17 +68,19 @@ export function Canvas({ agents, connected, selectedId, onSelect, onDeselect }: 
     const dx = (event.clientX - start.x) / start.camera.zoom
     const dy = (event.clientY - start.y) / start.camera.zoom
     if (start.id) {
-      const next = { ...positions, [start.id]: { x: start.position.x + dx, y: start.position.y + dy } }
-      positionRef.current = next
-      setPositions(next)
+      const position = { x: start.position.x + dx, y: start.position.y + dy }
+      positionRef.current = position
+      setDragging({ id: start.id, position })
+      onPosition(start.id, position, false)
     } else setCamera({ ...start.camera, x: start.camera.x - dx, y: start.camera.y - dy })
   }
 
   function pointerUp() {
     if (gesture.current?.id) {
-      try { localStorage.setItem('agent-canvas.tree-positions.v1', JSON.stringify(positionRef.current)) } catch { /* Layout remains usable without browser storage. */ }
+      onPosition(gesture.current.id, positionRef.current, true)
     }
     gesture.current = null
+    setDragging(null)
   }
 
   function zoomBy(factor: number) {
@@ -93,9 +88,8 @@ export function Canvas({ agents, connected, selectedId, onSelect, onDeselect }: 
   }
 
   function fit() {
-    setPositions({})
+    onReset()
     setCamera(null)
-    try { localStorage.removeItem('agent-canvas.tree-positions.v1') } catch { /* Layout still resets in memory. */ }
   }
 
   return (

@@ -27,6 +27,20 @@ def environment():
     env.update(
         {k: v for k, v in dotenv_values(ROOT / ".env.local").items() if v is not None}
     )
+    # Hosted workers use the instance role. Local workers use the workshop profile.
+    if env.get("AWS_CREDENTIAL_MODE") == "role":
+        for key in (
+            "AWS_PROFILE",
+            "AWS_DEFAULT_PROFILE",
+            "AWS_SHARED_CREDENTIALS_FILE",
+            "AWS_CONFIG_FILE",
+            "AWS_ACCESS_KEY_ID",
+            "AWS_SECRET_ACCESS_KEY",
+            "AWS_SESSION_TOKEN",
+        ):
+            env.pop(key, None)
+        env["LANGSMITH_TRACING"] = "false"
+        return env
     # Only the dedicated workshop files, not personal AWS profiles.
     env.update(
         AWS_SHARED_CREDENTIALS_FILE=os.getenv(
@@ -306,6 +320,12 @@ class AgentManager:
         self.subscribers = set()
         self.lock = asyncio.Lock()
         self.registry = ROOT / ".local/agents.json"
+        self.layout_file = ROOT / ".local/layout.json"
+        self.layout = (
+            json.loads(self.layout_file.read_text())
+            if self.layout_file.exists()
+            else {}
+        )
         self.agents = {"dexter": LocalAgent(self)}
         if self.registry.exists():
             for item in json.loads(self.registry.read_text()):
@@ -314,7 +334,11 @@ class AgentManager:
                 )
 
     def snapshot(self):
-        return {"agents": [a.snapshot() for a in self.agents.values()]}
+        return {
+            "agents": [a.snapshot() for a in self.agents.values()],
+            "positions": self.layout,
+            "viewers": len(self.subscribers),
+        }
 
     def publish(self):
         snapshot = self.snapshot()

@@ -22,11 +22,36 @@ New subagents appear beneath their parent. Collapse or expand a branch using its
 
 The initial version supports six agents and four active runs. `create_agent`, `list_agents`, and `message_agent` let agents delegate and follow up with their descendants. Shell commands, web research, and financial-data APIs are not enabled yet.
 
+## Hosted AWS demo
+
+The hosted version runs the same single container on a dedicated EC2 instance. CloudFront provides HTTPS and forwards live API/event traffic without caching it. An encrypted EBS disk stores agent conversations, files, and shared canvas positions across container restarts and deployments. ECR stores the image, Secrets Manager stores API keys and demo credentials, and an IAM instance role grants Bedrock access. Systems Manager manages the host without an open SSH port.
+
+The demo accounts are `kush@example.com`, `mayank@example.com`, and `gerson@example.com`. Passwords are generated per account and saved locally in ignored `.local/hosting/demo-accounts.json`. All accounts join one shared board; chats show who sent each message. Agent activity, files, dragged positions, and connected viewer counts update across browsers. Pan, zoom, selection, and collapsed branches stay personal.
+
+Build and deploy or update from this laptop:
+
+```sh
+docker build --platform linux/arm64 -f backend/Dockerfile -t aws-hackathon-sandbox:hosted .
+./workshop-run uv run python scripts/hosting.py
+```
+
+The script prints the HTTPS URL and records only this deployment's resources in `.local/hosting/resources.json`. It copies configured API secrets from `.env` to Secrets Manager, never into the image. Hosted workers obtain renewable credentials from their instance role. API key placeholders alone do not enable additional Dexter tools.
+
+This is a shared hackathon demo, with a single application process and no separate customer tenants. The workshop account and its resources remain subject to the event's lifetime. The hosted board starts independently of your laptop's agent history. Back up `/opt/agent-canvas/state` before removing the host; terminating it deletes that disk.
+
+Preview cleanup:
+
+```sh
+./workshop-run uv run python scripts/hosting.py --cleanup
+```
+
+Add `--apply` to remove the app. CloudFront disabling and instance termination are asynchronous; rerun the same cleanup command when prompted until it completes. This removes the dedicated instance, distribution, image repository, security group, and IAM role, and schedules the secret for deletion with seven days of recovery. The existing workshop desktops and earlier AgentCore sample are separate resources.
+
 ## Shared workspace
 
 Every agent reads and writes `.local/workspace/` on your laptop, mounted as `/app/.local/workspace` in Docker. Changes are visible to all agents immediately. Coordinate edits when working on the same file.
 
-Conversations and activity remain separate. Dexter's history is in `.local/agent/`; created agents' histories are under `.local/agents/<id>/`. The roster is in `.local/agents.json`. All of `.local/` is excluded from Git and survives container restarts.
+Conversations and activity remain separate. Dexter's history is in `.local/agent/`; created agents' histories are under `.local/agents/<id>/`. The roster is in `.local/agents.json`. All of `.local/` is excluded from Git and survives container restarts. The shared canvas layout is stored in `.local/layout.json`.
 
 The sandbox uses a non-root user, a read-only application filesystem, resource limits, and only a localhost API port. Application code and the built frontend are inside the image. It mounts only this project's local state, environment settings, and the two dedicated workshop credential files. It does not mount your home directory or Docker socket. Network access remains available for Bedrock.
 

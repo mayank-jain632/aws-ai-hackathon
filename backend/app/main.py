@@ -1,6 +1,7 @@
 """Local canvas API and the private bridge used by Dexter's agent tools."""
 
 import asyncio
+import json
 import secrets
 from collections.abc import AsyncIterable
 from contextlib import asynccontextmanager
@@ -12,6 +13,7 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel, Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from backend.app.access import HostedAccess
 from backend.app.agent import AgentManager
 
 
@@ -23,7 +25,16 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Local agent canvas", version="0.1.0", lifespan=lifespan)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"])
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=[
+        "127.0.0.1",
+        "localhost",
+        "*.cloudfront.net",
+        "*.compute-1.amazonaws.com",
+    ],
+)
+app.add_middleware(HostedAccess)
 
 
 class MessageRequest(BaseModel):
@@ -52,6 +63,42 @@ def health() -> dict:
     return {"status": "ok"}
 
 
+class BoardPosition(BaseModel):
+    x: float = Field(ge=-100000, le=100000, allow_inf_nan=False)
+    y: float = Field(ge=-100000, le=100000, allow_inf_nan=False)
+
+
+class LayoutUpdate(BaseModel):
+    agent_id: str = Field(default="", max_length=60)
+    position: BoardPosition | None = None
+    reset: bool = False
+
+
+@app.get("/api/me")
+def me(request: Request) -> dict:
+    return {
+        "email": getattr(request.state, "user", "local"),
+        "hosted": bool(getattr(request.state, "user", "")),
+    }
+
+
+@app.patch("/api/board/layout")
+async def update_layout(body: LayoutUpdate, request: Request) -> dict:
+    current = manager(request)
+    if body.reset:
+        current.layout = {}
+    elif body.position:
+        get_agent(request, body.agent_id)
+        current.layout[body.agent_id] = body.position.model_dump()
+    else:
+        raise HTTPException(422, "Provide an agent position or reset")
+    temporary = current.layout_file.with_suffix(".tmp")
+    temporary.write_text(json.dumps(current.layout))
+    temporary.replace(current.layout_file)
+    current.publish()
+    return {"positions": current.layout}
+
+
 @app.get("/api/agents")
 def get_agents(request: Request) -> dict:
     return manager(request).snapshot()
@@ -63,7 +110,9 @@ async def send_message(agent_id: str, body: MessageRequest, request: Request) ->
     if not text:
         raise HTTPException(422, "Enter a message")
     try:
-        await get_agent(request, agent_id).start(text)
+        await get_agent(request, agent_id).start(
+            text, getattr(request.state, "user", "You").split("@")[0].title()
+        )
     except ValueError as error:
         raise HTTPException(409, str(error)) from error
     except RuntimeError as error:
@@ -83,6 +132,7 @@ async def events(request: Request) -> AsyncIterable[ServerSentEvent]:
     current = manager(request)
     queue = asyncio.Queue(maxsize=8)
     current.subscribers.add(queue)
+    current.publish()
     try:
         yield ServerSentEvent(data=current.snapshot())
         while True:
@@ -93,6 +143,7 @@ async def events(request: Request) -> AsyncIterable[ServerSentEvent]:
             yield ServerSentEvent(data=snapshot)
     finally:
         current.subscribers.discard(queue)
+        current.publish()
 
 
 @app.get("/api/agents/{agent_id}/file")
