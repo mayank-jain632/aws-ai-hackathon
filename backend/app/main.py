@@ -21,7 +21,6 @@ from backend.app.routes.funds import router as funds_router
 from backend.app.routes.models import router as models_router
 from backend.app.routes.scores import router as scores_router
 from backend.app.routes.sharing import router as sharing_router
-from backend.app.routes.watchdog import router as watchdog_router
 from backend.app.routes.synthesis import router as synthesis_router
 from backend.app.routes.watchdog import router as watchdog_router
 
