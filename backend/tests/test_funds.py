@@ -46,6 +46,47 @@ def test_paused_fund_cannot_start_an_agent(tmp_path):
     assert manager.agents["dexter"].state["messages"] == []
 
 
+def test_start_fund_dispatches_delegated_workflow_without_changing_consent(
+    tmp_path, monkeypatch
+):
+    from fastapi.testclient import TestClient
+
+    import backend.app.funds as module
+    from backend.app import main
+
+    monkeypatch.setattr(module, "ROOT", tmp_path)
+    monkeypatch.setattr(
+        main, "AgentManager", lambda: AgentManager(root=tmp_path / ".local")
+    )
+    with TestClient(main.app, base_url="http://localhost") as client:
+        fund_id = client.post(
+            "/api/funds", json={"name": "Delegation regression"}
+        ).json()["id"]
+        runtime = main.app.state.funds.runtime(fund_id)
+        tasks = []
+
+        async def capture_task(prompt, source):
+            tasks.append(prompt)
+
+        monkeypatch.setattr(runtime.agents["dexter"], "start", capture_task)
+        before = client.get(f"/api/funds/{fund_id}").json()
+        assert client.post(f"/api/funds/{fund_id}/plan").status_code == 202
+        assert len(tasks) == 1
+        assert "create_agent" in tasks[0]
+        assert "Do not create subagents" not in tasks[0]
+        assert "strategy_id" in tasks[0] and "backtester" in tasks[0]
+        assert "does not authorize order submission" in tasks[0]
+        after = client.get(f"/api/funds/{fund_id}").json()
+        for field in (
+            "trading_allowed",
+            "approval_required",
+            "min_cash",
+            "mode",
+            "cutoff",
+        ):
+            assert after[field] == before[field]
+
+
 @pytest.mark.parametrize(
     "values",
     [

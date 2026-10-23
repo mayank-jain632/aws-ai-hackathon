@@ -36,3 +36,7 @@ Updated 2026-10-23 by the coordinating Codex chat.
 - Roles is executing the human-approved single $1 AAPL paper test in its isolated fund, then re-engaging stop. Submission/fill outcome is pending. Deployment is holding restarts during that test.
 - Core product is implementing the newly requested email-sharing popup and access handling. Existing Team 4 access must survive; membership checks cover APIs/files/SSE as well as the dashboard.
 - Continue retrieving new human requests and lane progress; completed rounds do not end monitoring.
+
+**Fund starter correction**
+- Human reported DemoTest1 stopped without specialists. Confirmed its actual saved task came from `/plan` and explicitly prohibited subagents, limiting work to two planning documents. Replaced that instruction with delegated evidence collection, adversarial review, strategy registration and strategy-bound evaluation, with concrete blockers reported honestly. Preserves mandate, consent and stop; no order submission authorized.
+- Cross-lane files coordinated with core owner: `backend/app/routes/funds.py`, `backend/tests/test_funds.py`. Endpoint regression verifies delegation task and unchanged consent. Ten fund tests and Python lint pass. Hosted delegation verification follows deployment.

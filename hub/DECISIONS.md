@@ -229,3 +229,8 @@ AGENTCORE_OPINION_ARN=arn:aws:bedrock-agentcore:us-east-1:556200168424:runtime/a
 **Safety:** any failure (AccessDenied before Aaron's policies exist, a timeout, an invalid reply) returns None and the existing in-process Luna path answers. The opinion runs after the gate's final verdict, never on the order path, so this cannot break the demo.
 **Verify after deploy:** on a fund with a blocked or near-miss order (or after `POST /api/funds/{id}/watchdog/audit`), the newest `opinion` entry in `GET /api/funds/{id}/watchdog` has `source` starting `agentcore:aaron_watchdog_opinion`, and `GET /api/agentcore` lists the call with `ok: true` and an `xray_trace_id`. If `source` starts `bedrock:`, the `error` field in `GET /api/agentcore` says why. Aaron then opens that trace ID on the CloudWatch X-Ray trace page in his account.
 **Affects:** Lane 5 `scripts/hosting.py` (one statement, one environment value) and one redeploy. Nothing new in the hosting account; in Aaron's account only the two resource policies.
+
+### Proposed · Kushagra, fund starter workflow correction
+**Human instruction:** The fund action must create specialists and continue the research/evaluation workflow rather than finish after planning documents.
+**Implementation:** Replace the `/plan` starter's explicit prohibition on subagents with delegated research, adversarial review, strategy registration and strategy-bound backtesting. Preserve historical evidence requirements and report concrete blocked phases; no mandate changes or order submission authorized by this starter.
+**Affects:** Fund starter endpoint and regression test. Existing Dexter runtime, roles and execution gates remain unchanged.

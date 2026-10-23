@@ -181,7 +181,26 @@ async def plan(fund_id: str, request: Request) -> dict:
     runtime = fund(request, fund_id)
     try:
         await runtime.agents["dexter"].start(
-            "Review this fund mandate. Write fund-plan.md with the objective, portfolio constraints, proposed research tasks, and a cautious next-step checklist. Write research-checklist.md listing the real data and tools required before any strategy, backtest, or trade can be claimed. Use only the provided mandate and existing files. Do not invent prices, sources, performance, or executions. Do not create subagents for this initial planning step. Read back your plan and report what you created.",
+            "Run this fund's research-to-evaluation workflow under its current mandate. "
+            "This request supersedes any earlier document-only planning task. "
+            "Read mandate.md and inspect_desk first. Then use create_agent to start "
+            "research specialists for distinct evidence families, such as company "
+            "fundamentals/filings and macro/market risk. Give each specialist the fund "
+            "mandate, research mode, decision cutoff, a concrete task and a shared memo path. "
+            "Reuse suitable existing specialists with message_agent. Obtain actual "
+            "tool-backed evidence; in historical mode use only cutoff-aware evidence "
+            "and disclose unavailable historical sources instead of using current data. "
+            "Have specialists delegate adversarial review of their findings. Continue "
+            "from their results to a strategy specialist, immutable strategy registration, "
+            "independent adversarial strategy review, and an Opus 4.6 backtester bound "
+            "to the approved strategy_id. Report the actual evaluation result and "
+            "provenance, including FAIL or blocked outcomes. Do not stop after writing "
+            "a plan or checklist. Update fund-plan.md with completed phases, evidence "
+            "paths, strategy/evaluation IDs and any concrete blockers. If one phase "
+            "is blocked, complete independent research and review before reporting it. "
+            "Keep trading permission, human approval requirements and emergency stop "
+            "unchanged. This task does not authorize order submission or mandate changes. "
+            "Never invent prices, sources, performance, approvals, trades or fills.",
             getattr(request.state, "user", "Team").split("@")[0].title(),
         )
     except (ValueError, RuntimeError) as error:
