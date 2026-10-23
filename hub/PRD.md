@@ -50,18 +50,20 @@ PHASE 4  execution agent       only for PASS and only if the mandate allows trad
 `main` holds two things that each cover half of the brainstorm. The hosted canvas (D7) is a working agent runtime: agents that create and message their own subagents, a shared filesystem, a shared board for several analysts' accounts, hosted on AWS. The Desk modules (D6) are a working research team, date-safe data, and a backtest. They join through the canvas tool list:
 
 - **The canvas is the runtime.** The orchestrator is a canvas agent. It spawns each phase's agents as its subagents, so analysts watch the pipeline run on the board, and the agent tree is the agent flow diagram for the slides.
-- **The Desk is the toolbox.** Today the canvas agents only have file and delegation tools (the `tools` array in `backend/worker/run.ts`). New tools there call The Desk modules through internal backend routes: research slices, strategy, backtest, orders. That bridge is the first thing lane 1 builds.
+- **Dexter supplies live research tools; The Desk supplies historical evaluation.** Current `main` directly registers Dexter's finance, market-data, SEC-filing, stock-screening, URL-fetch, and configured Exa/X search tools in `backend/worker/run.ts`, alongside file and delegation tools. The extra cached-research API and conversation mode locks were removed at Kushagra's request in D13. The Desk loaders, analysts, strategy and backtest modules remain available for the planned pipeline integration; that integration is not shipped by enabling live tools. Historical evaluation still requires cutoff-aware inputs.
 - **The shared filesystem is the audit trail.** Each phase writes its output as a file under one folder per run and client (memos, strategy, backtest result, orders, moderator events), which the next phase reads and the analysts can open from the board.
 
 | Piece on `main` | Today | Becomes |
 |---|---|---|
 | Hosted canvas (`frontend/`, `backend/app/agent.py`, `backend/app/access.py`, `backend/worker/`) | Dexter agent tree, shared files, demo accounts, EC2 behind CloudFront | the runtime and the analyst's view; orchestrator and phase agents run here |
-| Canvas tool list (`backend/worker/run.ts`) | read, write, and edit file; create, list, and message agent | gains finance tools that call The Desk modules: the bridge |
+| Canvas tool list (`backend/worker/run.ts`) | file and delegation tools plus native Dexter finance, filing, screening, URL-fetch and configured Exa/X search tools | orchestration and historical evaluation integration; reuse native live tools |
 | Five analysts (`backend/app/agents/`) | technical, fundamentals, macro, sentiment, geopolitics | Phase 1 research tools; new data inputs add new research tools |
 | PM agent (`backend/app/agents/pm.py`) | target weights with rationale | engine behind the Phase 2 strategy agent, now per client and risk band |
 | Backtest (`backend/app/backtest.py`) | monthly rebalance, metrics, 6 tests | engine for the Phase 3 backtest agent, plus the pass/fail gate |
 | Loaders (`backend/app/data.py`) | cutoff-filtered prices, SEC, FRED, events | the date-safe base every new data input plugs into |
 | Report page and `/api/run` | not on `main`; kept in git history and branch `report-baseline` | `/api/run` logic returns as an internal tool route; the report page is optional now that UI does not score |
+
+Native-tool registration is shipped on `main`; provider responses were tested with mocks. This tool update has not been verified deployed on AWS. Dedicated roles, mandates, strategy gates, and trading remain in flight or targets until their implementations are verified.
 
 ## 5. Requirements
 
@@ -113,8 +115,8 @@ Every input gets a fetch script or adapter, a cached snapshot for the demo, an `
 | Alpaca market data (free tier) | price, live | live | brainstorm, new |
 | Market news sentiment (scraped headlines) | sentiment | live, backtest if dated | brainstorm, new |
 | Reddit r/wallstreetbets and other social signals | sentiment | live | brainstorm, new |
-| Live web search for current context | context | live | brainstorm, new |
-| X/Twitter | sentiment | mocked sample feed | brainstorm, API restricted |
+| Live web search for current context | context | live | native Dexter Exa tool enabled on `main` when configured; deployment/live provider access unverified |
+| X/Twitter | sentiment | live tool available; mocked sample feed remains a demo option | native Dexter X tool enabled on `main` when configured; API access and deployment unverified |
 | More FRED series: yield curve slope, high-yield spread, VIX, policy uncertainty | macro | backtest | research brief, about 10 minutes |
 | SEC Form 4 insider buying | company | backtest | research brief, new |
 | Earnings call transcripts (Hugging Face, 2005 to 2025) | sentiment | backtest | research brief, new |

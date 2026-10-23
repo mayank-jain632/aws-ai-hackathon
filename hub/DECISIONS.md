@@ -86,3 +86,8 @@ When the team answers one, delete it here and log the answer below as a decision
 **Instruction:** Undo the extra research layer and mode locking from D11/e1436ea; enable Dexter's existing search and finance tools directly in the canvas.
 **Implementation:** Remove custom research modules/routes/tests/docs and their Docker data/pandas additions. Register upstream `get_financials`, `get_market_data`, `read_filings`, `stock_screener`, `web_fetch`, and configured Exa/X search in the existing worker adapter. Keep canvas file and delegation tools. No replacement data layer or mode locks.
 **Affects:** Lane 1 worker registry and removal of the private research router, Lane 5 container packaging. D11's implementation is superseded by this explicit user correction. The separately requested role work should restrict these native tools by role; it must not depend on the removed research router. No deploy or new billed infrastructure.
+
+### D14 · Proposed · Kushagra, direct documentation instruction recorded by Codex
+**Instruction:** Update the Markdown files to match the native Dexter tools and removal of the extra research layer and mode locks.
+**Implementation:** Correct README setup/tool documentation, AGENTS verified facts, and PRD descriptions of shipped live tools versus the planned historical pipeline. Preserve prior decision entries as history, including D11 and its reversal in D13. Provider checks used mocked responses; AWS deployment of the tool update remains unverified.
+**Affects:** Documentation only, including Lane 1 integration descriptions in the PRD. No runtime, rule, experiment, or deployment changes.

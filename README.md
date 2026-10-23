@@ -20,7 +20,27 @@ Configure the workshop credentials below before starting. Open http://127.0.0.1:
 
 New subagents appear beneath their parent. Collapse or expand a branch using its subagent count. Drag cards to arrange them, scroll to zoom, or use **Arrange tree** to restore the automatic layout. **Stop** cancels the selected agent and all its descendants.
 
-The initial version supports six agents and four active runs. `create_agent`, `list_agents`, and `message_agent` let agents delegate and follow up with their descendants. Shell commands, web research, and financial-data APIs are not enabled yet.
+The initial version supports six agents and four active runs. `create_agent`, `list_agents`, and `message_agent` let agents delegate and follow up with their descendants. The canvas also exposes Dexter's existing finance, search, and URL-fetch tools, described below. Shell commands and trade execution remain disabled.
+
+## Agent tools
+
+The canvas uses Dexter's existing tool implementations directly alongside its shared file and agent-delegation tools.
+
+| Tools | Use | Configuration |
+|---|---|---|
+| `get_financials` | Company statements, metrics, ratios, earnings, and segments | `FINANCIAL_DATASETS_API_KEY` |
+| `get_market_data` | Stock/crypto prices, news, and insider/ownership data | `FINANCIAL_DATASETS_API_KEY` |
+| `read_filings` | SEC filing content | `FINANCIAL_DATASETS_API_KEY` |
+| `stock_screener` | Find stocks by financial criteria | `FINANCIAL_DATASETS_API_KEY` |
+| `web_fetch` | Read a URL and answer a question about its content | Bedrock credentials for the model call |
+| `web_search` | Search current web information through Exa | Appears when `EXASEARCH_API_KEY` is set |
+| `x_search` | Search X/Twitter through Dexter's X adapter | Appears when `X_BEARER_TOKEN` is set; API access still depends on the token's permissions |
+
+Set provider keys in `.env` or `.env.local` for local workers. The finance tools are registered even without a key; successful provider access requires valid credentials. Their internal routing and the URL fetcher's model calls use Bedrock.
+
+There is no custom research API or conversation mode/cutoff lock. The Desk's cached data loaders and backtest remain separate modules. Live search and finance responses are not point-in-time-safe backtest inputs; historical decisions must still use cutoff-aware loaders.
+
+The tools are on `main`. Their registration and provider calls were checked with mocked responses; live provider access and deployment of this tool update to AWS have not been verified. Rebuild locally with `npm run dev`, or deploy the updated image with the commands below.
 
 ## Hosted AWS demo
 
@@ -35,7 +55,7 @@ docker build --platform linux/arm64 -f backend/Dockerfile -t aws-hackathon-sandb
 ./workshop-run uv run python scripts/hosting.py
 ```
 
-The script prints the HTTPS URL and records only this deployment's resources in `.local/hosting/resources.json`. It copies configured API secrets from `.env` to Secrets Manager, never into the image. Hosted workers obtain renewable credentials from their instance role. API key placeholders alone do not enable additional Dexter tools.
+The script prints the HTTPS URL and records only this deployment's resources in `.local/hosting/resources.json`. It copies configured API secrets from `.env` to Secrets Manager, never into the image. Hosted workers obtain renewable credentials from their instance role. The image registers the native tools listed above. Exa and X search are included when their keys are set; actual provider access requires valid credentials.
 
 This is a shared hackathon demo, with a single application process and no separate customer tenants. The workshop account and its resources remain subject to the event's lifetime. The hosted board starts independently of your laptop's agent history. Back up `/opt/agent-canvas/state` before removing the host; terminating it deletes that disk.
 
@@ -53,7 +73,7 @@ Every agent reads and writes `.local/workspace/` on your laptop, mounted as `/ap
 
 Conversations and activity remain separate. Dexter's history is in `.local/agent/`; created agents' histories are under `.local/agents/<id>/`. The roster is in `.local/agents.json`. All of `.local/` is excluded from Git and survives container restarts. The shared canvas layout is stored in `.local/layout.json`.
 
-The sandbox uses a non-root user, a read-only application filesystem, resource limits, and only a localhost API port. Application code and the built frontend are inside the image. It mounts only this project's local state, environment settings, and the two dedicated workshop credential files. It does not mount your home directory or Docker socket. Network access remains available for Bedrock.
+The sandbox uses a non-root user, a read-only application filesystem, resource limits, and only a localhost API port. Application code and the built frontend are inside the image. It mounts only this project's local state, environment settings, and the two dedicated workshop credential files. It does not mount your home directory or Docker socket. Network access remains available for Bedrock and the enabled data/search providers.
 
 ## Bedrock credentials
 
@@ -74,7 +94,7 @@ region = us-east-1
 output = json
 ```
 
-Keep both files private with `chmod 600`. Refresh them through Workshop Studio when the session expires. The Bedrock model is set in code to `us.openai.gpt-5.6-luna`. `.env` contains optional `AWS_REGION` and blank credentials for Dexter’s finance, search, and model providers; `.env.example` is the shared template. No account ID is required by the app. Adding a key does not enable a tool: this stripped-down adapter currently exposes shared file tools and agent delegation.
+Keep both files private with `chmod 600`. Refresh them through Workshop Studio when the session expires. The Bedrock model is set in code to `us.openai.gpt-5.6-luna`. `.env` contains optional `AWS_REGION` and blank credentials for Dexter’s finance, search, and model providers; `.env.example` is the shared template. No account ID is required by the app. Configure the provider keys listed in Agent tools to use Dexter's native finance and search integrations.
 
 Credentials stay in the backend. Model requests incur normal Bedrock charges. Running this local version creates no new AgentCore resources.
 
