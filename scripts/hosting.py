@@ -172,6 +172,7 @@ def main():
         )
     }
     env.update(
+        BACKTEST_ENGINE="wf",
         AWS_REGION=REGION,
         AWS_CREDENTIAL_MODE="role",
         APP_ACCESS_PASSWORD=access["password"],

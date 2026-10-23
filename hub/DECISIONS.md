@@ -196,3 +196,8 @@ _Drafted as D15 before `main` took D15 to D20; renumbered on this branch to avoi
 **Decision:** Code cutoff is 3:15 PM. Anything not merged to `main` and in the hosted image by then is not in the demo. Ship final feature pushes by about 2:50 so the deployment owner can redeploy the latest `main` and verify it before 3:15; after 2:50, push only fixes for something broken.
 **Why:** The schedule moved; a redeploy plus a smoke check needs about 20 minutes.
 **Affects:** every lane, and Lane 5's final redeploy timing.
+
+### Proposed · Kushagra, direct walk-forward deployment instruction
+**Instruction:** After the two engines were explained, Kushagra selected "use mayanks", relayed by the coordinator with the all-team consolidation request.
+**Implementation:** Hosted environment and local example select BACKTEST_ENGINE=wf. The image packages the merged data/wf, reports/wf and specs. Preserve Sol/Opus main model choices, fixed Opus 4.6 evaluator, existing records and actual leakage labels; no silent fallback to the preceding engine. A real hosted backtester run must be verified separately from tests and archived report reproduction.
+**Affects:** Lane 5 deployment config, template, packaging and setup documentation. No new order or changed acceptance thresholds authorized.
