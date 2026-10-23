@@ -26,7 +26,7 @@ The initial version supports six agents and four active runs. `create_agent`, `l
 
 The hosted version runs the same single container on a dedicated EC2 instance. CloudFront provides HTTPS and forwards live API/event traffic without caching it. An encrypted EBS disk stores agent conversations, files, and shared canvas positions across container restarts and deployments. ECR stores the image, Secrets Manager stores API keys and demo credentials, and an IAM instance role grants Bedrock access. Systems Manager manages the host without an open SSH port.
 
-The demo accounts are `kush@example.com`, `mayank@example.com`, and `gerson@example.com`. Passwords are generated per account and saved locally in ignored `.local/hosting/demo-accounts.json`. All accounts join one shared board; chats show who sent each message. Agent activity, files, dragged positions, and connected viewer counts update across browsers. Pan, zoom, selection, and collapsed branches stay personal.
+The demo accounts are `kush@example.com`, `mayank@example.com`, and `gerson@example.com`. Demo passwords are saved locally in ignored `.local/hosting/demo-accounts.json`. All accounts join one shared board; chats show who sent each message. Agent activity, files, dragged positions, and connected viewer counts update across browsers. Pan, zoom, selection, and collapsed branches stay personal.
 
 Build and deploy or update from this laptop:
 

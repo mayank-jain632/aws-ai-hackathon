@@ -10,13 +10,12 @@ Updated 2026-10-23 by Codex
 - Deployment/update script and scoped cleanup preview in `scripts/hosting.py`; no workshop desktops or existing AgentCore sample modified.
 
 **In flight**
-- Commit/push destination awaiting Kushagra's choice after discovering main's accepted D6 report-page decision. The hosted app is already working independently of that Git decision.
+- Integrating remote history and pushing the hosted canvas to main, explicitly authorized by Kushagra after disclosing D6. D7 records the direct instruction.
 
 **Blocked, or need from someone**
-- Confirm whether to preserve the report on main and push this work to agent-canvas, or explicitly replace main with the hosted canvas.
 - Finance/search API keys are available to hosted workers, but the existing stripped-down registry still exposes only file and delegation tools. No trading functionality has been added by this deployment.
 
 **Files I am working in right now**
 - `frontend/src/App.tsx`, `frontend/src/board/Canvas.tsx`, `frontend/src/types.ts`
 - `backend/app/main.py`, `backend/app/agent.py`, `backend/app/access.py`
-- `scripts/hosting.py`, `README.md`, `hub/status/kushagra.md`
+- `scripts/hosting.py`, `README.md`, current-state facts in `AGENTS.md`, D7 in `hub/DECISIONS.md`, `hub/status/kushagra.md`

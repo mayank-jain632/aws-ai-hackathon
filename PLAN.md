@@ -5,6 +5,11 @@ Track page: https://atx.rahman.dev/track-3.html
 
 ---
 
+> **Status (Oct 23, afternoon):** this plan was executed as the baseline. The dense "Desk"
+> layout, live tape and evidence drawer were then replaced by a plain single-column report
+> page, since judging weighs breadth of analysis variables and statistically tested backtests
+> over UI. Section 2 and 3 below are historical. The next phase is defined by a PRD.
+
 ## 1. What we are building
 
 **The Desk**: a single-screen research desk where five AI analyst agents and one

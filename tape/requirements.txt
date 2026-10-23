@@ -1,3 +1,0 @@
-# Tape sidecar. Install with:  pip install -r tape/requirements.txt
-# (the vendored ticker library in tape/vendor needs only websockets as well)
-websockets>=12,<15
