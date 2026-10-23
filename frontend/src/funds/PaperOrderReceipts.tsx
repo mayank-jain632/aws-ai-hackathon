@@ -59,8 +59,8 @@ export function PaperOrderReceipts({ fundId }: { fundId: string }) {
     <header><div><h3>Paper orders</h3></div><button className="text-button" disabled={loading} onClick={() => refresh.current()}>{loading ? 'Refreshing…' : 'Refresh orders'}</button></header>
     {error && <p className="fund-error" role="alert">{error}</p>}
     {orders === null ? !error && <p className="empty-text">Loading paper orders…</p> : <>
-      {intended.map(order => <article className="paper-receipt" key={`plan-${order.client_order_id}`}><header><strong>Agent plans to {order.side} {orderMoney(order.notional)} of {order.symbol}</strong><span className="subtle-tag">Prepared · not submitted</span></header><p className="order-state">Saved plan · {orderTime(order.planned_at)}</p>{order.blockers.map(reason => <p className="order-state" key={reason}>{reason}</p>)}</article>)}
       {!orders.length ? <p className="empty-text">No paper orders submitted</p> : orders.map(order => <PaperReceipt key={order.client_order_id} order={order}/>)}
+      {intended.map(order => <article className="paper-receipt" key={`plan-${order.client_order_id}`}><header><strong>Agent plans to {order.side} {orderMoney(order.notional)} of {order.symbol}</strong><span className="subtle-tag">Prepared · not submitted</span></header><p className="order-state">Saved plan · {orderTime(order.planned_at)}</p>{order.blockers.map(reason => <p className="order-state" key={reason}>{reason}</p>)}</article>)}
     </>}
   </section>
 }
