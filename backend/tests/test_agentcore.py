@@ -111,10 +111,47 @@ def test_status_route_is_people_only(hosted, monkeypatch):
     agentcore.second_opinion(opinion.SYSTEM, CONTEXT, opinion.SecondOpinion, DESK)
     monkeypatch.delenv("APP_ACCESS_PASSWORD", raising=False)
     with TestClient(app, base_url="http://localhost") as http:
+        monkeypatch.setattr(app.state, "sharing", SimpleNamespace(can_access=lambda fund_id, email: fund_id == DESK.manager.fund_id))
         body = http.get("/api/agentcore").json()
         assert body["enabled"] and body["runtime_arn"] == ARN and body["invocations"][-1]["ok"]
         assert "aaron_watchdog_opinion-AbC123" in body["links"]["runtime"]
         assert http.get("/api/agentcore", headers={"x-agent-token": "TOKEN"}).status_code == 403
+
+
+def test_status_shows_only_funds_the_caller_can_access(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import backend.app.funds as funds_module
+    from backend.app import main
+    from backend.app.agent import AgentManager
+
+    monkeypatch.setenv("APP_ACCESS_PASSWORD", "test-signing-secret")
+    monkeypatch.setenv("APP_DEMO_ACCOUNTS", json.dumps({"owner@example.com": "demo-test-pass", "peer@example.com": "peer-test-pass"}))
+    monkeypatch.delenv("APP_ORIGIN_TOKEN", raising=False)
+    monkeypatch.setenv("WATCHDOG_INTERVAL_SECONDS", "0")
+    monkeypatch.setenv("AGENTCORE_LOG", str(tmp_path / "invocations.jsonl"))
+    monkeypatch.setattr(funds_module, "ROOT", tmp_path)
+    monkeypatch.setattr(main, "AgentManager", lambda: AgentManager(root=tmp_path / ".local"))
+
+    def login(client, email, password):
+        client.post("/login", data={"email": email, "password": password}, follow_redirects=False)
+
+    with TestClient(main.app, base_url="https://localhost") as client:
+        login(client, "owner@example.com", "demo-test-pass")
+        private = client.post("/api/funds", json={"name": "Private fund"}).json()["id"]
+        rows = [
+            {"fund_id": private, "fund": "Private fund", "order": {"symbol": "MSFT", "notional": 40000.0}, "ok": True},
+            {"fund_id": "general", "fund": "Team 4 board", "order": {"symbol": "AAPL", "notional": 5000.0}, "ok": True},
+            {"fund": "No fund ID", "order": {"symbol": "JPM", "notional": 1000.0}, "ok": True},
+        ]
+        (tmp_path / "invocations.jsonl").write_text("".join(json.dumps(row) + "\n" for row in rows))
+        assert {r["fund"] for r in client.get("/api/agentcore").json()["invocations"]} == {"Private fund", "Team 4 board"}
+
+        login(client, "peer@example.com", "peer-test-pass")
+        assert client.get(f"/api/funds/{private}/agents").status_code == 403
+        seen = client.get("/api/agentcore").json()["invocations"]
+        assert [r["fund"] for r in seen] == ["Team 4 board"]
+        assert private not in json.dumps(seen) and "MSFT" not in json.dumps(seen)
 
 
 def test_opinion_prefers_runtime_then_local_bedrock(hosted, monkeypatch):

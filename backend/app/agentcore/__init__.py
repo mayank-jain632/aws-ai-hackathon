@@ -76,12 +76,16 @@ def remember(record: dict) -> dict:
     return record
 
 
-def recent(limit: int = 20) -> list[dict]:
+def recent(limit: int = 20, can_see=None) -> list[dict]:
+    """Newest invocations, optionally only those whose `fund_id` passes `can_see`."""
     path = log_path()
     if path.exists():
         rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
-        return rows[-limit:]
-    return list(RECENT)[-limit:]
+    else:
+        rows = list(RECENT)
+    if can_see is not None:
+        rows = [row for row in rows if row.get("fund_id") and can_see(row["fund_id"])]
+    return rows[-limit:]
 
 
 def recalled_lessons(desk, context: dict) -> list[str]:
@@ -114,6 +118,7 @@ def second_opinion(system: str, context: dict, model_cls, desk) -> dict | None:
         "time": datetime.now(UTC).isoformat(timespec="seconds"),
         "runtime_arn": runtime_arn(),
         "session_id": session,
+        "fund_id": desk.manager.fund_id,
         "fund": fund,
         "order": context.get("order"),
         "lessons_recalled": len(lessons),
@@ -151,7 +156,9 @@ def second_opinion(system: str, context: dict, model_cls, desk) -> dict | None:
     return {**opinion, "source": f"agentcore:{runtime_arn().rsplit('/', 1)[-1]}:{body.get('model')}", "agentcore": trace}
 
 
-def status() -> dict:
+def status(can_see=None) -> dict:
+    """Runtime status and recent invocations. With `can_see`, only funds it allows (records
+    without a fund ID are never shown then), so a person sees only their funds' orders."""
     arn = runtime_arn()
     links = {}
     if arn:
@@ -162,4 +169,4 @@ def status() -> dict:
             "observability": f"{console}/cloudwatch/home?region={region()}#gen-ai-observability/agent-core",
             "logs": f"{console}/cloudwatch/home?region={region()}#logsV2:log-groups/log-group/$252Faws$252Fbedrock-agentcore$252Fruntimes$252F{runtime_id}-DEFAULT",
         }
-    return {"enabled": enabled(), "runtime_arn": arn, "region": region(), "links": links, "invocations": recent()}
+    return {"enabled": enabled(), "runtime_arn": arn, "region": region(), "links": links, "invocations": recent(can_see=can_see)}
