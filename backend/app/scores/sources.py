@@ -21,6 +21,7 @@ SYNTHESIS_CODE = ROOT / "backend" / "app" / "synthesis"
 FILE_TOOLS = {"write_file", "edit_file"}
 URL = re.compile(r"https?://[^\s)\]>\"'|]+")
 ISO_DATE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
+ARG = re.compile(r'"(path|query|ticker|symbol|series_id|url|name|strategy_id)"\s*:\s*"([^"]{1,300})"')
 URL_KINDS = {
     "sec.gov": "sec",
     "stlouisfed.org": "fred",
@@ -105,10 +106,12 @@ def tool_calls(agents: dict) -> list[dict]:
         for event in agent["activity"]:
             if event.get("kind") != "tool":
                 continue
+            detail = event.get("detail") or "{}"
             try:
-                args = json.loads(event.get("detail") or "{}")
+                args = json.loads(detail)
             except ValueError:
-                args = {"raw": event.get("detail", "")}
+                # Activity details are cut at 12,000 characters, so long write_file calls arrive truncated.
+                args = {k: v for k, v in ARG.findall(detail[:2000])} or {"raw": detail[:300]}
             calls.append(
                 {"agent_id": agent["id"], "tool": event.get("label", ""), "args": args, "time": event.get("time", "")}
             )

@@ -1,6 +1,6 @@
 # Aaron · Lane 4 (moderator half): watchdog and moderator
 
-Updated 13:50 by Claude Code
+Updated 13:58 by Claude Code
 
 **Shipped** (on `main`, locally checked, broker mocked; reference in `docs/watchdog.md`)
 - Pre-trade gate `backend/app/watchdog/` (D17, D19): 16 deterministic rules, no LLM in the path. Emergency stop, trading permission, client universe, ticker exists in our data, backend PASS (buys), quantity/cash/no-short sanity, per-order size, position size, top-three concentration, account and tested drawdown, price band vs last close, rapid fire, duplicate under a new id, same-day wash trade, daily turnover, daily order count. The most serious block leads the reason
@@ -12,6 +12,14 @@ Updated 13:50 by Claude Code
 - Feedback loop: every verdict, desk-gate block, opinion and order outcome goes to `feedback.jsonl` beside the desk and is distilled into `workspace/watchdog/LESSONS.md`. `watchdog_lessons` tool for strategy, executor and moderator (orchestrator via `*`); their instructions in `roles.py` tell them to read it before registering or ordering
 - Demo: `MOCK_AGENTS=1 uv run python scripts/watchdog_demo.py` drives the real routes with only the broker stubbed. A conservative client's $40,000 MSFT buy is blocked on position size, an $8,000 buy is allowed, the firm-wide stop refuses orders in two funds, and the lessons are printed
 - Tests: `backend/tests/test_watchdog_rules.py` (each rule), `test_watchdog_gate.py` (real `paper.submit` path, halt across funds, routes, role denial, monitor loop starts with the app), `test_watchdog_monitor.py`, `backend/worker/watchdog-tools.test.ts`
+
+**Scores view demo path** (needs a hosted image built from `main` at or after this commit; until then run it locally)
+1. Open fund `ac8b623ccc0a4acb` (AWS source-to-strategy verification). On the overview, the "Scores and reasoning" panel shows eight rings; click Backtest score
+2. Backtest reads the real blind Opus 4.6 result for baseline `e344522d`: FAIL, 3 of 4 gate checks. Click "Return over SPY" to see 16.9% vs SPY 17.06% against the policy minimum, the gate's recorded limitations, and the price-snapshot provenance
+3. Click Strategy score, then Adversarial review: the reviewer agent's own critique, by name. Click "Cited memos" for the memo text, its URLs, and the agent whose write_file produced it
+4. Scroll to "Inputs the agents used": every tool call the fund's nine agents made (income statements, ratio snapshots, FRED, Exa, web_fetch, Apify, X, Jev sentiment, Alpaca read), by agent and time. "Where the data comes from" lists each record and whether it exists yet
+5. Open fund `fdf64d8751a448ea`: the Execution ring reads the real $1 AAPL paper buy that filled at Alpaca; the Watchdog gate ring shows the gate's verdict on it
+6. Confidence, Significance and Sensitivity say "not produced yet" and name Chaithu's and Mayank's lanes until their branches merge. After that, synthesis fills them for the fund, and walk-forward fills empty rings tagged firm-wide
 
 **Interface for execution and strategy owners**
 - Nothing to call if you go through `paper.submit`; the gate already runs there

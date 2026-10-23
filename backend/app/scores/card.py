@@ -144,6 +144,28 @@ def memo_excerpts(ctx: Context, paths: list[str], limit: int = 1500) -> str:
     return "\n\n".join(parts)
 
 
+PLAN_FILES = (("fund-plan.md", "Fund plan"), ("research-checklist.md", "Research checklist"))
+
+
+def plan_context(ctx: Context) -> list[Factor]:
+    """The orchestrator's planning files, as context for the mandate ring."""
+    factors = []
+    for path, label in PLAN_FILES:
+        text, mtime = src.read_memo(ctx.workspace, path)
+        if text is None:
+            continue
+        writers = [src.agent_ref(ctx.agents, a) for a in ctx.authors.get(path, [])] or ctx.role_holders("orchestrator")
+        factors.append(
+            Factor(
+                key=f"plan_{path}", label=f"{label} ({path})", value=f"{len(text.split())} words",
+                detail="Context only: what the orchestrator planned from the mandate before any strategy",
+                agents=writers, reasoning=text.strip()[:4000], reasoning_label=f"{label} as written in the fund's shared files",
+                provenance=Provenance(record=f"workspace/{path}", file=src.rel(ctx.workspace / path), time=datetime.fromtimestamp(mtime, UTC).isoformat(), citations=src.memo_citations(path, text)),
+            )
+        )
+    return factors
+
+
 # ---------------------------------------------------------------- 1. risk / mandate fit
 
 
@@ -151,7 +173,7 @@ def mandate_fit(ctx: Context) -> Score:
     key, label = "mandate_fit", "Risk / mandate fit"
     question = "Does the current strategy stay inside the client's mandate?"
     if not ctx.strategy:
-        return not_produced(key, label, question, OWNERS["desk"], "No strategy registered in this fund yet. A strategy agent registers one with register_strategy.")
+        return not_produced(key, label, question, OWNERS["desk"], "No strategy registered in this fund yet. A strategy agent registers one with register_strategy.", plan_context(ctx))
     m, s, sid = ctx.fund, ctx.strategy, ctx.sid
     weights = s["weights"]
     test = ctx.desk.state["tests"].get(sid)
@@ -242,7 +264,7 @@ def mandate_fit(ctx: Context) -> Score:
     )
     value, passed, total = checklist(factors)
     return scored(
-        key, label, question, factors,
+        key, label, question, factors + plan_context(ctx),
         raw=f"{passed} of {total} mandate checks pass for {s['name']}",
         formula="100 × checks passed ÷ checks evaluated (pending checks are left out)",
         source=desk_source(ctx, "Fund mandate and the desk's frozen strategy"),

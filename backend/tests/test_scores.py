@@ -191,3 +191,39 @@ def test_route_is_human_only_and_scoped_to_a_fund(tmp_path, monkeypatch):
         assert http.get("/api/funds/general/scores?strategy_id=nope").status_code == 404
         token = app.state.manager.token
         assert http.get("/api/funds/general/scores", headers={"X-Agent-Token": token, "X-Agent-ID": "dexter"}).status_code == 403
+
+
+def test_synthesis_records_fill_fund_rings_when_present(tmp_path):
+    """synthesis.json in the shapes on branch chaithu/synthesis-layer. Fixture numbers."""
+    manager, _, sid = evaluated_fund(tmp_path)
+    runs = [
+        {"id": "s1", "time": "2026-10-23T18:00:00+00:00", "kind": "synthesis", "agent": "strategist", "strategy_id": sid,
+         "memos": ["macro", "fundamentals"], "memo_paths": ["macro.md"], "model_used": False, "model_note": "",
+         "seed": {"conviction": {"AAPL": 1.2, "MSFT": -0.4}, "seed_weights": {"AAPL": 0.7, "MSFT": 0.3}, "dropped": {"NVDA": "net avoid -0.60"}, "clamped": []}},
+        {"id": "s2", "time": "2026-10-23T18:05:00+00:00", "kind": "significance", "strategy_id": sid, "horizon_days": 182, "n_windows": 10,
+         "hit_rate_vs_spy": 0.7, "hit_rate_vs_equal": 0.6, "mean_excess_vs_spy": 0.02, "mean_excess_vs_equal": 0.01, "t_stat_vs_spy": 2.0,
+         "p_value_vs_spy": 0.04, "ci95_excess_vs_spy": [0.001, 0.04], "worst_drawdown": -0.12, "limitations": "Overlapping windows."},
+    ]
+    (tmp_path / "synthesis.json").write_text(json.dumps(runs))
+    rings = by_key(build_scorecard("f1", Mandate(name="Growth").model_dump(), manager))
+    confidence = rings["confidence"]
+    assert confidence.scope == "fund" and confidence.value == pytest.approx(50 * (1 + (0.5 * 1.2 + 0.5 * -0.4) / 2), abs=0.05)
+    assert {f.label for f in confidence.factors} >= {"AAPL", "MSFT", "NVDA (dropped)"}
+    assert rings["significance"].value == pytest.approx(98.0) and rings["significance"].scope == "fund"
+    assert rings["sensitivity"].value == pytest.approx(70.0)
+    assert next(s for s in build_scorecard("f1", Mandate(name="Growth").model_dump(), manager).sources if s.id == "synthesis").status == "present"
+
+
+def test_plan_files_give_context_before_any_strategy(tmp_path):
+    manager = empty_fund(tmp_path)
+    (tmp_path / "workspace").mkdir()
+    (tmp_path / "workspace" / "fund-plan.md").write_text("# Plan\nObjective: balanced growth under a 15% drawdown cap.\n")
+    fit = by_key(build_scorecard("f1", Mandate(name="Planned").model_dump(), manager))["mandate_fit"]
+    assert fit.status == "not_produced" and fit.value is None
+    assert fit.factors[0].reasoning.startswith("# Plan") and fit.factors[0].weight is None
+
+
+def test_truncated_write_file_activity_still_credits_the_author():
+    long_call = json.dumps({"path": "macro.md", "content": "x" * 20000})[:12000]
+    agents = {"r1": {"id": "r1", "name": "Macro researcher", "role": "research", "activity": [{"kind": "tool", "label": "write_file", "detail": long_call, "time": "t"}]}}
+    assert src.file_authors(src.tool_calls(agents)) == {"macro.md": ["r1"]}
