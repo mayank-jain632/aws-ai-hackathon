@@ -1,8 +1,33 @@
 # Sushruth · Lane 4b: firm-wide exposure roll-up
 
-Updated 14:40 by Claude Code
+Updated 14:05 by Claude Code. Earlier stamps in this file said 14:25 to 14:55; those were
+estimates, not clock readings, and were wrong. This one is checked.
 
-**Shipped (on main, locally checked, broker not reachable from this machine)**
+**Where this lives: branch `sushruth/firm-exposure`, not `main`.**
+It was briefly on main at `4599ad5` and `2bb325f`, reverted at Sushruth's instruction in
+`5b42f19`. The branch is now re-applied on top of current `main` (through Aaron's
+`70f8c7c`), so it is current with the walk-forward harness, synthesis layer, scores view
+and AgentCore work. Re-landing it means reverting the revert, not a rebase: the original
+commits are ancestors of `main`, so `git rebase main` silently drops the whole feature.
+Not merged, and not in the hosted image, so by D31 it is not in the demo unless the team
+merges it before the 2:50 push deadline.
+
+**Checked against current main at 14:05**
+- 16 firm tests pass; 386 passed and 1 skipped for the whole suite with this branch, versus
+  370 on main alone. `npm run check:python` clean. The 4 `test_delegation_capacity.py`
+  errors are pre-existing and Windows-only (`os.killpg`), confirmed on a clean tree.
+- Nothing it reads has changed: `Mandate.capital`/`max_position`/`max_sector`, the
+  `desk.json` keys, and the test record's `verdict`/`policy_hash` are all intact.
+- No duplication. Nobody else aggregates across funds; I checked `scores/`, `synthesis/`
+  and the new routes. Aaron's scores view uses `scope="firm"` for a different idea, a
+  walk-forward result shared by every fund rather than aggregated exposure. Worth renaming
+  one of them if both ever appear in the same UI.
+- Chaithu's `execute_order_plan` submits a whole plan through `paper.submit` in sequence, so
+  it inherits every per-fund check and still has no cross-fund one. The capacity findings
+  apply more strongly to it than to single orders: the first fund to run a plan can consume
+  the shared account's cash that other funds' approved books were already sized against.
+
+**Shipped (branch only, locally checked, broker not reachable from this machine)**
 - `GET /api/firm/exposure`: exposure across every fund at once, per symbol, per sector and
   per risk band, with cross-fund overlap and a capacity check against the single shared
   paper account. Human sessions only; a worker token gets 403. D27.
@@ -11,7 +36,7 @@ Updated 14:40 by Claude Code
   that it would have put another member's fund names, capital and holdings in a
   "firm-wide" total. Covered by a two-account hosted test.
 - New files: `backend/app/firm.py` (pure aggregation, no I/O), `backend/app/routes/firm.py`,
-  `backend/tests/test_firm_exposure.py` (15 tests), `docs/firm-exposure.md`. One
+  `backend/tests/test_firm_exposure.py` (16 tests), `docs/firm-exposure.md`. One
   `app.include_router(firm_router)` line plus its import in `backend/app/main.py`.
 - Exposure counts only recorded broker orders net of sells, and the newest strategy holding
   a current human approval and backend PASS. Proposals are never exposure; `unknown` and
