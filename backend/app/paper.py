@@ -5,7 +5,9 @@ import os
 import threading
 
 import httpx
+from dotenv import dotenv_values
 
+from backend.app.agent import ROOT
 from backend.app.desk import digest, stamp
 
 PAPER_URL = "https://paper-api.alpaca.markets"
@@ -13,8 +15,14 @@ BROKER_LOCK = threading.RLock()
 
 
 def broker(method, path, body=None):
-    key = os.getenv("ALPACA_API_KEY") or os.getenv("APCA_API_KEY_ID")
-    secret = os.getenv("ALPACA_SECRET_KEY") or os.getenv("APCA_API_SECRET_KEY")
+    settings = {
+        **os.environ,
+        **{
+            k: v for k, v in dotenv_values(ROOT / ".env.local").items() if v is not None
+        },
+    }
+    key = settings.get("ALPACA_API_KEY") or settings.get("APCA_API_KEY_ID")
+    secret = settings.get("ALPACA_SECRET_KEY") or settings.get("APCA_API_SECRET_KEY")
     if not key or not secret:
         raise ValueError("Alpaca paper credentials are not configured on the backend")
     with httpx.Client(base_url=PAPER_URL, timeout=20, follow_redirects=False) as client:

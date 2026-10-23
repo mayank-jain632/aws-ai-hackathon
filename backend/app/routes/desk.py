@@ -1,5 +1,6 @@
 """Role-protected tools plus human-only policy, approval and stop controls."""
 
+import httpx
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import Field
 
@@ -146,6 +147,8 @@ def paper_account(request: Request) -> dict:
         return account_snapshot()
     except ValueError as error:
         raise HTTPException(422, str(error)) from error
+    except httpx.HTTPError as error:
+        raise HTTPException(502, "Alpaca paper account request failed") from error
 
 
 @router.post("/api/internal/desk/order")

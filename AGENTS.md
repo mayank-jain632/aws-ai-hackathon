@@ -10,7 +10,7 @@ Team 4, Financial Portfolio Management, Austin Agentic AI Hackathon, 2026-10-23.
 
 The verified AWS deployment uses EC2, CloudFront HTTPS, encrypted EBS, ECR, Secrets Manager, IAM, Systems Manager, and Bedrock. It is not an AgentCore-hosted canvas. The earlier AgentCore sample is separate. Run locally with `npm run dev`; stop with `npm run stop`. See `README.md` for credentials, deployment, and cleanup.
 
-D8 joins this runtime with portfolio research, strategy, evaluation, and paper execution. Fund creation, mandate setup, overview, pause/archive controls, and isolated per-fund canvases are merged on main. Typed roles and pipeline enforcement remain in flight; verify deployments separately. The Desk loaders, analysts, schema, and backtest remain available for reuse. Do not rebuild the runtime or revive the old report as the main interface.
+D8 joins this runtime with portfolio research, strategy, evaluation, and paper execution. Fund creation, mandate setup, overview, pause/archive controls, and isolated per-fund canvases are merged on main. Dedicated roles, backend evaluation/approval checks and paper-order adapters are implemented and locally checked; verify deployment and provider execution separately. The Desk loaders, analysts, schema, and backtest remain available for reuse. Do not rebuild the runtime or revive the old report as the main interface.
 
 ## Sources of truth
 
@@ -60,8 +60,8 @@ Changing a registry also means checking the allowlist, descriptions, model routi
 
 - Bedrock model: `us.openai.gpt-5.6-luna`, through Converse; omit `temperature`. Canvas defaults live in code. `BEDROCK_MODEL_ID` applies only to the older sample helpers.
 - Native registry on main: file tools; `create_agent`, `list_agents`, `message_agent`; `get_financials`, `get_market_data`, `read_filings`, `stock_screener`, `web_fetch`; `web_search` with `EXASEARCH_API_KEY`; `x_search` with `X_BEARER_TOKEN`. Finance uses `FINANCIAL_DATASETS_API_KEY`. Recheck the registry after syncing because role work is active.
-- At this documentation pass, the base manager permits six agents and four active runs, and the worker uses eight iterations with memory disabled. Those are present limits, not permanent product requirements. Waiting parents occupy active-run capacity.
-- No real Alpaca execution, full role-enforced pipeline, evaluation gate, or AgentCore canvas deployment is established by this inventory. Per-fund storage isolation exists on main; that does not establish an AWS rollout or multi-tenant security. Check the owning lane's merged code and verification before claiming them.
+- The role-aware manager permits sixteen agents and four active runs. Dexter uses 24 iterations for the orchestrator, 12 for specialists, and 3 for the bound backtester, with memory disabled. Waiting parents occupy active-run capacity; exhaustion is an error.
+- Dedicated role permissions, immutable strategy/review records, snapshot backtesting gates and guarded Alpaca paper-order code are locally verified. The backtester has only `run_backtest`, without files, web or delegation. See `docs/agent-roles.md` for human controls and limitations. No real Alpaca order, autonomous end-to-end provider run, AWS role-workflow rollout or AgentCore canvas deployment is established by those checks.
 - Tests: `uv run pytest backend/tests`, `npm run check:python`, `npm run lint`, `npm run build`. Mock Desk helpers do not make the canvas an offline mock app.
 
 ## File ownership and agent coordination

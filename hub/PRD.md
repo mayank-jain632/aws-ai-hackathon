@@ -43,7 +43,7 @@ fund + client mandate
   -> moderator checks / emergency stop
 ```
 
-Use role-specific instructions and backend-enforced capabilities around the existing Dexter loop. The orchestrator coordinates; researchers gather cited evidence; adversarial agents challenge assumptions; the strategy agent produces a testable proposal; the backtester receives a frozen strategy and numeric data, not open-ended research access; the executor receives only approved orders. These roles and gates are work in flight until their lane verifies them.
+Use role-specific instructions and backend-enforced capabilities around the existing Dexter loop. The orchestrator coordinates; researchers gather cited evidence; adversarial agents challenge assumptions; the strategy agent produces a testable proposal; the backtester receives a frozen strategy and numeric data, not open-ended research access; the executor receives only approved orders. Role capabilities, frozen strategy/review records, numeric-only evaluator input, existing snapshot-backtest gates and guarded Alpaca paper-order code are implemented and locally verified. The owning status and `docs/agent-roles.md` record their limits. Real provider execution and hosted rollout of this workflow remain unverified; this does not establish a completed autonomous pipeline.
 
 The backtest agent having no research context does not remove model-memory leakage. Report the actual evaluation assumptions and limitations.
 

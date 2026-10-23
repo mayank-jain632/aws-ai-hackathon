@@ -156,7 +156,8 @@ def test_unknown_submission_never_automatically_resubmits(approved, monkeypatch)
     assert restored.state["orders"][order.client_order_id]["status"] == "unknown"
 
 
-def test_paper_host_and_auth_headers(monkeypatch):
+def test_paper_host_and_auth_headers(monkeypatch, tmp_path):
+    monkeypatch.setattr(paper, "ROOT", tmp_path)
     monkeypatch.setenv("ALPACA_API_KEY", "paper-key")
     monkeypatch.setenv("ALPACA_SECRET_KEY", "paper-secret")
     monkeypatch.setenv("APCA_API_BASE_URL", "https://api.alpaca.markets")
@@ -178,7 +179,8 @@ def test_paper_host_and_auth_headers(monkeypatch):
     assert paper.broker("GET", "/v2/account")["status"] == "ACTIVE"
 
 
-def test_missing_credentials_explicit(monkeypatch):
+def test_missing_credentials_explicit(monkeypatch, tmp_path):
+    monkeypatch.setattr(paper, "ROOT", tmp_path)
     for key in [
         "ALPACA_API_KEY",
         "ALPACA_SECRET_KEY",
