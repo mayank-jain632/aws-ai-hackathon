@@ -6,7 +6,7 @@ Updated 13:50 by Claude Code
 - The Desk pipeline end to end (earlier today): `data/` snapshots, `backend/app/data.py`, `backend/app/backtest.py`, `backend/app/agents/`, `POST /api/run`.
 - `docs/agent-flow.md`, `.tex`, `.pdf`: high-level agent flow and per-agent variables table for the team.
 
-**In flight** (branch `chaithu/synthesis-layer`, D24 proposed)
+**In flight** (branch `chaithu/synthesis-layer`, D26 proposed)
 - `backend/app/synthesis/`: research bundle contract, `strategy.synthesize` (conviction seed from memos, mandate and policy clamping, optional one-call Bedrock refinement re-clamped in code), `significance.walk_forward` (monthly cutoffs, hit rate, mean excess, t-stat, bootstrap CI vs SPY and equal weight), `orders.plan_orders` (weights x capital minus holdings, sells first, within cash and limits).
 - `backend/app/routes/synthesis.py`: `POST /api/internal/desk/synthesize` (strategy role, registers through `Desk.register`), `POST /api/internal/desk/plan-orders` (executor role, after `execution_checks`), human `GET .../desk/strategies/{id}/significance` and `GET .../desk/runs`; run records in `synthesis.json` beside `desk.json`.
 - `POST /api/internal/desk/execute-plan` and executor tool `execute_order_plan`: submits a planned order list through Kushagra's verified `paper.submit` one order at a time with the full backend recheck, halts at the first blocked or uncertain order, and returns the remaining client_order_ids for a resumable batch. Needed because the adapter refuses a new order while one is open, and after the 3:00 PM close every market order stays open.
