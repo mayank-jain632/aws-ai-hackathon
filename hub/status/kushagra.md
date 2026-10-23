@@ -14,6 +14,8 @@ Updated 2026-10-23 by Codex
 
 **Blocked, or need from someone**
 - Finance/search API keys are available to hosted workers, but the existing stripped-down registry still exposes only file and delegation tools. No trading functionality has been added by this deployment.
+- Agent-loop inspection by Codex on 2026-10-23: `create_agent` and `message_agent` wait for the child's result; waiting parents count toward the four active runs, so recursive delegation can exhaust capacity before reaching the six-agent roster cap. Lane 1 should account for this when orchestrating phases.
+- Dexter's eight-iteration exhaustion emits `done`; the Python adapter records "Run completed" and returns to idle even when the answer says the task was not completed. This is a status-reporting gap for pipeline consumers. Inspection only; no runtime code changed or Bedrock calls made.
 
 **Files I am working in right now**
 - `frontend/src/App.tsx`, `frontend/src/board/Canvas.tsx`, `frontend/src/types.ts`
