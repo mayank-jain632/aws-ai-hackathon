@@ -18,7 +18,7 @@ function Agents({ agents }: { agents: AgentRef[] }) {
 
 function ScoreDetail({ score, factor, onFactor }: { score: Score; factor: string; onFactor: (key: string) => void }) {
   return <section className="fund-panel score-detail">
-    <header><div><h3>{score.label}</h3><p>{score.question}</p></div><span className="subtle-tag">{score.status === 'scored' ? (score.scope === 'firm' ? 'Firm-wide' : 'This fund') : 'Not produced yet'}</span></header>
+    <header><div><h3>{score.label}</h3><p>{score.question}</p></div><span className="subtle-tag">{score.status === 'scored' ? (score.scope === 'firm' ? 'Frozen team run, not this fund' : 'This fund') : 'Not produced yet'}</span></header>
     {score.status === 'scored' ? <dl className="fact-list score-facts">
       <div><dt>Score</dt><dd><strong>{score.value} / 100</strong></dd></div>
       <div><dt>Raw metric</dt><dd>{score.raw}</dd></div>
@@ -72,7 +72,7 @@ function FactorDetail({ factor }: { factor: Factor | undefined }) {
 export function ScoresView({ card, initial, onClose, onStrategy, onRefresh, loading }: { card: Scorecard; initial: string; onClose: () => void; onStrategy: (id: string) => void; onRefresh: () => void; loading: boolean }) {
   const [selected, setSelected] = useState(initial)
   const [factor, setFactor] = useState('')
-  const score = card.scores.find(s => s.key === selected) ?? card.scores[0]
+  const score = [...card.scores, ...card.team].find(s => s.key === selected) ?? card.scores[0]
   const tools = useMemo(() => Object.entries(card.inputs.reduce<Record<string, number>>((all, call) => ({ ...all, [call.tool]: (all[call.tool] ?? 0) + 1 }), {})).sort((a, b) => b[1] - a[1]), [card.inputs])
   useEffect(() => { const close = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }; window.addEventListener('keydown', close); return () => window.removeEventListener('keydown', close) }, [onClose])
   const produced = card.scores.filter(s => s.status === 'scored').length
@@ -89,6 +89,10 @@ export function ScoresView({ card, initial, onClose, onStrategy, onRefresh, load
       </header>
       <p className="scores-note">Each ring shows its raw metric, the formula that maps it to 0 to 100, and the record it was read from. Reasoning is the text each agent recorded, not the model's hidden chain of thought. A ring with no data says so and names the lane that owns it.{card.notes.map(n => ` ${n}`)}</p>
       <div className="ring-row">{card.scores.map(s => <ScoreRing key={s.key} score={s} selected={s.key === score.key} onSelect={() => { setSelected(s.key); setFactor('') }}/>)}</div>
+      {card.team.length > 0 && <section className="team-panel" aria-label={card.team_title}>
+        <h3>{card.team_title}</h3><p className="scores-note">{card.team_note}</p>
+        <div className="ring-row team-rings">{card.team.map(s => <ScoreRing key={s.key} score={s} selected={s.key === score.key} onSelect={() => { setSelected(s.key); setFactor('') }}/>)}</div>
+      </section>}
       <div className="scores-detail">
         <ScoreDetail score={score} factor={factor} onFactor={setFactor}/>
         <FactorDetail factor={score.factors.find(f => f.key === factor)}/>

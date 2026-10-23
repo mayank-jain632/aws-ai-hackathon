@@ -13,6 +13,6 @@ export function ScoreRing({ score, selected, onSelect, size = 76 }: { score: Sco
       <text x="38" y="38" textAnchor="middle" dominantBaseline="central" className={produced ? 'ring-number' : 'ring-dash'}>{produced ? Math.round(score.value ?? 0) : '?'}</text>
     </svg>
     <span className="ring-label">{score.label}</span>
-    <span className="ring-sub">{produced ? (score.scope === 'firm' ? 'Firm-wide walk-forward' : 'This fund') : 'Not produced yet'}</span>
+    <span className="ring-sub">{produced ? (score.scope === 'firm' ? 'Frozen team run' : 'This fund') : 'Not produced yet'}</span>
   </button>
 }

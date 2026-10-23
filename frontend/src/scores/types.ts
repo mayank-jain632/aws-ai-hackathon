@@ -21,5 +21,6 @@ export interface Scorecard {
   fund_id: string; fund_name: string; generated_at: string
   strategy: { id: string; name: string; author: string; created_at: string; weights: Record<string, number>; cutoff: string; end: string } | null
   strategies: { id: string; name: string; created_at: string; verdict: string | null }[]
-  scores: Score[]; sources: SourceStatus[]; agents: AgentRef[]; inputs: ToolCall[]; notes: string[]
+  scores: Score[]; team_title: string; team_note: string; team: Score[]
+  sources: SourceStatus[]; agents: AgentRef[]; inputs: ToolCall[]; notes: string[]
 }

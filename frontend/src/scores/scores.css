@@ -60,5 +60,9 @@
 .input-row time{color:var(--fund-muted)}
 .input-summary{word-break:break-word;color:var(--fund-muted)}
 .scores-generated{margin-top:20px}
-@media (max-width:1100px){.ring-row{grid-template-columns:repeat(4,minmax(0,1fr))}.scores-detail{grid-template-columns:1fr}}
+.team-panel{margin-top:22px;padding-top:16px;border-top:1px solid var(--fund-line)}
+.team-panel h3{font-family:var(--fund-serif);font-size:18px;font-weight:500}
+.team-panel .scores-note{margin:8px 0 12px}
+.team-rings{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:1100px){.ring-row,.team-rings{grid-template-columns:repeat(4,minmax(0,1fr))}.scores-detail{grid-template-columns:1fr}}
 @media (max-width:640px){.scores-sheet{padding:18px 16px}.ring-row{grid-template-columns:repeat(2,minmax(0,1fr))}.scores-head{flex-direction:column}.factor-row{grid-template-columns:1fr 1fr}.factor-row.factor-head{display:none}.source-row,.input-row{grid-template-columns:1fr}}

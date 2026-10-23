@@ -25,7 +25,7 @@ export function ScoresEntry({ fund }: { fund: { id: string } }) {
   const refresh = () => { setLoading(true); setVersion(value => value + 1) }
   const produced = card?.scores.filter(s => s.status === 'scored').length ?? 0
   return <section className="fund-panel scores-entry">
-    <header><div><h3>Scores and reasoning</h3><p>{card ? `${produced} of ${card.scores.length} scores produced · click a ring for its factors, agents, reasoning and sources` : error || 'Loading scores…'}</p></div><button className="secondary" disabled={!card} onClick={() => setOpen(card?.scores[0]?.key ?? 'mandate_fit')}>Open scores</button></header>
+    <header><div><h3>Scores and reasoning</h3><p>{card ? `${produced} of ${card.scores.length} fund scores produced · click a ring for its factors, agents, reasoning and sources${card.team.some(s => s.status === 'scored') ? ' · team walk-forward panel inside' : ''}` : error || 'Loading scores…'}</p></div><button className="secondary" disabled={!card} onClick={() => setOpen(card?.scores[0]?.key ?? 'mandate_fit')}>Open scores</button></header>
     {card && <div className="ring-row compact">{card.scores.map(s => <ScoreRing key={s.key} score={s} size={58} onSelect={() => setOpen(s.key)}/>)}</div>}
     {card && open && <ScoresView card={card} initial={open} loading={loading} onClose={() => setOpen('')} onRefresh={refresh} onStrategy={id => { setLoading(true); setStrategy(id) }}/>}
   </section>

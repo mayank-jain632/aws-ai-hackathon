@@ -10,7 +10,7 @@ from backend.app import agent as runtime
 from backend.app.desk import Policy, ReviewInput, StrategyInput, desk_for
 from backend.app.funds import Mandate
 from backend.app.main import app
-from backend.app.scores import build_scorecard
+from backend.app.scores import build_scorecard, card
 from backend.app.scores import sources as src
 from backend.app.watchdog import feedback
 
@@ -24,6 +24,7 @@ Apple 10-K filed 2022-10-28 https://www.sec.gov/Archives/edgar/data/320193/aapl-
 def isolated(tmp_path, monkeypatch):
     monkeypatch.setenv("WATCHDOG_DIR", str(tmp_path / "watchdog-global"))
     monkeypatch.setattr(src, "WF_ROOT", tmp_path / "no-walk-forward")
+    monkeypatch.setattr(card, "SIGNIFICANCE_CACHE", {})
 
 
 def empty_fund(tmp_path):
@@ -72,15 +73,16 @@ def by_key(card):
 
 
 def test_rings_without_data_say_not_produced_and_name_the_owner(tmp_path):
-    card = build_scorecard("f1", Mandate(name="Empty fund").model_dump(), empty_fund(tmp_path))
-    assert len(card.scores) == 8
-    for score in card.scores:
+    scorecard = build_scorecard("f1", Mandate(name="Empty fund").model_dump(), empty_fund(tmp_path))
+    assert len(scorecard.scores) == 8
+    for score in scorecard.scores:
         assert score.status == "not_produced"
         assert score.value is None and score.raw == "" and score.formula == ""
         assert score.owner and score.missing
-    statuses = {s.id: s.status for s in card.sources}
+    statuses = {s.id: s.status for s in scorecard.sources}
     assert statuses["desk"] == "empty"
     assert statuses["walk_forward"] == "empty"
+    assert len(scorecard.team) == 5 and all(s.status == "not_produced" and s.value is None for s in scorecard.team)
 
 
 def test_scored_rings_show_raw_formula_source_and_recorded_reasoning(tmp_path):
@@ -110,7 +112,7 @@ def test_scored_rings_show_raw_formula_source_and_recorded_reasoning(tmp_path):
     kinds = {c.kind: c for c in memos.provenance.citations}
     assert kinds["fred"].date == "2022-12-13" and kinds["sec"].url.startswith("https://www.sec.gov/")
 
-    for key in ("confidence", "significance", "execution", "watchdog", "sensitivity"):
+    for key in ("confidence", "execution", "watchdog"):
         assert rings[key].status == "not_produced", key
 
 
@@ -138,10 +140,16 @@ def write_walk_forward(root):
     run = root / "final"
     (run / "results_test").mkdir(parents=True)
     (run / "decisions").mkdir()
-    (run / "manifest.json").write_text(json.dumps({"run_id": "final", "created": "2026-10-23T18:00:00+00:00"}))
-    sig = {"excess_weekly_mean": 0.001, "excess_lo": -0.001, "excess_hi": 0.003, "p_le_zero": 0.2, "sharpe_diff": 0.1, "sharpe_diff_lo": -0.1, "sharpe_diff_hi": 0.3}
-    (run / "results_test" / "stats.json").write_text(json.dumps({"window": "test", "decisions": 3, "significance": {"vs_spy_buy_hold": sig}, "research_ic": {}}))
-    (run / "results_test" / "attribution.csv").write_text(",total_return,costs,n_fills,n_skipped\npipeline,0.01,10,3,1\n")
+    (run / "manifest.json").write_text(json.dumps({"run_id": "final", "created": "2026-10-23T18:00:00+00:00", "config": {"model_id": "fixture-model", "first_decision": "2025-10-03", "last_decision": "2026-10-16", "mark_end": "2026-10-22", "universe": ["AAPL", "MSFT"]}}))
+    sig = {"excess_weekly_mean": -0.001, "excess_lo": -0.004, "excess_hi": 0.001, "p_le_zero": 0.8, "sharpe_diff": -0.1, "sharpe_diff_lo": -0.3, "sharpe_diff_hi": 0.1}
+    (run / "results_test" / "stats.json").write_text(json.dumps({"window": "test", "decisions": 3, "significance": {"vs_spy_buy_hold": sig, "random_policy_percentile": 12.5, "random_policy_n": 500}, "research_ic": {}}))
+    (run / "results_test" / "attribution.csv").write_text(
+        ",total_return,cagr,max_drawdown,sharpe,costs,n_fills,n_skipped\n"
+        "pipeline,0.01,0.01,-0.05,0.2,10,3,1\n"
+        "pipeline_naive_execution,0.03,0.03,-0.06,0.4,12,4,0\n"
+        "mechanical_seed,0.02,0.02,-0.07,0.3,9,4,0\n"
+        "spy_buy_hold,0.10,0.10,-0.08,0.9,1,1,0\n"
+    )
     (run / "decisions" / "2026-10-16.json").write_text(json.dumps({
         "decision_date": "2026-10-16",
         "memos": [{"analyst": "macro", "views": [{"ticker": "AAPL", "stance": "long", "confidence": 0.8, "note": "Rates easing.", "sources": ["fred:DGS10"]}]}],
@@ -155,16 +163,24 @@ def write_walk_forward(root):
     ]}))
 
 
-def test_walk_forward_fills_empty_rings_as_firm_wide(tmp_path):
+def test_frozen_walk_forward_gets_its_own_panel_and_never_fills_fund_rings(tmp_path):
     write_walk_forward(tmp_path / "wf")
-    rings = by_key(build_scorecard("f1", Mandate(name="Empty").model_dump(), empty_fund(tmp_path), wf_root=tmp_path / "wf"))
-    assert rings["confidence"].scope == "firm" and rings["confidence"].value == 60.0
-    plan = rings["confidence"].factors[0]
+    scorecard = build_scorecard("f1", Mandate(name="Empty").model_dump(), empty_fund(tmp_path), wf_root=tmp_path / "wf")
+    assert all(s.status == "not_produced" for s in scorecard.scores)
+    assert scorecard.team_title == "Team walk-forward evaluation (frozen run)"
+    assert "not this fund's strategy" in scorecard.team_note and "fixture-model" in scorecard.team_note
+    team = {s.key: s for s in scorecard.team}
+    assert all(s.scope == "firm" for s in team.values())
+    assert team["team_backtest"].value == 12.5 and team["team_backtest"].source.location.endswith("results_test/attribution.csv")
+    execution = next(f for f in team["team_backtest"].factors if f.key == "contribution_execution")
+    assert execution.number == pytest.approx(-0.02) and execution.status == "fail" and execution.agents[0].role == "executor"
+    assert team["team_confidence"].value == 60.0
+    plan = team["team_confidence"].factors[0]
     assert plan.reasoning.startswith("Macro tailwind.") and plan.provenance.citations[0].kind == "fred"
-    assert rings["significance"].value == 80.0
-    assert rings["execution"].value == 75.0
-    assert rings["sensitivity"].value == 50.0
-    assert rings["mandate_fit"].status == "not_produced"
+    assert team["team_significance"].value == pytest.approx(20.0)
+    assert "Did not beat SPY with any significance" in team["team_significance"].raw
+    assert team["team_execution"].value == 75.0
+    assert team["team_sensitivity"].value == 50.0
 
 
 def test_building_the_card_writes_nothing(tmp_path):
@@ -212,25 +228,49 @@ def test_synthesis_records_fill_fund_rings_when_present(tmp_path):
     from backend.app.synthesis.significance import walk_forward
 
     real = walk_forward(sid, {"AAPL": 0.5, "MSFT": 0.5}, horizon_days=182)
-    one_sided = real.p_value_vs_spy / 2 if real.t_stat_vs_spy > 0 else 1 - real.p_value_vs_spy / 2
     sig = rings["significance"]
-    assert sig.scope == "fund" and sig.value == pytest.approx(100 * (1 - one_sided), abs=0.05)
-    assert f"t = {real.t_stat_vs_spy:.2f}" in sig.raw and "95% CI" in sig.raw and "hit rate" in sig.raw
-    lo, hi = real.ci95_excess_vs_spy
-    assert sig.raw.endswith("includes zero" if lo <= 0 <= hi else "excludes zero")
-    assert "s2" in sig.factors[0].provenance.record and "not recorded" in sig.factors[0].provenance.record
+    assert sig.scope == "fund" and sig.value == pytest.approx(98.0)
+    assert sig.raw.startswith("Recorded: t = 2.00") and sig.raw.endswith("Beat SPY: the 95% interval for mean excess return is above zero")
+    assert sig.source.label.startswith("Recorded") and "s2" in sig.factors[0].provenance.record
+    assert next(f for f in sig.factors if f.key == "inputs").value.startswith("182-day horizon, 10 windows; price snapshot")
+    assert sig.factors[0].reasoning == "Overlapping windows."
+    assert "computed when this page loaded" in rings["sensitivity"].source.label.lower()
     beat = sum(w.excess_vs_spy > 0 for w in real.windows)
     assert rings["sensitivity"].value == pytest.approx(round(100 * beat / real.n_windows, 1))
     assert len(rings["sensitivity"].factors) == real.n_windows
     assert next(s for s in build_scorecard("f1", Mandate(name="Growth").model_dump(), manager).sources if s.id == "synthesis").status == "present"
 
 
-def test_strategy_without_a_synthesis_record_has_no_significance(tmp_path):
+def test_strategy_without_a_synthesis_record_gets_computed_significance(tmp_path):
+    from backend.app.synthesis.significance import walk_forward
+
+    manager, _, sid = evaluated_fund(tmp_path)
+    rings = by_key(build_scorecard("f1", Mandate(name="Growth").model_dump(), manager))
+    real = walk_forward(sid, {"AAPL": 0.5, "MSFT": 0.5})
+    sig = rings["significance"]
+    assert sig.status == "scored" and sig.raw.startswith("Computed on page load")
+    assert "computed when this page loaded by chaithu's walk_forward" in sig.source.label.lower()
+    assert f"/desk/strategies/{sid}/significance" in sig.source.label and "not a recorded pipeline result" in sig.source.label
+    assert all("computed when this page loaded" in f.provenance.record.lower() for f in sig.factors)
+    inputs = next(f for f in sig.factors if f.key == "inputs")
+    assert inputs.value.startswith(f"{real.horizon_days}-day horizon, {real.n_windows} windows") and "price snapshot" in inputs.value
+    assert sig.factors[0].reasoning == real.limitations
+    assert rings["sensitivity"].status == "scored" and len(rings["sensitivity"].factors) == real.n_windows
+    assert not (tmp_path / "synthesis.json").exists()
+
+
+def test_walk_forward_failure_means_no_number(tmp_path, monkeypatch):
+    from backend.app.synthesis import significance as engine
+
+    def refuse(*_args, **_kwargs):
+        raise ValueError("only 2 walk-forward windows between 2025-01-01 and 2025-02-01; need 6")
+
+    monkeypatch.setattr(engine, "walk_forward", refuse)
     manager, _, _ = evaluated_fund(tmp_path)
     rings = by_key(build_scorecard("f1", Mandate(name="Growth").model_dump(), manager))
-    assert rings["significance"].status == "not_produced"
-    assert "synthesis layer has no record" in rings["significance"].missing
-    assert "Lane 2b" in rings["significance"].owner and rings["significance"].value is None
+    for key in ("significance", "sensitivity"):
+        assert rings[key].status == "not_produced" and rings[key].value is None and rings[key].raw == ""
+        assert "only 2 walk-forward windows" in rings[key].missing
 
 
 def test_plan_files_give_context_before_any_strategy(tmp_path):

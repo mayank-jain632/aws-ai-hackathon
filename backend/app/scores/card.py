@@ -1,8 +1,8 @@
 """Build one fund's scorecard from records other lanes already wrote. Read-only.
 
-Fund-scoped rings read the fund's desk, mandate, watchdog logs and shared files. When a
-fund has nothing for a ring and the walk-forward run has a firm-wide result, the ring
-shows that result with scope `firm`, never as if it were the fund's own.
+Fund rings read the fund's desk, mandate, watchdog logs and shared files, plus Chaithu's
+walk_forward over the fund's frozen weights. The frozen team walk-forward run (reports/wf)
+gets its own panel and never stands in for a fund's own results.
 """
 
 from __future__ import annotations
@@ -312,12 +312,9 @@ def confidence(ctx: Context) -> Score:
             source=SourceRef(id="synthesis", label="Synthesis seed (SeedDetail.conviction)", scope="fund", location=src.rel(Path(ctx.desk.path).with_name("synthesis.json"))),
             owner=OWNERS["synthesis"], value=50 * (1 + x), contributors=[author],
         )
-    decision = ctx.wf and ctx.wf["decision"]
-    if decision:
-        return wf_confidence(ctx, key, label, question, decision)
     return not_produced(
-        key, label, question, f"{OWNERS['synthesis']}; {OWNERS['wf']}",
-        "Needs analyst conviction: a synthesis run for this fund's strategy (synthesis.json) or a walk-forward decision record (reports/wf/*/decisions).",
+        key, label, question, OWNERS["synthesis"],
+        "Needs analyst conviction for this fund's strategy: a synthesis run records it in synthesis.json when the strategy agent uses the synthesize tool. The team walk-forward panel shows the frozen run's conviction separately.",
     )
 
 
@@ -330,7 +327,11 @@ def wf_sources_for(decision: dict, ids: list[str]) -> list[Citation]:
     ]
 
 
-def wf_confidence(ctx, key, label, question, decision) -> Score:
+def team_confidence(ctx: Context) -> Score:
+    key, label, question = "team_confidence", "Strategist conviction", "How strongly did the frozen run's strategist back each position in its latest week?"
+    decision = ctx.wf and ctx.wf["decision"]
+    if not decision:
+        return team_missing(key, label, question)
     plans = decision["plan"]["plans"]
     total = sum(p["target_weight"] for p in plans) or 1
     value = 100 * sum(p["target_weight"] * p["conviction"] for p in plans) / total
@@ -365,8 +366,8 @@ def wf_confidence(ctx, key, label, question, decision) -> Score:
         key, label, question, factors,
         raw=f"weighted conviction {value / 100:.2f} over {len(plans)} positions, decision {decision['decision_date']} ({decision['plan'].get('strategy_name', '')})",
         formula="100 × Σ(target weight × conviction) ÷ Σ target weight",
-        source=wf_source(ctx, "Walk-forward decision record (latest week)", ctx.wf["decision_path"]),
-        owner=OWNERS["wf"], value=value, contributors=[f.agents[0] for f in factors[:1]], scope="firm",
+        source=wf_source(ctx, "Frozen walk-forward decision record (latest week)", ctx.wf["decision_path"]),
+        owner=OWNERS["wf"], value=value, contributors=dedupe([a for f in factors for a in f.agents]), scope="firm",
     )
 
 
@@ -514,78 +515,113 @@ def backtest_score(ctx: Context) -> Score:
 
 
 SIGNIFICANCE_CACHE: dict[tuple, dict] = {}
-SIG_ENGINE = AgentRef(name="Walk-forward significance (synthesis layer, synthesis.significance.walk_forward)", role="backend", attribution="system")
+SIG_ENGINE = AgentRef(name="Chaithu's walk_forward (backend/app/synthesis/significance.py)", role="backend", attribution="system")
 
 
-def synthesis_significance(ctx: Context) -> tuple[dict | None, dict | None, str]:
-    """Chaithu's walk_forward for the current strategy, computed in-process and never recorded.
+def strategy_significance(ctx: Context) -> tuple[dict | None, dict | None, str]:
+    """Chaithu's walk_forward over the fund's frozen weights, read-only and cached.
 
-    Only for a strategy the synthesis layer has a record for. A recorded significance run
-    sets the horizon, so the view shows what that run's numbers came from. Strategies are
-    immutable and the price snapshot is fixed, so results are cached per strategy.
+    Runs for every registered strategy. A person's recorded run in synthesis.json is
+    preferred and sets the horizon. Strategies are immutable and the price snapshot is
+    fixed, so a cached result equals a fresh one. Any failure means no number at all.
     """
     if not ctx.strategy:
         return None, None, "No strategy registered in this fund yet."
     recorded = src.latest(ctx.synthesis, "significance", ctx.sid)
-    if not recorded and not src.latest(ctx.synthesis, "synthesis", ctx.sid):
-        return None, None, "The synthesis layer has no record for this strategy. Strategies built with the synthesize tool get one, and a person can run GET /api/funds/{fund_id}/desk/strategies/{strategy_id}/significance."
-    from backend.app.synthesis import significance as engine
+    try:
+        from backend.app import data
+        from backend.app.synthesis import significance as engine
 
-    horizon = recorded["horizon_days"] if recorded else engine.DEFAULT_HORIZON_DAYS
-    key = (ctx.sid, horizon)
-    if key not in SIGNIFICANCE_CACHE:
-        try:
-            SIGNIFICANCE_CACHE[key] = engine.walk_forward(ctx.sid, ctx.strategy["weights"], horizon_days=horizon).model_dump()
-        except ValueError as error:
-            return None, recorded, f"The synthesis layer's walk-forward could not run: {error}"
+        horizon = recorded["horizon_days"] if recorded else engine.DEFAULT_HORIZON_DAYS
+        key = (ctx.sid, horizon)
+        if key not in SIGNIFICANCE_CACHE:
+            weights = ctx.strategy["weights"]
+            closes = data.prices_full(list(weights) + [data.REFERENCE])
+            result = engine.walk_forward(ctx.sid, weights, horizon_days=horizon, closes=closes).model_dump()
+            result["snapshot"] = [closes.index.min().date().isoformat(), closes.index.max().date().isoformat()]
+            SIGNIFICANCE_CACHE[key] = result
+    except Exception as error:  # noqa: BLE001 any failure means no number, only the reason
+        return None, recorded, f"Chaithu's walk_forward could not evaluate this strategy: {type(error).__name__}: {error}"
     return SIGNIFICANCE_CACHE[key], recorded, ""
 
 
-def significance_provenance(ctx: Context, recorded: dict | None, horizon: int) -> Provenance:
-    record = f"synthesis.significance.walk_forward(strategy {ctx.sid[:8]}, {horizon}-day horizon), computed on view, not recorded"
+def how_produced(ctx: Context, recorded: dict | None) -> str:
     if recorded:
-        record += f"; a person's recorded run: synthesis.json → {recorded['id']}"
+        return f"Recorded: a person ran the significance route at {recorded['time']} (synthesis.json → {recorded['id']})"
+    return f"Computed when this page loaded by Chaithu's walk_forward (the same function as GET /api/funds/{ctx.fund_id}/desk/strategies/{ctx.sid}/significance); not a recorded pipeline result"
+
+
+def inputs_text(sig: dict, result: dict | None) -> str:
+    text = f"{sig['horizon_days']}-day horizon, {sig['n_windows']} windows"
+    if result and len(result.get("windows", [])) == sig["n_windows"]:
+        w = result["windows"]
+        text += f"; window starts {w[0]['cutoff']} to {w[-1]['cutoff']}, last window ends {w[-1]['end']}"
+    if result and result.get("snapshot"):
+        text += f"; price snapshot {result['snapshot'][0]} to {result['snapshot'][1]}"
+    return text
+
+
+def plain_reading(lo: float, hi: float) -> str:
+    if lo > 0:
+        return "Beat SPY: the 95% interval for mean excess return is above zero"
+    if hi < 0:
+        return "Trailed SPY: the 95% interval for mean excess return is below zero"
+    return "No significant edge over SPY: the 95% interval for mean excess return includes zero"
+
+
+def significance_provenance(ctx: Context, recorded: dict | None) -> Provenance:
     tickers = ", ".join(ctx.strategy["weights"])
     prices = Citation(id="data/prices", kind="price", title=f"Daily closes for {tickers}, SPY and equal weight (repository price snapshots)", excerpt="Existing Desk backtest engine run from every monthly cutoff for a fixed horizon.")
-    return Provenance(record=record, time=recorded["time"] if recorded else None, citations=[prices])
+    return Provenance(record=how_produced(ctx, recorded), file="backend/app/synthesis/significance.py", time=recorded["time"] if recorded else None, citations=[prices])
 
 
 def significance(ctx: Context) -> Score:
     key, label = "significance", "Statistical significance"
     question = "Is the edge over SPY distinguishable from noise?"
-    result, recorded, missing = synthesis_significance(ctx)
-    if result:
-        t, p = result["t_stat_vs_spy"], result["p_value_vs_spy"]
-        one_sided = p / 2 if t > 0 else 1 - p / 2
-        lo, hi = result["ci95_excess_vs_spy"]
-        prov = significance_provenance(ctx, recorded, result["horizon_days"])
-        rows = [
-            ("p", "One-sided p, mean excess over SPY > 0", f"{one_sided:.3f} (t = {t:.2f}, two-sided p = {p:.3f})", one_sided, 1.0),
-            ("hit_spy", "Windows beating SPY (hit rate)", f"{pct(result['hit_rate_vs_spy'], 0)} of {result['n_windows']}", result["hit_rate_vs_spy"], None),
-            ("hit_equal", "Windows beating equal weight", pct(result["hit_rate_vs_equal"], 0), result["hit_rate_vs_equal"], None),
-            ("mean", "Mean excess over SPY per window", f"{result['mean_excess_vs_spy']:+.2%}", result["mean_excess_vs_spy"], None),
-            ("ci", "95% CI, mean excess over SPY (bootstrap)", "[{:+.2%}, {:+.2%}]".format(*result["ci95_excess_vs_spy"]), None, None),
-            ("drawdown", "Worst window drawdown", pct(abs(result["worst_drawdown"])), result["worst_drawdown"], None),
-            ("windows", "Windows and horizon", f"{result['n_windows']} monthly start dates, {result['horizon_days']}-day horizon", result["n_windows"], None),
-        ]
-        factors = [
-            Factor(key=k, label=lbl, value=val, number=num, weight=w, status="info", detail="Synthesis layer walk-forward over the fund's frozen weights", agents=[SIG_ENGINE], reasoning=result["limitations"], reasoning_label="Limitations recorded by the synthesis layer", provenance=prov)
-            for k, lbl, val, num, w in rows
-        ]
-        return scored(
-            key, label, question, factors,
-            raw=f"t = {t:.2f}, two-sided p = {p:.3f}, hit rate {pct(result['hit_rate_vs_spy'], 0)}, 95% CI [{lo:+.2%}, {hi:+.2%}] over {result['n_windows']} windows; the CI {'includes' if lo <= 0 <= hi else 'excludes'} zero",
-            formula="100 × (1 − one-sided p) that mean excess return over SPY is above zero, from the synthesis layer's t-test",
-            source=SourceRef(id="synthesis", label="Synthesis layer walk-forward significance", scope="fund", location="backend/app/synthesis/significance.py"),
-            owner=OWNERS["synthesis"], value=100 * (1 - one_sided), contributors=[SIG_ENGINE],
+    result, recorded, missing = strategy_significance(ctx)
+    sig = recorded or result
+    if not sig:
+        return not_produced(key, label, question, OWNERS["synthesis"], missing)
+    t, p = sig["t_stat_vs_spy"], sig["p_value_vs_spy"]
+    one_sided = p / 2 if t > 0 else 1 - p / 2
+    lo, hi = sig["ci95_excess_vs_spy"]
+    reading = plain_reading(lo, hi)
+    prov = significance_provenance(ctx, recorded)
+    rows = [
+        ("reading", "Plain reading", reading, None, None),
+        ("p", "One-sided p, mean excess over SPY > 0", f"{one_sided:.3f} (t = {t:.2f}, two-sided p = {p:.3f})", one_sided, 1.0),
+        ("hit_spy", "Windows beating SPY (hit rate)", f"{pct(sig['hit_rate_vs_spy'], 0)} of {sig['n_windows']}", sig["hit_rate_vs_spy"], None),
+        ("hit_equal", "Windows beating equal weight", pct(sig["hit_rate_vs_equal"], 0), sig["hit_rate_vs_equal"], None),
+        ("mean", "Mean excess over SPY per window", f"{sig['mean_excess_vs_spy']:+.2%}", sig["mean_excess_vs_spy"], None),
+        ("ci", "95% CI, mean excess over SPY (bootstrap)", f"[{lo:+.2%}, {hi:+.2%}]", None, None),
+        ("drawdown", "Worst window drawdown", pct(abs(sig["worst_drawdown"])), sig["worst_drawdown"], None),
+        ("inputs", "Inputs", inputs_text(sig, result), sig["n_windows"], None),
+    ]
+    factors = [
+        Factor(
+            key=k, label=lbl, value=val, number=num, weight=w, status="info", detail=prov.record, agents=[SIG_ENGINE],
+            reasoning=sig["limitations"], reasoning_label="Limitations, verbatim from Significance", provenance=prov,
         )
-    stats = ctx.wf and (ctx.wf["stats"].get("test") or ctx.wf["stats"].get("all"))
-    if stats:
-        return wf_significance(ctx, key, label, question, stats)
-    return not_produced(key, label, question, f"{OWNERS['synthesis']}; {OWNERS['wf']}", missing)
+        for k, lbl, val, num, w in rows
+    ]
+    return scored(
+        key, label, question, factors,
+        raw=f"{'Recorded' if recorded else 'Computed on page load'}: t = {t:.2f}, two-sided p = {p:.3f}, hit rate {pct(sig['hit_rate_vs_spy'], 0)}, 95% CI [{lo:+.2%}, {hi:+.2%}] over {sig['n_windows']} windows. {reading}",
+        formula="100 × (1 − one-sided p) that mean excess return over SPY is above zero, from the walk_forward t-test",
+        source=SourceRef(id="synthesis", label=prov.record, scope="fund", location="backend/app/synthesis/significance.py"),
+        owner=OWNERS["synthesis"], value=100 * (1 - one_sided), contributors=[SIG_ENGINE],
+    )
 
 
-def wf_significance(ctx, key, label, question, stats) -> Score:
+def team_stats(ctx: Context) -> dict | None:
+    return ctx.wf and (ctx.wf["stats"].get("test") or ctx.wf["stats"].get("all"))
+
+
+def team_significance(ctx: Context) -> Score:
+    key, label, question = "team_significance", "Significance vs SPY", "Did the frozen pipeline beat SPY by more than noise?"
+    stats = team_stats(ctx)
+    if not stats:
+        return team_missing(key, label, question)
     window = stats.get("window", "test")
     path = Path(ctx.wf["dir"]) / f"results_{window}" / "stats.json"
     record = src.rel(path)
@@ -618,12 +654,17 @@ def wf_significance(ctx, key, label, question, stats) -> Score:
                 provenance=Provenance(record=f"{record} → research_ic.{name}", file=record),
             )
         )
-    p = sig["vs_spy_buy_hold"]["p_le_zero"]
+    spy = sig["vs_spy_buy_hold"]
+    p = spy["p_le_zero"]
+    reading = plain_reading(spy["excess_lo"], spy["excess_hi"]).replace("mean excess return", "mean weekly excess return")
+    if spy["excess_hi"] >= 0 >= spy["excess_lo"] and p > 0.5:
+        reading = f"Did not beat SPY with any significance: P(excess ≤ 0) = {p:.3f} and the 95% interval for mean weekly excess, [{spy['excess_lo']:+.2%}, {spy['excess_hi']:+.2%}], includes zero"
+    factors.insert(0, Factor(key="reading", label="Plain reading", value=reading, agents=[engine], reasoning=ctx.wf.get("summary"), reasoning_label="Walk-forward write-up (summary.md)", provenance=Provenance(record=f"{record} → significance.vs_spy_buy_hold", file=record, time=ctx.wf["manifest"].get("created"))))
     return scored(
         key, label, question, factors,
-        raw=f"P(mean weekly excess vs SPY ≤ 0) = {p:.3f}, {stats.get('decisions')} weekly decisions ({window} window)",
+        raw=f"P(mean weekly excess vs SPY ≤ 0) = {p:.3f}, {stats.get('decisions')} weekly decisions ({window} window). {reading}",
         formula="100 × (1 − P(mean weekly excess ≤ 0)), block bootstrap, pipeline vs SPY buy-and-hold",
-        source=wf_source(ctx, f"Walk-forward stats.json ({window} window)", path),
+        source=wf_source(ctx, f"Frozen walk-forward stats.json ({window} window)", path),
         owner=OWNERS["wf"], value=100 * (1 - p), contributors=[engine] + [f.agents[0] for f in factors if f.key.startswith("ic_") and f.key.endswith("@1w")], scope="firm",
     )
 
@@ -668,17 +709,25 @@ def execution(ctx: Context) -> Score:
             source=desk_source(ctx, "Desk order records (Alpaca paper responses)"),
             owner=OWNERS["execution"], value=value, contributors=executors,
         )
-    rows = ctx.wf and (ctx.wf["attribution"].get("test") or ctx.wf["attribution"].get("all"))
-    if rows and "pipeline" in rows:
-        return wf_execution(ctx, key, label, question, rows, blocked_factors)
     return not_produced(
         key, label, question, OWNERS["execution"],
         f"No paper order has been sent from this fund yet ({len(blocked)} blocked before the broker).", blocked_factors,
     )
 
 
-def wf_execution(ctx, key, label, question, rows, extra) -> Score:
-    window = "test" if ctx.wf["attribution"].get("test") is rows else "all"
+def team_rows(ctx: Context) -> tuple[dict | None, str]:
+    for window in ("test", "all"):
+        rows = ctx.wf and ctx.wf["attribution"].get(window)
+        if rows and "pipeline" in rows:
+            return rows, window
+    return None, ""
+
+
+def team_execution(ctx: Context) -> Score:
+    key, label, question = "team_execution", "Execution fills", "How many of the frozen run's orders filled in the execution simulator?"
+    rows, window = team_rows(ctx)
+    if not rows:
+        return team_missing(key, label, question)
     path = Path(ctx.wf["dir"]) / f"results_{window}" / "attribution.csv"
     record = src.rel(path)
     agent = AgentRef(name="Execution agent (walk-forward run)", role="executor", specialty="execution", attribution="system")
@@ -690,7 +739,7 @@ def wf_execution(ctx, key, label, question, rows, extra) -> Score:
             key=name, label=name.replace("_", " "),
             value=f"{float(r['n_fills']):.0f} fills, {float(r['n_skipped']):.0f} skipped; total return {pct(float(r['total_return']))}, costs ${float(r['costs']):,.0f}",
             number=float(r["total_return"]), weight=1.0 if name == "pipeline" else None,
-            detail="pipeline_naive_execution swaps the execution agent for market orders; pipeline_no_protective drops stops and targets",
+            detail=VARIANTS.get(name, ("", ""))[1],
             agents=[agent], reasoning=notes, reasoning_label=f"Execution agent notes, decision {decision.get('decision_date', '')}",
             provenance=Provenance(record=f"{record} → {name}", file=record, time=ctx.wf["manifest"].get("created")),
         )
@@ -698,10 +747,10 @@ def wf_execution(ctx, key, label, question, rows, extra) -> Score:
         if name.startswith("pipeline")
     ]
     return scored(
-        key, label, question, factors + extra,
+        key, label, question, factors,
         raw=f"{fills:.0f} simulated fills, {skipped:.0f} skipped orders ({window} window)",
         formula="100 × fills ÷ (fills + skipped), walk-forward execution simulator",
-        source=wf_source(ctx, f"Walk-forward attribution.csv ({window} window)", path),
+        source=wf_source(ctx, f"Frozen walk-forward attribution.csv ({window} window)", path),
         owner=OWNERS["wf"], value=100 * fills / (fills + skipped) if fills + skipped else 0, contributors=[agent], scope="firm",
     )
 
@@ -766,54 +815,143 @@ def watchdog(ctx: Context) -> Score:
 def sensitivity(ctx: Context) -> Score:
     key, label = "sensitivity", "Sensitivity analysis"
     question = "Do results hold when the start date moves or the tickers are masked?"
-    result, recorded, _ = synthesis_significance(ctx)
-    if result:
-        prov = significance_provenance(ctx, recorded, result["horizon_days"])
-        factors = [
-            Factor(
-                key=f"window_{w['cutoff']}", label=f"Start {w['cutoff']}, end {w['end']}",
-                value=f"book {w['portfolio']:+.1%} vs SPY {w['spy']:+.1%}, excess {w['excess_vs_spy']:+.1%}",
-                number=w["excess_vs_spy"], status="pass" if w["excess_vs_spy"] > 0 else "fail",
-                detail=f"Same frozen weights started on {w['cutoff']}; max drawdown {pct(abs(w['max_drawdown']))}",
-                agents=[SIG_ENGINE], reasoning=result["limitations"], reasoning_label="Limitations recorded by the synthesis layer", provenance=prov,
-            )
-            for w in result["windows"]
-        ]
-        value, passed, total = checklist(factors)
-        return scored(
-            key, label, question, factors,
-            raw=f"beat SPY from {passed} of {total} monthly start dates ({result['horizon_days']}-day horizon)",
-            formula="100 × start dates where the frozen book beat SPY ÷ start dates tested",
-            source=SourceRef(id="synthesis", label="Synthesis layer walk-forward windows", scope="fund", location="backend/app/synthesis/significance.py"),
-            owner=OWNERS["synthesis"], value=value, contributors=[SIG_ENGINE],
+    result, recorded, missing = strategy_significance(ctx)
+    if not result:
+        return not_produced(key, label, question, OWNERS["synthesis"], missing)
+    prov = significance_provenance(ctx, None)
+    inputs = inputs_text(result, result)
+    factors = [
+        Factor(
+            key=f"window_{w['cutoff']}", label=f"Start {w['cutoff']}, end {w['end']}",
+            value=f"book {w['portfolio']:+.1%} vs SPY {w['spy']:+.1%}, excess {w['excess_vs_spy']:+.1%}",
+            number=w["excess_vs_spy"], status="pass" if w["excess_vs_spy"] > 0 else "fail",
+            detail=f"Same frozen weights started on {w['cutoff']}; max drawdown {pct(abs(w['max_drawdown']))}. Inputs: {inputs}",
+            agents=[SIG_ENGINE], reasoning=result["limitations"], reasoning_label="Limitations, verbatim from Significance", provenance=prov,
         )
+        for w in result["windows"]
+    ]
+    value, passed, total = checklist(factors)
+    note = f" A recorded run reported a {pct(recorded['hit_rate_vs_spy'], 0)} hit rate." if recorded else ""
+    return scored(
+        key, label, question, factors,
+        raw=f"Computed on page load: beat SPY from {passed} of {total} monthly start dates ({result['horizon_days']}-day horizon).{note}",
+        formula="100 × start dates where the frozen book beat SPY ÷ start dates tested",
+        source=SourceRef(id="synthesis", label=prov.record, scope="fund", location="backend/app/synthesis/significance.py"),
+        owner=OWNERS["synthesis"], value=value, contributors=[SIG_ENGINE],
+    )
+
+
+def team_sensitivity(ctx: Context) -> Score:
+    key, label, question = "team_sensitivity", "Ticker-masking sensitivity", "Do the frozen run's signals hold when tickers are masked (a memorization check)?"
     audit = ctx.wf and ctx.wf.get("audit")
-    if audit and audit.get("rows"):
-        record = src.rel(ctx.wf["audit_path"])
-        rule = next((line for line in (ctx.wf.get("audit_note") or "").splitlines() if line.startswith("Verdict rule")), "")
-        factors = [
-            Factor(
-                key=f"{r['series']}@{r['horizon']}", label=f"{r['series']} signal, {r['horizon']}",
-                value=f"named IC {r['named_ic']:+.3f}, masked {r['masked_ic']:+.3f}, difference {r['diff']:+.3f} [{r['ci_lo']:+.3f}, {r['ci_hi']:+.3f}]",
-                number=r["diff"], status="pass" if r["verdict"] == "no detectable memory effect" else "fail",
-                detail=f"Verdict: {r['verdict']} ({r['n_dates']} dates)",
-                agents=[AgentRef(name=f"{r['series']} {'agent' if r['series'] == 'strategy_weight' else 'analyst'} (walk-forward run)", role="strategy" if r["series"] == "strategy_weight" else "research", specialty=r["series"], attribution="system")],
-                reasoning=f"{r['verdict']}. {rule}".strip(), reasoning_label="Audit verdict and rule",
-                provenance=Provenance(record=f"{record} → rows[{i}]", file=record),
-            )
-            for i, r in enumerate(audit["rows"])
-        ]
-        value, passed, total = checklist(factors)
-        return scored(
-            key, label, question, factors,
-            raw=f"{passed} of {total} signal series unchanged when tickers are masked ({audit.get('n_dates')} dates)",
-            formula="100 × series with no detectable memory effect ÷ series audited (named vs masked tickers)",
-            source=wf_source(ctx, "Walk-forward memorization audit (named vs masked)", ctx.wf["audit_path"]),
-            owner=OWNERS["wf"], value=value, contributors=[f.agents[0] for f in factors], scope="firm",
+    if not (audit and audit.get("rows")):
+        return team_missing(key, label, question)
+    record = src.rel(ctx.wf["audit_path"])
+    rule = next((line for line in (ctx.wf.get("audit_note") or "").splitlines() if line.startswith("Verdict rule")), "")
+    factors = [
+        Factor(
+            key=f"{r['series']}@{r['horizon']}", label=f"{r['series']} signal, {r['horizon']}",
+            value=f"named IC {r['named_ic']:+.3f}, masked {r['masked_ic']:+.3f}, difference {r['diff']:+.3f} [{r['ci_lo']:+.3f}, {r['ci_hi']:+.3f}]",
+            number=r["diff"], status="pass" if r["verdict"] == "no detectable memory effect" else "fail",
+            detail=f"Verdict: {r['verdict']} ({r['n_dates']} dates)",
+            agents=[AgentRef(name=f"{r['series']} {'agent' if r['series'] == 'strategy_weight' else 'analyst'} (walk-forward run)", role="strategy" if r["series"] == "strategy_weight" else "research", specialty=r["series"], attribution="system")],
+            reasoning=f"{r['verdict']}. {rule}".strip(), reasoning_label="Audit verdict and rule",
+            provenance=Provenance(record=f"{record} → rows[{i}]", file=record),
         )
-    return not_produced(
-        key, label, question, f"{OWNERS['synthesis']} (shifted start dates); {OWNERS['wf']} (masked-ticker audit)",
-        synthesis_significance(ctx)[2] or "Needs a sensitivity result for this fund or the firm.",
+        for i, r in enumerate(audit["rows"])
+    ]
+    value, passed, total = checklist(factors)
+    return scored(
+        key, label, question, factors,
+        raw=f"{passed} of {total} signal series unchanged when tickers are masked ({audit.get('n_dates')} dates)",
+        formula="100 × series with no detectable memory effect ÷ series audited (named vs masked tickers)",
+        source=wf_source(ctx, "Frozen walk-forward memorization audit (named vs masked)", ctx.wf["audit_path"]),
+        owner=OWNERS["wf"], value=value, contributors=[f.agents[0] for f in factors], scope="firm",
+    )
+
+
+# ---------------------------------------------------------------- team walk-forward panel
+
+
+TEAM_TITLE = "Team walk-forward evaluation (frozen run)"
+ANALYSTS = ("technical", "fundamentals", "macro", "sentiment", "geopolitics")
+VARIANTS = {
+    "pipeline": ("Full agent pipeline", "Analysts, strategist and execution agent, as run"),
+    "pipeline_no_protective": ("Pipeline without stops and targets", "Same orders with the execution agent's stop and target prices removed"),
+    "pipeline_naive_execution": ("Pipeline with naive execution", "Same strategist weights, all market-on-open orders: no execution agent"),
+    "mechanical_seed": ("Mechanical seed from the same memos", "Weights from the analysts' signed conviction (pm.seed_weights): no strategist"),
+    "equal_weight_buy_hold": ("Equal weight, buy and hold", "Baseline, no agents"),
+    "equal_weight_weekly": ("Equal weight, weekly rebalance", "Baseline, no agents"),
+    "spy_buy_hold": ("SPY, buy and hold", "Benchmark, no agents"),
+    "momentum_12_1_top5": ("12-1 momentum, top five", "Rules baseline, no agents"),
+}
+CONTRIBUTIONS = (
+    ("execution", "Execution agent (vs naive market orders)", "pipeline", "pipeline_naive_execution", "executor"),
+    ("protective", "Stops and targets (vs none)", "pipeline", "pipeline_no_protective", "executor"),
+    ("strategist", "Strategist (vs mechanical seed from the same memos)", "pipeline_naive_execution", "mechanical_seed", "strategy"),
+)
+
+
+def team_missing(key: str, label: str, question: str) -> Score:
+    return not_produced(key, label, question, OWNERS["wf"], "reports/wf/final is not in this deployment (copy reports/wf into the image or set SCORES_WF_DIR).")
+
+
+def team_backtest(ctx: Context) -> Score:
+    key, label, question = "team_backtest", "Pipeline vs baselines", "How did the frozen agent pipeline do against baselines, and which agents added or cost return?"
+    stats, (rows, window) = team_stats(ctx), team_rows(ctx)
+    if not stats or not rows or "random_policy_percentile" not in stats.get("significance", {}):
+        return team_missing(key, label, question)
+    path = Path(ctx.wf["dir"]) / f"results_{window}" / "attribution.csv"
+    record, created = src.rel(path), ctx.wf["manifest"].get("created")
+    total = {name: float(r["total_return"]) for name, r in rows.items()}
+    agents = {
+        "research": [AgentRef(name=f"{a} analyst (walk-forward run)", role="research", specialty=a, attribution="system") for a in ANALYSTS],
+        "strategy": [AgentRef(name="Strategist (walk-forward run)", role="strategy", specialty="strategy", attribution="system")],
+        "executor": [AgentRef(name="Execution agent (walk-forward run)", role="executor", specialty="execution", attribution="system")],
+    }
+    factors = [
+        Factor(
+            key=f"contribution_{k}", label=lbl, value=f"{total[a] - total[b]:+.1%} total return ({pct(total[a])} vs {pct(total[b])})",
+            number=total[a] - total[b], status="pass" if total[a] > total[b] else "fail",
+            detail=f"{VARIANTS[a][0]} minus {VARIANTS[b][0].lower()}, same LLM decisions, {window} window",
+            agents=agents[role], reasoning=ctx.wf.get("summary"), reasoning_label="Walk-forward write-up (summary.md)",
+            provenance=Provenance(record=f"{record} → {a}.total_return − {b}.total_return", file=record, time=created),
+        )
+        for k, lbl, a, b, role in CONTRIBUTIONS
+        if a in total and b in total
+    ]
+    for name, r in rows.items():
+        title, what = VARIANTS.get(name, (name.replace("_", " "), ""))
+        factors.append(
+            Factor(
+                key=name, label=title,
+                value=f"total {pct(float(r['total_return']))}, CAGR {pct(float(r['cagr']))}, max drawdown {pct(abs(float(r['max_drawdown'])))}, Sharpe {float(r['sharpe']):.2f}",
+                number=float(r["total_return"]), detail=f"{what}. Costs ${float(r['costs']):,.0f}, {float(r['n_fills']):.0f} fills",
+                agents=agents["research"] + agents["strategy"] + agents["executor"] if name == "pipeline" else [],
+                provenance=Provenance(record=f"{record} → {name}", file=record, time=created),
+            )
+        )
+    sig = stats["significance"]
+    return scored(
+        key, label, question, factors,
+        raw=f"pipeline {pct(total['pipeline'])} vs SPY {pct(total.get('spy_buy_hold', 0))} and equal weight {pct(total.get('equal_weight_buy_hold', 0))} ({window} window, {stats.get('decisions')} weekly decisions); {sig['random_policy_percentile']:g}th percentile of {sig.get('random_policy_n')} random long-only policies",
+        formula="Percentile rank (0 to 100) of the pipeline's total return among random long-only policies (stats.json random_policy_percentile)",
+        source=wf_source(ctx, f"Frozen walk-forward attribution.csv and stats.json ({window} window)", path),
+        owner=OWNERS["wf"], value=float(sig["random_policy_percentile"]), contributors=agents["research"] + agents["strategy"] + agents["executor"], scope="firm",
+    )
+
+
+TEAM_RINGS = (team_backtest, team_significance, team_confidence, team_execution, team_sensitivity)
+
+
+def team_note(wf: dict | None) -> str:
+    if not wf:
+        return "Not produced yet: reports/wf/final is not in this deployment."
+    cfg = wf["manifest"].get("config", {})
+    return (
+        f"Frozen walk-forward run '{wf['manifest'].get('run_id', wf['dir'].name)}': {cfg.get('model_id', 'model not recorded')} weekly decisions "
+        f"from {cfg.get('first_decision', '?')} to {cfg.get('last_decision', '?')}, marked to {cfg.get('mark_end', '?')}, on Mayank's experiment universe "
+        f"({', '.join(cfg.get('universe', []))}). It evaluates the team's research pipeline, not this fund's strategy. Source: {src.rel(wf['dir'])}."
     )
 
 
@@ -848,7 +986,7 @@ def source_statuses(ctx: Context) -> list[SourceStatus]:
         SourceStatus(
             id="walk_forward", label="Walk-forward evaluation", owner=OWNERS["wf"], location=src.rel(ctx.wf["dir"]) if ctx.wf else "reports/wf/",
             status="present" if ctx.wf else "empty",
-            detail=f"{ctx.wf['n_decisions']} weekly decision records, firm-wide (not this fund's strategy)" if ctx.wf else "reports/wf/ is not in this deployment (set SCORES_WF_DIR or copy reports/wf into the image)",
+            detail=f"{ctx.wf['n_decisions']} weekly decision records; shown in the team panel, not as this fund's results" if ctx.wf else "reports/wf/ is not in this deployment (set SCORES_WF_DIR or copy reports/wf into the image)",
         ),
     ]
 
@@ -869,8 +1007,6 @@ def build_scorecard(fund_id: str, fund: dict, manager, strategy_id: str | None =
         key=lambda s: s["created_at"], reverse=True,
     )
     notes = []
-    if ctx.wf:
-        notes.append("Rings marked firm-wide read the walk-forward run, which evaluates the research pipeline across the firm, not this fund's own strategy.")
     return Scorecard(
         fund_id=fund_id,
         fund_name=fund.get("name", fund_id),
@@ -878,6 +1014,9 @@ def build_scorecard(fund_id: str, fund: dict, manager, strategy_id: str | None =
         strategy={k: ctx.strategy[k] for k in ("id", "name", "author", "created_at", "weights", "cutoff", "end")} if ctx.strategy else None,
         strategies=strategies,
         scores=scores,
+        team_title=TEAM_TITLE,
+        team_note=team_note(ctx.wf),
+        team=[ring(ctx) for ring in TEAM_RINGS],
         sources=source_statuses(ctx),
         agents=[src.agent_ref(agents, a) for a in agents],
         inputs=[ToolCall(agent=src.agent_ref(agents, c["agent_id"]), tool=c["tool"], summary=src.summarize_args(c["args"]), time=c["time"]) for c in calls[-300:]],

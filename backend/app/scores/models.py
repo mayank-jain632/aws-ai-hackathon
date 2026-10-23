@@ -105,6 +105,11 @@ class Scorecard(BaseModel):
     strategy: dict | None = None
     strategies: list[dict] = Field(default_factory=list)
     scores: list[Score]
+    team_title: str = ""
+    team_note: str = ""
+    team: list[Score] = Field(
+        default_factory=list, description="Frozen team walk-forward run; never this fund's own results"
+    )
     sources: list[SourceStatus]
     agents: list[AgentRef]
     inputs: list[ToolCall] = Field(
