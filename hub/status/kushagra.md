@@ -13,6 +13,7 @@ Updated 2026-10-23 by Codex
 - Directly requested by Kushagra: fund home/dashboard, short detailed mandate setup, per-fund overview, and an existing agent canvas per fund. Working in managed worktree fund-dashboard.
 - New files in `frontend/src/funds/`, `backend/app/funds.py`, and `backend/app/routes/funds.py`. Preserve existing board as the first fund, then keep each fund's agents, files, layout, and discussions separate; all agents inside one fund still share its filesystem.
 - Cross-lane integration: minimal main.py router/lifecycle lookup edits and a worker prompt context line are required to scope private delegation to the owning fund. No trading execution, strategy gate, or shared pipeline schema changes.
+- User-requested data breadth: adding cutoff-aware cached data tools and live Exa context search. Cross-lane work touches Lane 1 tool registration and adds a private research router; no experiment or shared financial schema changes. Work is isolated on `codex/agent-data-tools`.
 
 **Blocked, or need from someone**
 - Finance/search API keys are available to hosted workers, but the existing stripped-down registry still exposes only file and delegation tools. No trading functionality has been added by this deployment.
