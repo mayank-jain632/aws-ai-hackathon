@@ -1,7 +1,0 @@
-main { max-width: 42rem; margin: 15vh auto; padding: 2rem; }
-.team { color: #526271; }
-h1 { font-size: clamp(2rem, 6vw, 3.5rem); line-height: 1.1; margin: 0 0 1rem; }
-button { margin-top: 1rem; border: 0; border-radius: 0.35rem; padding: 0.85rem 1.1rem; background: #174b73; color: white; font: inherit; cursor: pointer; }
-button:disabled { opacity: 0.65; cursor: wait; }
-button:focus-visible { outline: 3px solid #e59a27; outline-offset: 4px; }
-[role='status'] { font-size: 0.95rem; max-width: 35rem; }

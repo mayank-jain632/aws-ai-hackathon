@@ -1,43 +1,64 @@
-import { useState } from 'react'
-import './App.css'
-
-type Connection = 'unchecked' | 'checking' | 'connected' | 'failed'
+import { useCallback, useState } from "react";
+import { Tape } from "./components/Tape";
+import { Analysts } from "./components/Analysts";
+import { Book } from "./components/Book";
+import { Performance } from "./components/Performance";
+import { CutoffBar } from "./components/CutoffBar";
+import { EvidenceDrawer } from "./components/EvidenceDrawer";
+import { UNIVERSE, useRun } from "./lib/useRun";
+import { useTape } from "./lib/useTape";
 
 export default function App() {
-  const [connection, setConnection] = useState<Connection>('unchecked')
+  const [cutoff, setCutoff] = useState("2023-01-01");
+  const [selected, setSelected] = useState<string | null>(null);
+  const run = useRun(cutoff);
+  const tape = useTape(UNIVERSE);
+  const close = useCallback(() => setSelected(null), []);
 
-  async function checkBackend() {
-    setConnection('checking')
-    try {
-      const response = await fetch('/api/health', {
-        signal: AbortSignal.timeout(5000),
-      })
-      if (!response.ok) throw new Error('Request failed')
-      const data: unknown = await response.json()
-      if (
-        typeof data !== 'object' || data === null ||
-        !('status' in data) || data.status !== 'ok'
-      ) throw new Error('Unexpected response')
-      setConnection('connected')
-    } catch {
-      setConnection('failed')
-    }
-  }
+  const data = run.data?.data;
 
   return (
-    <main>
-      <p className="team">Team 4</p>
-      <h1>AWS hackathon</h1>
-      <p>The local workspace is ready for your project.</p>
-      <button onClick={checkBackend} disabled={connection === 'checking'}>
-        {connection === 'checking' ? 'Checking…' : 'Check backend connection'}
-      </button>
-      <p role="status" aria-live="polite">
-        {connection === 'connected' ? 'Backend connected.' :
-          connection === 'failed' ? 'Cannot reach the backend. Start it with npm run dev:backend, then try again.' :
-          connection === 'checking' ? 'Connecting to the local API…' :
-          'Check the connection when both local servers are running.'}
-      </p>
-    </main>
-  )
+    <div className="grid h-full grid-rows-[28px_44px_1fr_44px] overflow-hidden">
+      <Tape tape={tape} tickers={UNIVERSE} />
+
+      <header className="grid grid-cols-[1fr_auto] items-center border-b border-line px-3">
+        <div className="flex items-baseline gap-4">
+          <h1 className="serif text-[22px] leading-none text-ink">The Desk</h1>
+          <span className="text-[11px] text-muted">
+            Five analyst agents, one portfolio manager, one cutoff date. A historical experiment, not advice.
+          </span>
+        </div>
+        <dl className="flex items-baseline gap-6 text-[11px]">
+          <div className="flex gap-2">
+            <dt className="label">Universe</dt>
+            <dd className="text-ink">{UNIVERSE.join(" ")}</dd>
+          </div>
+          <div className="flex gap-2">
+            <dt className="label">Baseline</dt>
+            <dd className="text-ink">Equal weight</dd>
+          </div>
+          <div className="flex gap-2">
+            <dt className="label">Rebalance</dt>
+            <dd className="text-ink">Monthly</dd>
+          </div>
+        </dl>
+      </header>
+
+      {data ? (
+        <main className="grid min-h-0 grid-cols-[300px_1fr_440px]">
+          <Analysts memos={data.memos} />
+          <Book weights={data.weights} selected={selected} onSelect={setSelected} />
+          <Performance equity={data.equity} metrics={data.metrics} cutoff={data.cutoff} />
+        </main>
+      ) : (
+        <main className="flex items-center justify-center">
+          <span className="label">Loading</span>
+        </main>
+      )}
+
+      <CutoffBar cutoff={cutoff} onChange={setCutoff} busy={run.isFetching} origin={run.data?.origin} />
+
+      {data && <EvidenceDrawer run={data} ticker={selected} onClose={close} />}
+    </div>
+  );
 }

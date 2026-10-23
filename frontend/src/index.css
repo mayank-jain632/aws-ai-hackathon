@@ -1,3 +1,110 @@
-:root { font-family: system-ui, sans-serif; color: #203241; background: #f7fafc; line-height: 1.6; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-* { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; }
+@import "tailwindcss";
+
+@theme {
+  --color-*: initial;
+  --color-bg: #0b0c0e;
+  --color-panel: #0f1012;
+  --color-ink: #e8e6e1;
+  --color-muted: #8a8782;
+  --color-faint: #4a4844;
+  --color-line: #232528;
+  --color-accent: #d9a441;
+  --color-up: #3fb950;
+  --color-down: #f85149;
+
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+  --radius-*: initial;
+  --radius-sm: 2px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.005em;
+}
+
+/* Tape */
+@keyframes tape-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.tape-track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: tape-scroll 60s linear infinite;
+}
+.tape-track:hover {
+  animation-play-state: paused;
+}
+
+/* Slider */
+input[type="range"].cutoff {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 1px;
+  background: var(--color-line);
+  outline: none;
+}
+input[type="range"].cutoff::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 9px;
+  height: 9px;
+  background: var(--color-accent);
+  border: 0;
+  cursor: ew-resize;
+}
+input[type="range"].cutoff::-moz-range-thumb {
+  width: 9px;
+  height: 9px;
+  background: var(--color-accent);
+  border: 0;
+  border-radius: 0;
+  cursor: ew-resize;
+}
+
+/* Scrollbars inside panels */
+.scroll {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+
+/* Grid items must not grow past the main row */
+main > section {
+  min-height: 0;
+  overflow: hidden;
+}
