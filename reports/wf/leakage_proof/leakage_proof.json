@@ -1,0 +1,557 @@
+{
+ "dates": 55,
+ "all_ok": true,
+ "failures": [],
+ "rows": [
+  {
+   "as_of": "2025-10-03",
+   "real_hash": "971283b321f76c0df2107df9cc7da0419f0b9c3746b3b5737ff90773d2ea2d45",
+   "latest_date_in_prompts": "2025-10-03",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2025-10-10",
+   "real_hash": "cbeccd6f45da8484994b8f5664232292482e5a578c3ca94bd2368d508db1d835",
+   "latest_date_in_prompts": "2025-10-10",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2025-10-17",
+   "real_hash": "490e937e0438192b0e035945d7fa31321cdda644f756f672df7cc21710cfa868",
+   "latest_date_in_prompts": "2025-10-17",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2025-10-24",
+   "real_hash": "b2d22380264c1ac912e7134b56fd76f05daa21b2585e937677ec1bad21ccbc3e",
+   "latest_date_in_prompts": "2025-10-24",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2025-10-31",
+   "real_hash": "709a62b6032d0a0904e98f9d9f24dd1b3c0110b0372532fbe34068480b105b3e",
+   "latest_date_in_prompts": "2025-10-31",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2025-11-07",
+   "real_hash": "a1946fc0199ba583ac3e71de8fc7b005685a450e09b8001134a2a1fe51509070",
+   "latest_date_in_prompts": "2025-11-07",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2025-11-14",
+   "real_hash": "54499e355cff394fe8d3ed929bdec32cd4ba0a0a39e144052a40810ba5286cf6",
+   "latest_date_in_prompts": "2025-11-14",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2025-11-21",
+   "real_hash": "d99f76b34c2fcaa6eab3d2838fc5a3aeb956ee4c044cec03c1ce3824faef1735",
+   "latest_date_in_prompts": "2025-11-21",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2025-11-28",
+   "real_hash": "110cac0af17408c4813750411dc315748f9d1b20d9172ee2c421000a27529328",
+   "latest_date_in_prompts": "2025-11-28",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2025-12-05",
+   "real_hash": "685a72c3295b3691cdfce21c09cf23d44820ddffbdb28f9587c33394d9a60aa0",
+   "latest_date_in_prompts": "2025-12-05",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2025-12-12",
+   "real_hash": "2bb4f3668c824beb8a87ed31fcba9fdb7f5e682ed991663e378c089503419910",
+   "latest_date_in_prompts": "2025-12-12",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2025-12-19",
+   "real_hash": "4944ff08a5040a93600fcff7107b139923e55a39e99f4ef97f5a5f826d639b00",
+   "latest_date_in_prompts": "2025-12-19",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2025-12-26",
+   "real_hash": "56d10923319ed5a25ba206e46a43983080db52050a27cdc504d7b95f2fabd45d",
+   "latest_date_in_prompts": "2025-12-26",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-01-02",
+   "real_hash": "4fd7872ac3fe581df30de8fb86448e81ed20259a2f8c723a8033b48e5199ebc6",
+   "latest_date_in_prompts": "2026-01-02",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-01-09",
+   "real_hash": "14005603bf2a841a68d865d68a76e712a95a6fa1289f510abf5e8e05598053f2",
+   "latest_date_in_prompts": "2026-01-09",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-01-16",
+   "real_hash": "56e89c597ab80f5ad9e77a6a3eea38a73527168617ce4bda1ba9b74c21b902b5",
+   "latest_date_in_prompts": "2026-01-16",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-01-23",
+   "real_hash": "fe35fa4406df9f799b319b66788a20b1ec96a05f86eeaf3874987a45e0064a3c",
+   "latest_date_in_prompts": "2026-01-23",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-01-30",
+   "real_hash": "ec9de712fb8dd1b8282e245577a823978b8aebab6402dcd81dcf1a2acc54cc60",
+   "latest_date_in_prompts": "2026-01-30",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-02-06",
+   "real_hash": "f92896734921b7aae256f3d8d54e60244904542b51e0e93614bf811ff4b53c7f",
+   "latest_date_in_prompts": "2026-02-06",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-02-13",
+   "real_hash": "a41723a32be6ee111a86e8e0c9b9e23ed9e64a144e8ebacd9bcb64c03eb0c3cb",
+   "latest_date_in_prompts": "2026-02-13",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-02-20",
+   "real_hash": "06d3736134192bfc8e6c6d272a23b6289f77483b138ed364e0109dc1baffb231",
+   "latest_date_in_prompts": "2026-02-20",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-02-27",
+   "real_hash": "1fa642252ed5578110b004d035e10f289535a08bf1da4e9fb364775a93f71a2f",
+   "latest_date_in_prompts": "2026-02-27",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-03-06",
+   "real_hash": "e0e208f153588d7e20a7dda8f1fe9a6242e371a89ff72fa763bedcc6fb1ef001",
+   "latest_date_in_prompts": "2026-03-06",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-03-13",
+   "real_hash": "ea25b395e47c8fe989e7e92b62614d4769bcf3d8b5d91fc04cef13bef365ff13",
+   "latest_date_in_prompts": "2026-03-13",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-03-20",
+   "real_hash": "14a2d6de6f40b8828bef9e371d5b6f34476abdc49b309b11b3a9c59192e5abd4",
+   "latest_date_in_prompts": "2026-03-20",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-03-27",
+   "real_hash": "d1084a32e125bfaafcb16910100e892f2e18f612e28d4f7f1aac21dd4c8fe9d9",
+   "latest_date_in_prompts": "2026-03-27",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-04-02",
+   "real_hash": "1a74f2581d96b9487e56313731100ab464d72fb0822b022319f1edc924ef0837",
+   "latest_date_in_prompts": "2026-04-02",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-04-10",
+   "real_hash": "c7187e437cb9657608a5be4774c14ffb15d499e453670cad7265f4e046a5c33b",
+   "latest_date_in_prompts": "2026-04-10",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-04-17",
+   "real_hash": "db063313f7056a34ad48d2ad5d08b7025d3997726c0ac8872f59474204301296",
+   "latest_date_in_prompts": "2026-04-17",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-04-24",
+   "real_hash": "a56b0326ab36b210027f00dec89de579694638125a5c3eae0e3c5dffc9a8ff36",
+   "latest_date_in_prompts": "2026-04-24",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-05-01",
+   "real_hash": "8c0484c71c4b47973fb10199f0a8e80c026a89f196aac170dff5c0d1c7c9e5a9",
+   "latest_date_in_prompts": "2026-05-01",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-05-08",
+   "real_hash": "94d3592351a317abd62f120f9c5d9c17607306d5b4a9bb22741d6959d0836f01",
+   "latest_date_in_prompts": "2026-05-08",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-05-15",
+   "real_hash": "6b281f88595b0d9d6cf426e9af753655620dbd99b8afe6c055bde1f4552cc50f",
+   "latest_date_in_prompts": "2026-05-15",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-05-22",
+   "real_hash": "5e94779dba876e556abb776064aaf2713e3d75215e5803e36e309a829e3e178d",
+   "latest_date_in_prompts": "2026-05-22",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-05-29",
+   "real_hash": "b93035106aa7d2aa4f0d64af38148998042eb53ee5a8816b122fe370d36bee01",
+   "latest_date_in_prompts": "2026-05-29",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-06-05",
+   "real_hash": "a8f99cc2c49ecccfa3ffaeeab2a25d7d71687a00f2f37391d11f035b05099868",
+   "latest_date_in_prompts": "2026-06-05",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-06-12",
+   "real_hash": "b2c5762f89e30d596c6884e5de63ebbcb92eddfdc9bb03df7f98f6bf56395729",
+   "latest_date_in_prompts": "2026-06-12",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-06-18",
+   "real_hash": "86285bbea35e9039b3bd1bdbf8d8efb09132941607f2e3305dfcde6bae1042e9",
+   "latest_date_in_prompts": "2026-06-18",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-06-26",
+   "real_hash": "35d12d1f5f37ddfc9900abb61fef83f1d809bd74a578ee9e586df13f00e573f8",
+   "latest_date_in_prompts": "2026-06-26",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-07-02",
+   "real_hash": "6292652cd1f984913513469872be1665e557a29df0bd65943c9a545d43f9093d",
+   "latest_date_in_prompts": "2026-07-02",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-07-10",
+   "real_hash": "008547fd23b35f5739257d111bc8809a584b7fe3d6ccdc458b557ff258189463",
+   "latest_date_in_prompts": "2026-07-10",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-07-17",
+   "real_hash": "c10379d6cb9a29914e82b33e10295672e48958a8652abb75769fe01b31154904",
+   "latest_date_in_prompts": "2026-07-17",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-07-24",
+   "real_hash": "2df8c89144ab4d7ecb2033d80e762bb26ffc6e32a51bca0420b9dd9c35630e36",
+   "latest_date_in_prompts": "2026-07-24",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-07-31",
+   "real_hash": "684c80282a56bda52f7089c51d32ac89b7e11b7d47952fff23db3e4c99b64ddb",
+   "latest_date_in_prompts": "2026-07-31",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-08-07",
+   "real_hash": "b6d8ba7f959102e1d9663572e11775612b9cf9984b74196c458a25480295719a",
+   "latest_date_in_prompts": "2026-08-07",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-08-14",
+   "real_hash": "8502e19ea390f02f71b2ef94bd2adb611377e4a590ced2d7dca91f39903070e4",
+   "latest_date_in_prompts": "2026-08-14",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-08-21",
+   "real_hash": "1adf3c979e4278fcfecb8b3fa340a3314f837f938748ecda36432d43c1574732",
+   "latest_date_in_prompts": "2026-08-21",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-08-28",
+   "real_hash": "33aeb997056458ab197e73fef9957f4afbb10c0f931ccd6bad9e529050efc3c0",
+   "latest_date_in_prompts": "2026-08-28",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-09-04",
+   "real_hash": "c6ad20db531b8099a7033252284e18076720cbef4131739900b4d4517fc355fb",
+   "latest_date_in_prompts": "2026-09-04",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-09-11",
+   "real_hash": "ee4b7a77c50ab293ae0551d3da86ee152d7ea14582c7b4961b94d1d88484dbe7",
+   "latest_date_in_prompts": "2026-09-11",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-09-18",
+   "real_hash": "874bde8382cc833d48b5cc9b59175a98bd554e2128f15cfc5e2be39772813b51",
+   "latest_date_in_prompts": "2026-09-18",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-09-25",
+   "real_hash": "5a1e85ac889e85765a8aa834c998b34ea62672c5da03c7abdd7d30b0c7e9a687",
+   "latest_date_in_prompts": "2026-09-25",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-10-02",
+   "real_hash": "6ab9be6624562488efc1e9aade3f667a32cafd6a64314493988db54a55196b1b",
+   "latest_date_in_prompts": "2026-10-02",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-10-09",
+   "real_hash": "117ecf25a572492b6baffd852ed09aa534d54d4a75ba8831d1a76c161aa14396",
+   "latest_date_in_prompts": "2026-10-09",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  },
+  {
+   "as_of": "2026-10-16",
+   "real_hash": "79531cf308f0c1ac3c0e700ba2cfac03a98e21e165a6f1c7bc91490316860a0d",
+   "latest_date_in_prompts": "2026-10-16",
+   "truncate_identical": true,
+   "poison_identical": true,
+   "poison_was_present": true,
+   "no_future_dates": true,
+   "ok": true
+  }
+ ]
+}
