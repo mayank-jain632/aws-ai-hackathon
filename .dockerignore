@@ -10,3 +10,6 @@
 frontend/dist
 backend/.bedrock_agentcore*
 backend/resources.json
+
+!data/
+!data/**
