@@ -1,9 +1,11 @@
 ---
-description: Team 4 hub. Read AGENTS.md and hub/DECISIONS.md before any work in this repo.
+description: Team 4 hub. Read AGENTS.md, hub/DECISIONS.md, hub/PRD.md, and hub/BUILDING.md before any work in this repo.
 alwaysApply: true
 ---
 
-Before any work in this repo, read `AGENTS.md` and `hub/DECISIONS.md` at the repo root and follow them. They are the only rulebook; this file only points there. Start your first reply in each chat with the hub version tag from `AGENTS.md`.
+Before any work in this repo, read `AGENTS.md`, `hub/DECISIONS.md`, `hub/PRD.md`, and `hub/BUILDING.md` at the repo root and follow them. They are the only rulebook; this file only points there. Start your first reply in each session with the hub version tag from `AGENTS.md`.
 
 @AGENTS.md
 @hub/DECISIONS.md
+@hub/PRD.md
+@hub/BUILDING.md
