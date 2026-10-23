@@ -1,0 +1,1 @@
+Before any work in this repo, read `AGENTS.md` and `hub/DECISIONS.md` at the repo root and follow them. They are the only rulebook; this file only points there. Start your first reply in each session with the hub version tag from `AGENTS.md`.

@@ -1,0 +1,12 @@
+*
+!backend/
+!backend/**
+!frontend/
+!frontend/**
+!package.json
+!package-lock.json
+**/node_modules
+**/__pycache__
+frontend/dist
+backend/.bedrock_agentcore*
+backend/resources.json

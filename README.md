@@ -6,7 +6,9 @@ reconciles them into target weights with a rationale and a "changes my mind" tri
 position. The portfolio is then backtested from the cutoff forward against equal weight
 and SPY. The result is a single report page: equity curve and metrics against the baseline, the
 allocation with the PM's rationale, and each analyst memo with its cited sources.
-`PLAN.md` records the original build plan; the next phase is defined by a PRD.
+`PLAN.md` records the original build plan; the next phase is defined by a PRD. Team
+rules and decisions are in `AGENTS.md` and `hub/`. The Docker agent canvas is on branch
+`agent-canvas` (`npm run dev:canvas` on `main` still builds its sandbox).
 
 **This is a historical experiment, not financial advice.**
 
