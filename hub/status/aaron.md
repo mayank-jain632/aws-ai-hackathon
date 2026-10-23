@@ -80,6 +80,7 @@ What "not produced yet" means on screen: a dashed ring with "?", the reason, and
 - Nothing else in the 15:00 freeze scope. If time allows: run the demo on the hosted canvas once Lane 5 deploys this commit
 
 **Blocked, or need from someone**
+- Lane 5, at Aaron's request (15:09): redeploy current main (88df4ff or later) to the live build when it does not collide with a deploy or agent run already in flight. Over release 4939aee it adds the scores view's plain-language definitions (c0d4827, 88df4ff; read-only, no contract or order-path change). It would also ship Lane 1/5's own 29cf67d, fdc343e and c40efbd (autonomous paper defaults); Kushagra to confirm those are meant to go out together.
 - Nothing blocks the watchdog. D26 is superseded: Kushagra's deploy owner created the hosting account's own Guardrail and Memory (Owner=Kushagra) with `scripts/hosting_watchdog.py`, which reuses `scripts/watchdog_aws.py`, and scoped the hosted role himself
 - Hosted app, once that deploy is live: Guardrail scans, fund-scoped AgentCore Memory and CloudWatch `Team4/Watchdog` metrics. Only in Aaron's participant account: the EventBridge rule and log group `/aws/events/aaron-watchdog` and the alarm `aaron-watchdog-firm-wide-halt`. The hosted role can put events on the default bus, but no rule there picks them up
 - The hosted second opinion goes to Aaron's AgentCore Runtime when `AGENTCORE_OPINION_ARN` is set (the AgentCore session owns that hook); otherwise Luna on Bedrock, unchanged
