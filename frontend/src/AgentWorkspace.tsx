@@ -97,7 +97,7 @@ export default function AgentWorkspace({ fundId, fundName }: { fundId: string; f
   return (
     <main className="app">
       <header className="topbar">
-        <div className="brand"><span className="brand-mark">⌘</span><div><strong>Agent canvas</strong><span>{fundName}</span></div></div>
+        <div className="brand"><div><strong>Agent canvas</strong><span>{fundName}</span></div></div>
         <div className="connection"><i className={connected ? 'online' : ''} />{connected ? `Shared board · ${viewers} online` : 'Reconnecting…'}{identity.hosted ? <><span style={{ marginLeft: 12 }}>{identity.email.split('@')[0]}</span><a href="/logout" style={{ marginLeft: 12, color: 'inherit' }}>Sign out</a></> : null}</div>
       </header>
       <div className="workspace">
@@ -113,18 +113,18 @@ export default function AgentWorkspace({ fundId, fundName }: { fundId: string; f
             </div>
             <div id="agent-content" className="panel-content" role="tabpanel" aria-labelledby={`tab-${tab}`}>
               {tab === 'chat' ? <>
-                {!agent?.messages.length ? <div className="empty-chat"><div className="empty-icon">✳</div><h2>What are we working on?</h2><p>Give this agent a task. It can work with shared files or create its own subagents.</p><button className="suggestion" onClick={() => { setDraft('Create a researcher agent named Scout. Ask it to write a short introduction in hello.txt, read it back, and report the result.'); textarea.current?.focus() }}>Create a researcher agent <span>↗</span></button></div> : agent.messages.map(message => <div key={message.id} className={`message ${message.role}`}><span className="message-author">{message.role === 'user' ? message.source || 'You' : agent?.name}</span><div>{message.text}</div></div>)}
+                {!agent?.messages.length ? <div className="empty-chat"><h2>Start a task</h2><p>Ask for research, a file, or a subagent.</p><button className="suggestion" onClick={() => { setDraft('Create a research agent named Scout. Ask it to read mandate.md and write research-plan.md with the data needed to research this fund. Do not trade or invent market data.'); textarea.current?.focus() }}>Create research agent</button></div> : agent.messages.map(message => <div key={message.id} className={`message ${message.role}`}><span className="message-author">{message.role === 'user' ? message.source || 'You' : agent?.name}</span><div>{message.text}</div></div>)}
                 {running ? <div className="working" role="status"><span className="pulse" />{agent?.name} is working… <button onClick={() => setTab('activity')}>View activity</button></div> : null}
                 {lastError ? <div className="error-box" role="alert"><strong>The run couldn’t finish</strong><p>{lastError.detail}</p><small>If the workshop token expired, refresh your dedicated AWS credentials and send the message again.</small></div> : null}
                 <div ref={bottom} />
               </> : null}
               {tab === 'activity' ? <div className="activity-list">{!agent?.activity.length ? <p className="empty-text">Tool calls and run activity will appear here.</p> : agent.activity.map(item => <details key={item.id} className={`activity-item ${item.kind}`}><summary><i /><span>{item.label}</span><time>{new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time></summary>{item.detail ? <pre>{item.detail}</pre> : <p>No additional details.</p>}</details>)}</div> : null}
-              {tab === 'files' ? <div className="files"><p className="workspace-path">{agent?.workspace || '.local/workspace'}</p>{file ? <><button className="back-link" onClick={() => { fileRequest.current++; setFile(null) }}>‹ All files</button><h2 className="file-title">{file.path}</h2><pre className="file-preview">{file.content}</pre></> : !agent?.files.length ? <p className="empty-text">No files yet. Ask Dexter to create one.</p> : agent.files.map(path => <button className="file-row" key={path} onClick={() => void openFile(path)}><span>▤</span>{path}<span>↗</span></button>)}</div> : null}
+              {tab === 'files' ? <div className="files"><p className="workspace-path">{agent?.workspace || '.local/workspace'}</p>{file ? <><button className="back-link" onClick={() => { fileRequest.current++; setFile(null) }}>‹ All files</button><h2 className="file-title">{file.path}</h2><pre className="file-preview">{file.content}</pre></> : !agent?.files.length ? <p className="empty-text">No files yet.</p> : agent.files.map(path => <button className="file-row" key={path} onClick={() => void openFile(path)}>{path}</button>)}</div> : null}
             </div>
             {error ? <p className="request-error" role="alert">{error}</p> : null}
             <form className="composer" onSubmit={send}>
               <textarea ref={textarea} aria-label={`Message ${agent?.name || 'agent'}`} placeholder={`Give ${agent?.name || 'the agent'} a task…`} value={draft} maxLength={12000} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void send(event) } }} />
-              <div className="composer-footer"><span>Shared workspace for all agents</span>{running ? <button type="button" className="stop-button" onClick={() => void stop()}>■ Stop</button> : <button className="send-button" aria-label="Send message" disabled={!draft.trim() || !connected || sending}>↑</button>}</div>
+              <div className="composer-footer"><span>Shared files</span>{running ? <button type="button" className="stop-button" onClick={() => void stop()}>■ Stop</button> : <button className="send-button" aria-label="Send message" disabled={!draft.trim() || !connected || sending}>↑</button>}</div>
             </form>
           </aside>
         ) : null}

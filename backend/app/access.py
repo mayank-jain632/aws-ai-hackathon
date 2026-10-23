@@ -12,14 +12,12 @@ from urllib.parse import parse_qs
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse, Response
 
-LOGIN = """<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agent canvas · Demo login</title></head>
-<body style="font-family:system-ui;background:#f5f6fa;display:grid;place-items:center;min-height:90vh;color:#202530">
-<form method="post" action="/login" style="background:white;padding:40px;border:1px solid #e2e6ed;border-radius:12px;width:320px;max-width:75vw">
-<p style="font-size:12px;color:#78808f">AWS HACKATHON</p><h1 style="font-size:26px">Agent canvas</h1><p>Sign in to your team's shared demo.</p>
-<label for="email">Demo account</label><select id="email" name="email" style="padding:12px;width:100%;margin:8px 0 20px">__ACCOUNTS__</select>
-<label for="password">Password</label><input id="password" name="password" type="password" required autocomplete="current-password" style="padding:12px;box-sizing:border-box;width:100%;margin-top:8px">
-<p style="color:#bd3a35">__ERROR__</p><button style="padding:12px;width:100%;border:0;border-radius:6px;background:#5265d9;color:white;font-size:14px">Open shared demo</button>
-<p style="font-size:12px;color:#78808f">Your team shares agents, conversations, files, and the canvas.</p></form></body></html>"""
+LOGIN = """<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fund desk · Sign in</title>
+<style>*{box-sizing:border-box}body{margin:0;font:14px system-ui,sans-serif;background:#f3f1ed;color:#292622;min-height:100dvh;display:grid;place-items:center;padding:24px}form{width:360px;max-width:100%;padding:32px;border:1px solid #ddd7cf;background:#faf9f6}h1{font:400 32px Georgia,serif;margin:0 0 12px}p{font-size:13px;color:#756c62;line-height:1.6}label{display:block;margin:24px 0 8px;font-size:12px}input,select,button{font:inherit;width:100%;padding:12px;border:1px solid #cfc4b7;background:#faf9f6;color:#292622;border-radius:2px}button{margin-top:8px;background:#874e4c;color:#fffaf5;border-color:#874e4c;cursor:pointer}button:hover{background:#74413f}input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid #874e4c;outline-offset:3px}.error{color:#9b4036}.aws{margin-top:24px;font-size:11px;text-align:center}</style></head><body>
+<form method="post" action="/login"><h1>Fund desk</h1><p>Sign in to your shared team workspace.</p>
+<label for="email">Demo account</label><select id="email" name="email">__ACCOUNTS__</select>
+<label for="password">Password</label><input id="password" name="password" type="password" required autocomplete="current-password">
+<p class="error">__ERROR__</p><button>Sign in</button><p class="aws">Built on AWS</p></form></body></html>"""
 
 
 class HostedAccess:

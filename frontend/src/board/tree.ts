@@ -7,9 +7,9 @@ const LEVEL_GAP = 100
 export type Position = { x: number; y: number }
 
 /** Center each parent over its children's measured subtrees. */
-export function layoutTree(agents: Agent[], collapsed: Set<string>) {
+export function layoutTree<T extends Pick<Agent, 'id' | 'parentId'>>(agents: T[], collapsed: Set<string>) {
   const byId = new Map(agents.map(agent => [agent.id, agent]))
-  const children = new Map<string, Agent[]>()
+  const children = new Map<string, T[]>()
   for (const agent of agents) {
     if (!agent.parentId) continue
     const siblings = children.get(agent.parentId) || []
@@ -25,8 +25,8 @@ export function layoutTree(agents: Agent[], collapsed: Set<string>) {
     return width
   }
   const positions: Record<string, Position> = {}
-  const visible: Agent[] = []
-  function place(agent: Agent, left: number, depth: number) {
+  const visible: T[] = []
+  function place(agent: T, left: number, depth: number) {
     const width = measure(agent.id)
     positions[agent.id] = { x: left + (width - NODE_WIDTH) / 2, y: 80 + depth * (NODE_HEIGHT + LEVEL_GAP) }
     visible.push(agent)

@@ -135,7 +135,7 @@ export function Canvas({ agents, connected, selectedId, onSelect, onDeselect, po
               <text className="agent-footer" x="19" y="158">{agent.files.length} {agent.files.length === 1 ? 'file' : 'files'}</text>
               {tree.children.get(agent.id)?.length ? <g role="button" tabIndex={0} aria-label={`${collapsed.has(agent.id) ? 'Expand' : 'Collapse'} ${agent.name} branch`} onPointerDown={event => event.stopPropagation()} onClick={() => toggleBranch(agent.id)} onKeyDown={event => {
                 if (event.key === 'Enter' || event.key === ' ') { event.stopPropagation(); event.preventDefault(); toggleBranch(agent.id) }
-              }}><rect x="156" y="140" width="138" height="27" fill="transparent" /><text className="agent-footer branch-toggle" x="281" y="158" textAnchor="end">{tree.children.get(agent.id)!.length} {tree.children.get(agent.id)!.length === 1 ? 'subagent' : 'subagents'} {collapsed.has(agent.id) ? '▸' : '▾'}</text></g> : <text className="agent-footer" x="281" y="158" textAnchor="end">Open agent ↗</text>}
+              }}><rect x="156" y="140" width="138" height="27" fill="transparent" /><text className="agent-footer branch-toggle" x="281" y="158" textAnchor="end">{tree.children.get(agent.id)!.length} {tree.children.get(agent.id)!.length === 1 ? 'subagent' : 'subagents'} {collapsed.has(agent.id) ? '▸' : '▾'}</text></g> : <text className="agent-footer" x="281" y="158" textAnchor="end">Open agent</text>}
             </g>
           })}
         </g>
