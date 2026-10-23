@@ -206,3 +206,26 @@ _Drafted as D15 before `main` took D15 to D20; renumbered on this branch to avoi
 **Human instruction:** Kushagra selected "use mayanks" after the comparison, verified in the coordinating chat, and requested completion of the dedicated-agent flow with Opus 4.6 backtesting.
 **Implementation:** Make WF the Desk default with no failure fallback; explicit legacy remains an identified corrected reference. Bind execution and human approval to current engine/version, policy, frozen strategy and exact evaluation. Freeze author model at registration rather than consulting mutable agent settings; old unknown authors stay unknown. Correct the reproduced missing month-start return without rewriting stored results. Preserve conditional/unknown model-memory labels and the pinned blind evaluator model.
 **Affects:** Lane 1 desk/roles/human approval, Lane 2 WF adapters/reference comparison, Lane 4 read-only scores and tests. No new order, threshold, cloud resource, dependency or experiment authorized. Existing paper receipt and stop are preserved; hosting owner verifies the new engine separately.
+
+### D32 · Proposed · 14:12 · Aaron (logged by Claude Code), for Kushagra's deployment owner
+**Decision:** At the redeploy, the hosted watchdog second opinion calls AgentCore Runtime `aaron_watchdog_opinion` in Aaron's participant account across accounts, so it works for every teammate and judge on the hosted app (Aaron's call, relayed by his lead orchestrator). No code change: the client shipped with D28.
+**Status:** pending Aaron's resource policies. AWS requires a resource-based policy on both the runtime and its `runtime-endpoint/DEFAULT` for a cross-account caller (AgentCore Developer Guide, "Resource-based policies", hierarchical authorization). Aaron applies both in his account, each allowing only `bedrock-agentcore:InvokeAgentRuntime` for `arn:aws:iam::709515537151:role/team4-agent-canvas`.
+**Deployment owner adds** this statement to the `team4-agent-canvas` role's inline `app` policy in `scripts/hosting.py`:
+```json
+{
+  "Sid": "InvokeWatchdogOpinionRuntime",
+  "Effect": "Allow",
+  "Action": "bedrock-agentcore:InvokeAgentRuntime",
+  "Resource": [
+    "arn:aws:bedrock-agentcore:us-east-1:556200168424:runtime/aaron_watchdog_opinion-v3mruu2T4a",
+    "arn:aws:bedrock-agentcore:us-east-1:556200168424:runtime/aaron_watchdog_opinion-v3mruu2T4a/runtime-endpoint/DEFAULT"
+  ]
+}
+```
+and this line to the hosted environment (the `team4-agent-canvas-environment` secret that `start.sh` loads), then redeploys:
+```
+AGENTCORE_OPINION_ARN=arn:aws:bedrock-agentcore:us-east-1:556200168424:runtime/aaron_watchdog_opinion-v3mruu2T4a
+```
+**Safety:** any failure (AccessDenied before Aaron's policies exist, a timeout, an invalid reply) returns None and the existing in-process Luna path answers. The opinion runs after the gate's final verdict, never on the order path, so this cannot break the demo.
+**Verify after deploy:** on a fund with a blocked or near-miss order (or after `POST /api/funds/{id}/watchdog/audit`), the newest `opinion` entry in `GET /api/funds/{id}/watchdog` has `source` starting `agentcore:aaron_watchdog_opinion`, and `GET /api/agentcore` lists the call with `ok: true` and an `xray_trace_id`. If `source` starts `bedrock:`, the `error` field in `GET /api/agentcore` says why. Aaron then opens that trace ID on the CloudWatch X-Ray trace page in his account.
+**Affects:** Lane 5 `scripts/hosting.py` (one statement, one environment value) and one redeploy. Nothing new in the hosting account; in Aaron's account only the two resource policies.

@@ -30,30 +30,17 @@ Cleanup previews by default, checks the account and every ownership tag, and the
 AWS_PROFILE=team4-toolkit uv run python scripts/agentcore_cleanup.py --apply --restore-transaction-search
 ```
 
-## Hosting account runbook (for the deployment owner, after the freeze)
+## Hosted app, across accounts (D32)
 
-The hosted app calls AWS as `team4-agent-canvas` in the hosting account, which is not Aaron's participant account. To have it use the hosted second opinion:
+The hosted app runs as `team4-agent-canvas` in the hosting account and calls the runtime in Aaron's participant account. Three pieces, all required by AWS for a cross-account `InvokeAgentRuntime` (AgentCore Developer Guide, "Resource-based policies", hierarchical authorization):
 
-1. With hosting-account credentials, from a checkout of `main`: `./workshop-run uv run python scripts/agentcore_deploy.py`, then the same with `--apply`. It prints the runtime ARN and the exact IAM statement.
-2. Add that statement to the `team4-agent-canvas` role policy in `scripts/hosting.py` (shape below; `--policy` prints it again from the inventory).
-3. Set `AGENTCORE_OPINION_ARN=<printed ARN>` in the hosted environment and redeploy. Lessons recall needs D26's Memory permissions on the same role; without them the runtime still answers, with no lessons.
-4. Check: trigger a blocked order, then `GET /api/agentcore` shows the invocation with `ok: true` and an X-Ray trace ID.
+1. Aaron's account: a resource-based policy on the runtime and another on its `runtime-endpoint/DEFAULT`, each allowing only `bedrock-agentcore:InvokeAgentRuntime` for the `team4-agent-canvas` role ARN. Each policy's `Resource` must be the exact ARN it is attached to.
+2. Hosting account: the role's identity policy allows the same action on both ARNs (statement in D32; `scripts/agentcore_deploy.py --policy` prints it).
+3. Hosted environment: `AGENTCORE_OPINION_ARN` set to the runtime ARN (value in D32), then a redeploy.
 
-## IAM handoff for team4-agent-canvas
+No qualifier is needed (the client omits it, so AgentCore uses `DEFAULT`), and the runtime session ID and `traceparent` need nothing extra across accounts; spans land in Aaron's account. Until all three exist the hosted call fails and the in-process Luna path answers. Verification steps are in D32.
 
-```json
-{
-  "Sid": "InvokeWatchdogOpinionRuntime",
-  "Effect": "Allow",
-  "Action": "bedrock-agentcore:InvokeAgentRuntime",
-  "Resource": [
-    "arn:aws:bedrock-agentcore:us-east-1:<hosting-account-id>:runtime/aaron_watchdog_opinion-<suffix>",
-    "arn:aws:bedrock-agentcore:us-east-1:<hosting-account-id>:runtime/aaron_watchdog_opinion-<suffix>/runtime-endpoint/*"
-  ]
-}
-```
-
-`<suffix>` is the ID AgentCore assigns at creation; the deploy prints the full ARNs. Not applied anywhere (D25). AgentCore Runtime also accepts a resource-based policy (`PutResourcePolicy`), so the hosted role could call the runtime in Aaron's participant account without a second deploy: that needs this statement with that runtime's ARN plus a runtime policy naming the `team4-agent-canvas` role. Neither is set up.
+A second deploy in the hosting account is the alternative: run `scripts/agentcore_deploy.py --apply` there with hosting credentials, grant the role the `--policy` statement, and point `AGENTCORE_OPINION_ARN` at that runtime instead.
 
 ## Roadmap, not built: AgentCore Gateway
 
@@ -61,6 +48,6 @@ Expose the desk and watchdog APIs as MCP tools through an AgentCore Gateway, so 
 
 ## Limits
 
-- The resources are in Aaron's participant account, not the hosting account. The hosted app has no `AGENTCORE_OPINION_ARN` and keeps the in-process path. Adopting it there means rerunning the deploy in the hosting account and granting `team4-agent-canvas` `bedrock-agentcore:InvokeAgentRuntime` on the runtime ARN (D25, D28).
+- The resources are in Aaron's participant account, not the hosting account. Until D32's three pieces are in place the hosted app keeps the in-process path.
 - The opinion explains a verdict; it cannot change one. Nothing on the order path waits on AgentCore except the second opinion itself, which runs after the gate.
-- Recalled lessons are whatever Memory's semantic strategy has extracted so far. Right after the first blocks it can be empty, and the payload says "none recalled yet".
+- The hosted path needs the desk's server-assigned fund ID (8533f38); a desk without one keeps the in-process path. Lessons are recalled only for that fund, never across funds. Recalled lessons are whatever Memory's semantic strategy has extracted so far. Right after the first blocks it can be empty, and the payload says "none recalled yet".
