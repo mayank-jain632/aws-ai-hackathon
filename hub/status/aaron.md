@@ -1,6 +1,6 @@
 # Aaron · Lane 4 (moderator half): watchdog and moderator
 
-Updated 14:13 by Claude Code (watchdog and scores sessions share this file)
+Updated 14:14 by Claude Code (watchdog and scores sessions share this file)
 
 **Shipped** (on `main`, locally checked, broker mocked; reference in `docs/watchdog.md`)
 - Pre-trade gate `backend/app/watchdog/` (D17, D19): 17 deterministic rules (16 checks plus a market-hours note), no LLM in the path. Emergency stop, trading permission, client universe, ticker exists in our data, backend PASS (buys), quantity/cash/no-short sanity, per-order size, position size, top-three concentration, account and tested drawdown, price band vs last close, rapid fire, duplicate under a new id, same-day wash trade, daily turnover, daily order count. The most serious block leads the reason
@@ -71,10 +71,10 @@ What "not produced yet" means on screen: a dashed ring with "?", the reason, and
 - Nothing else in the 15:00 freeze scope. If time allows: run the demo on the hosted canvas once Lane 5 deploys this commit
 
 **Blocked, or need from someone**
-- Lane 1: `roles.py` now lists `watchdog_lessons` for strategy, executor and moderator and `watchdog_audit` for moderator, plus one sentence each in the strategy and executor instructions. Say if you want them placed differently
-- Lane 5: hosted deploy of this commit to see the gate on the real Alpaca paper account
-- Lane 5: add the D26 statement to the hosted role in `scripts/hosting.py` and redeploy, so live data and the AWS wiring run on the hosted app
-- Not verified: live Alpaca market data (keys live only in the hosted secret, D25), the AWS wiring from the hosted role (needs D26), the hosting account's Guardrail and Memory (Lane 5 provisions them), the built-container registry listing
+- Nothing blocks the watchdog. D26 is superseded: Kushagra's deploy owner created the hosting account's own Guardrail and Memory (Owner=Kushagra) with `scripts/hosting_watchdog.py`, which reuses `scripts/watchdog_aws.py`, and scoped the hosted role himself
+- Hosted app, once that deploy is live: Guardrail scans, fund-scoped AgentCore Memory and CloudWatch `Team4/Watchdog` metrics. Only in Aaron's participant account: the EventBridge rule and log group `/aws/events/aaron-watchdog` and the alarm `aaron-watchdog-firm-wide-halt`. The hosted role can put events on the default bus, but no rule there picks them up
+- The hosted second opinion goes to Aaron's AgentCore Runtime when `AGENTCORE_OPINION_ARN` is set (the AgentCore session owns that hook); otherwise Luna on Bedrock, unchanged
+- Not verified by this session: the hosted app's Guardrail, Memory and metrics calls and its live Alpaca market data (both run only on the hosted app; neither observed from here), and the built-container registry listing
 
 **Files I am working in right now**
 - AgentCore Runtime: `backend/app/agentcore/`, `backend/app/routes/agentcore.py`, `backend/tests/test_agentcore.py`, `scripts/agentcore_deploy.py`, `scripts/agentcore_cleanup.py`, `docs/agentcore.md`; one-line hooks in `backend/app/watchdog/opinion.py` and `backend/app/main.py`
