@@ -91,3 +91,9 @@ When the team answers one, delete it here and log the answer below as a decision
 **Instruction:** Update the Markdown files to match the native Dexter tools and removal of the extra research layer and mode locks.
 **Implementation:** Correct README setup/tool documentation, AGENTS verified facts, and PRD descriptions of shipped live tools versus the planned historical pipeline. Preserve prior decision entries as history, including D11 and its reversal in D13. Provider checks used mocked responses; AWS deployment of the tool update remains unverified.
 **Affects:** Documentation only, including Lane 1 integration descriptions in the PRD. No runtime, rule, experiment, or deployment changes.
+
+
+### D15 · Proposed · Kushagra, direct documentation and coordination correction
+**Instruction:** Keep the product direction, remove bloated or incorrect implementation context, include features already built, and make reuse of existing Dexter tools the default before adding equivalent tools. Send the corrections to breath of data, different agents, and kinda mina chat.
+**Implementation:** Shorten AGENTS/PRD/BUILDING; bump the rules marker to Hub v3 for the reuse-first rule. Record existing login, collaboration, persistent shared files, native tools and AWS hosting, the newly merged fund dashboard, and separate deployed/locally-verified/in-flight states. Correct the stale baseline status and snapshot provenance language. D13 already records the native-tool correction; this pass changes documentation only and preserves the decision log.
+**Affects:** Cross-lane documentation and integration guidance; no runtime, provider, experiment, infrastructure, or live-deployment changes. The human explicitly authorized these documentation edits.

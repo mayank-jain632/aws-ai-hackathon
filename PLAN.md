@@ -5,10 +5,7 @@ Track page: https://atx.rahman.dev/track-3.html
 
 ---
 
-> **Status (Oct 23, afternoon):** this plan was executed as the baseline. The dense "Desk"
-> layout, live tape and evidence drawer were then replaced by a plain single-column report
-> page, since judging weighs breadth of analysis variables and statistically tested backtests
-> over UI. Section 2 and 3 below are historical. The next phase is defined by a PRD.
+> **Historical baseline, not the current app specification.** The dense Desk UI and later report page are superseded by the hosted collaborative Dexter canvas. Reuse the data, analysts and backtest modules described here; do not rebuild this UI or infer that its old endpoints remain active. Current behavior and direction are in `README.md` and `hub/PRD.md`. The baseline experiment method below remains relevant until the evaluation lane explicitly records a replacement.
 
 ## 1. What we are building
 

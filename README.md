@@ -24,7 +24,7 @@ The initial version supports six agents and four active runs. `create_agent`, `l
 
 ## Agent tools
 
-The canvas uses Dexter's existing tool implementations directly alongside its shared file and agent-delegation tools.
+The canvas uses Dexter's existing tool implementations directly alongside its shared file and agent-delegation tools. Before adding an equivalent integration, inspect the pinned upstream registry and enable its existing implementation. Keep custom code for missing app behavior such as ownership, roles, mandates, and historical filtering; do not rebuild Exa or the financial provider clients.
 
 | Tools | Use | Configuration |
 |---|---|---|

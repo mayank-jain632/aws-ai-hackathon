@@ -3,6 +3,7 @@
 Updated 2026-10-23 by Codex
 
 **Shipped**
+- Documentation audit at Kushagra's request: shortened core context, introduced Hub v3 native-Dexter-first guidance, separated implemented/deployed/verified/target states, and incorporated the newly merged fund dashboard. Corrected stale PLAN status and data provenance claims. Shared corrections with breath of data, different agents, and kinda mina chat. Docs-only cross-lane edits: AGENTS.md, hub/PRD.md, hub/BUILDING.md, README.md, PLAN.md, data/README.md, and D15; no runtime code or AWS resources changed.
 - Documentation corrected at Kushagra's request: README tool list and keys, PRD current implementation versus target pipeline, and AGENTS verified facts now describe the direct native Dexter tools and removal of the custom research API/mode locks. Shipped code, mocked verification, and unverified AWS rollout are distinguished. No runtime changes.
 - User correction to D11: removed the custom research layer, its mode/cutoff locks, cached-data API routes, and extra Docker data/pandas packaging. Canvas now directly exposes Dexter's existing finance, market-data, SEC-filing, stock-screener and URL-fetch tools, Exa search when configured, and X search when configured. Existing file/delegation tools remain.
 - Verified six backend tests, Python lint, mock analyst path, Docker build, and container smoke checks of the actual native registry, key gating, nested Bedrock model routing, financial API request and Exa request with mocked responses. No live provider/model calls or AWS deployment performed.
