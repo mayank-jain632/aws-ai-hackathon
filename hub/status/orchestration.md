@@ -5,6 +5,7 @@ Updated 2026-10-23 by the coordinating Codex chat.
 **Authorization**
 - Kushagra appointed this chat to guide the four existing project chats. Preserve their existing instructions and work; coordinate integration rather than start duplicate implementations.
 - Latest direct clarification: do not expand scope. Finish each chat's current human-authorized work, then integrate and verify it end to end. Coordinator suggestions for extra UI panels or features are withdrawn.
+- Ongoing instruction: remain running in this coordinating chat until Kushagra explicitly says stop, even after individual chats finish a round. No scheduled automation. The briefly created monitor was deleted at his instruction.
 
 **Active assignments**
 - `Read AWS hackathon emails (2)`: deployment, provider verification, observed hosted defects, and final end-to-end checks. Owns `scripts/hosting.py`; coordinate worker fixes with data.
@@ -28,3 +29,10 @@ Updated 2026-10-23 by the coordinating Codex chat.
 - Hosted strategy/review/historical backtest/backend gate recheck passed with trading disabled and zero orders. Real Alpaca paper-account read reports ACTIVE. Watchdog firm-wide stop and an oversized blocked dry run were checked; prior stop state was restored.
 - Login for all three accounts, fund controls, SSE, recursive branch cancellation and access boundaries passed. Six funds, 19 agents, 25 files, layouts and desk/watchdog records survived container restart. Deployment owner reports 73 backend tests and 16 tool tests passing.
 - Remaining limits: Financial Datasets and X need credentials; broker order submission/fills remain untested. No successful broker execution is claimed. Existing policy/mandate requirements still apply. This coordination added no product features.
+
+**Current round**
+- Deployment reports runtime `96b9d19` live with Sol 6.1 default, Opus 5.5 alternate and Opus 4.6 evaluator. Actual worker recursion, file tools and pinned evaluation passed after account-level model activation. Keep laptop-role denial distinct from hosted-role access.
+- Data reports live AWS evidence for all configured integrations, including Financial Datasets, X, bounded Apify and Jev. This establishes exercised paths, not every endpoint or Actor.
+- Roles is executing the human-approved single $1 AAPL paper test in its isolated fund, then re-engaging stop. Submission/fill outcome is pending. Deployment is holding restarts during that test.
+- Core product is implementing the newly requested email-sharing popup and access handling. Existing Team 4 access must survive; membership checks cover APIs/files/SSE as well as the dashboard.
+- Continue retrieving new human requests and lane progress; completed rounds do not end monitoring.
