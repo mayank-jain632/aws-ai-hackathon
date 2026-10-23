@@ -128,7 +128,10 @@ class StrategyId(StrictModel):
 @router.post("/api/internal/desk/backtest")
 def run_backtest(body: StrategyId, request: Request) -> dict:
     agent, desk = worker(request, "run_backtest")
-    if role_of(agent) != "backtester" or agent.state.get("strategy_id") != body.strategy_id:
+    if (
+        role_of(agent) != "backtester"
+        or agent.state.get("strategy_id") != body.strategy_id
+    ):
         raise HTTPException(403, "Evaluator is bound to a different strategy")
     try:
         return desk.evaluate(body.strategy_id)
@@ -155,7 +158,14 @@ def paper_order(body: OrderInput, request: Request) -> dict:
         return submit(desk, body)
     except ValueError as error:
         with desk.lock:
-            desk.event("paper_order_blocked", {"agent": agent.id, "strategy_id": body.strategy_id, "reason": str(error)})
+            desk.event(
+                "paper_order_blocked",
+                {
+                    "agent": agent.id,
+                    "strategy_id": body.strategy_id,
+                    "reason": str(error),
+                },
+            )
         raise HTTPException(422, str(error)) from error
 
 

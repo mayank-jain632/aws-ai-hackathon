@@ -94,6 +94,11 @@ plugin({
 
 const emit = (event: Record<string, unknown>) => process.stdout.write(JSON.stringify(event) + '\n');
 try {
+  if (process.argv.includes('--list-tools')) {
+    const { getTools } = await import(pathToFileURL(resolve(dexter, 'src/tools/registry.ts')).href);
+    emit({ type: 'tools', role, tools: getTools('bedrock:us.openai.gpt-5.6-luna').map((tool: { name: string }) => tool.name) });
+    process.exit(0);
+  }
   const input = JSON.parse(await Bun.stdin.text());
   const { Agent } = await import(pathToFileURL(resolve(dexter, 'src/agent/agent.ts')).href);
   const { InMemoryChatHistory } = await import(pathToFileURL(resolve(dexter, 'src/utils/in-memory-chat-history.ts')).href);

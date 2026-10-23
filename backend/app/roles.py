@@ -2,14 +2,37 @@
 
 from typing import Literal
 
-Role = Literal["orchestrator", "research", "adversarial", "strategy", "backtester", "executor", "moderator"]
+Role = Literal[
+    "orchestrator",
+    "research",
+    "adversarial",
+    "strategy",
+    "backtester",
+    "executor",
+    "moderator",
+]
 FILES = ["read_file", "write_file", "edit_file"]
-RESEARCH = ["get_financials", "get_market_data", "read_filings", "stock_screener", "web_fetch", "web_search", "x_search"]
+RESEARCH = [
+    "get_financials",
+    "get_market_data",
+    "read_filings",
+    "stock_screener",
+    "web_fetch",
+    "web_search",
+    "x_search",
+]
 DELEGATE = ["create_agent", "list_agents", "message_agent"]
 PROFILES = {
     "orchestrator": {
         "tools": FILES + RESEARCH + DELEGATE + ["inspect_desk"],
-        "children": ["research", "strategy", "adversarial", "backtester", "executor", "moderator"],
+        "children": [
+            "research",
+            "strategy",
+            "adversarial",
+            "backtester",
+            "executor",
+            "moderator",
+        ],
         "instructions": "Coordinate specialists, reuse idle agents, and pass explicit context. Start research specialists with distinct data families. Have a research or strategy agent create an adversarial reviewer before backtesting. Ask strategy to register an immutable strategy and obtain adversarial approval. Create a backtester bound to that strategy_id. Only send passing, approved strategies to the paper executor. Run moderator after execution. Never claim a phase succeeded without its tool result. Keep concurrent runs below four, including yourself. Execution uses live context independently of historical research.",
     },
     "research": {
@@ -33,7 +56,14 @@ PROFILES = {
         "instructions": "You are the blind historical evaluator. Call run_backtest for the bound strategy_id and report the returned metrics and gate verdict exactly. You receive only numeric strategy parameters. Do not infer prices, browse, read research, create agents, tune weights, or invent PASS. The backend computes metrics and the verdict; your prose cannot authorize execution.",
     },
     "executor": {
-        "tools": ["web_search", "web_fetch", "get_market_data", "inspect_desk", "alpaca_paper_account", "submit_paper_order"],
+        "tools": [
+            "web_search",
+            "web_fetch",
+            "get_market_data",
+            "inspect_desk",
+            "alpaca_paper_account",
+            "submit_paper_order",
+        ],
         "children": [],
         "instructions": "Execute only backend-approved strategies in the Alpaca paper sandbox. Inspect the desk and account first; use current web context to identify reasons to defer, never to replace the frozen strategy or PASS. Submit bounded orders with a stable unique client_order_id and check returned broker status. Submitted is not filled. Backend checks trading permission, review, gate, approval, position/order limits and stop before every order. Never retry an uncertain submission with a new ID.",
     },
@@ -46,7 +76,9 @@ PROFILES = {
 
 
 def role_of(agent) -> str:
-    return getattr(agent, "role", "orchestrator" if agent.id == "dexter" else "research")
+    return getattr(
+        agent, "role", "orchestrator" if agent.id == "dexter" else "research"
+    )
 
 
 def require_tool(agent, tool: str) -> None:
@@ -56,4 +88,6 @@ def require_tool(agent, tool: str) -> None:
 
 def allow_child(parent, role: str) -> None:
     if role not in PROFILES[role_of(parent)]["children"]:
-        raise PermissionError(f"The {role_of(parent)} role cannot create or task a {role} agent")
+        raise PermissionError(
+            f"The {role_of(parent)} role cannot create or task a {role} agent"
+        )

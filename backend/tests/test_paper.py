@@ -20,19 +20,61 @@ from backend.app.desk import (
 def approved(tmp_path):
     manager = SimpleNamespace(registry=tmp_path / "agents.json", paused=False)
     desk = desk_for(manager)
-    desk.set_policy(Policy(universe=["AAPL", "MSFT"], max_position=0.7, max_drawdown=0.5, min_sharpe=-100, min_excess_return=-1, max_order_notional=1000, max_daily_orders=10, trading_allowed=True))
-    strategy = StrategyInput(name="Test", weights={"AAPL": 0.5, "MSFT": 0.5}, cutoff="2023-01-01", end="2023-06-30", rationale="Cited evidence", memo_paths=["memo.md"], changes_my_mind="Evidence changes")
+    desk.set_policy(
+        Policy(
+            universe=["AAPL", "MSFT"],
+            max_position=0.7,
+            max_drawdown=0.5,
+            min_sharpe=-100,
+            min_excess_return=-1,
+            max_order_notional=1000,
+            max_daily_orders=10,
+            trading_allowed=True,
+        )
+    )
+    strategy = StrategyInput(
+        name="Test",
+        weights={"AAPL": 0.5, "MSFT": 0.5},
+        cutoff="2023-01-01",
+        end="2023-06-30",
+        rationale="Cited evidence",
+        memo_paths=["memo.md"],
+        changes_my_mind="Evidence changes",
+    )
     sid = desk.register(strategy, "author")["id"]
-    desk.review(ReviewInput(strategy_id=sid, verdict="APPROVE", critique="An independent review checked concentration and dated inputs."), "reviewer")
+    desk.review(
+        ReviewInput(
+            strategy_id=sid,
+            verdict="APPROVE",
+            critique="An independent review checked concentration and dated inputs.",
+        ),
+        "reviewer",
+    )
     desk.evaluate(sid)
     desk.state["approvals"][sid] = digest(desk.state["policy"])
     desk.state["stop"] = False
     desk.save()
-    return desk, OrderInput(strategy_id=sid, symbol="AAPL", side="buy", notional=100, client_order_id="stable-order-001")
+    return desk, OrderInput(
+        strategy_id=sid,
+        symbol="AAPL",
+        side="buy",
+        notional=100,
+        client_order_id="stable-order-001",
+    )
 
 
 def healthy_account():
-    return {"account": {"status": "ACTIVE", "trading_blocked": False, "account_blocked": False, "equity": "10000", "cash": "10000"}, "positions": [], "open_orders": []}
+    return {
+        "account": {
+            "status": "ACTIVE",
+            "trading_blocked": False,
+            "account_blocked": False,
+            "equity": "10000",
+            "cash": "10000",
+        },
+        "positions": [],
+        "open_orders": [],
+    }
 
 
 def test_submit_and_idempotent_retry(approved, monkeypatch):
@@ -58,7 +100,9 @@ def test_submit_and_idempotent_retry(approved, monkeypatch):
 
 def test_gates_fail_before_broker(approved, monkeypatch):
     desk, order = approved
-    monkeypatch.setattr(paper, "account_snapshot", lambda: pytest.fail("Broker must not be called"))
+    monkeypatch.setattr(
+        paper, "account_snapshot", lambda: pytest.fail("Broker must not be called")
+    )
     desk.state["stop"] = True
     with pytest.raises(ValueError, match="stop"):
         paper.submit(desk, order)
@@ -72,11 +116,20 @@ def test_gates_fail_before_broker(approved, monkeypatch):
         paper.submit(desk, order)
 
 
-@pytest.mark.parametrize("mutation,reason", [
-    ({"open_orders": [{"symbol": "AAPL"}]}, "existing paper orders"),
-    ({"positions": [{"symbol": "AAPL", "qty": "100", "market_value": "4990"}]}, "position size"),
-    ({"positions": [{"symbol": "AAPL", "qty": "-1", "market_value": "-100"}]}, "long-only"),
-])
+@pytest.mark.parametrize(
+    "mutation,reason",
+    [
+        ({"open_orders": [{"symbol": "AAPL"}]}, "existing paper orders"),
+        (
+            {"positions": [{"symbol": "AAPL", "qty": "100", "market_value": "4990"}]},
+            "position size",
+        ),
+        (
+            {"positions": [{"symbol": "AAPL", "qty": "-1", "market_value": "-100"}]},
+            "long-only",
+        ),
+    ],
+)
 def test_projected_exposure_and_pending_orders(approved, monkeypatch, mutation, reason):
     desk, order = approved
     monkeypatch.setattr(paper, "account_snapshot", lambda: healthy_account() | mutation)
@@ -115,12 +168,23 @@ def test_paper_host_and_auth_headers(monkeypatch):
         assert request.headers["APCA-API-SECRET-KEY"] == "paper-secret"
         return httpx.Response(200, json={"status": "ACTIVE"})
 
-    monkeypatch.setattr(httpx, "Client", lambda **kwargs: original_client(**kwargs, transport=httpx.MockTransport(check)))
+    monkeypatch.setattr(
+        httpx,
+        "Client",
+        lambda **kwargs: original_client(
+            **kwargs, transport=httpx.MockTransport(check)
+        ),
+    )
     assert paper.broker("GET", "/v2/account")["status"] == "ACTIVE"
 
 
 def test_missing_credentials_explicit(monkeypatch):
-    for key in ["ALPACA_API_KEY", "ALPACA_SECRET_KEY", "APCA_API_KEY_ID", "APCA_API_SECRET_KEY"]:
+    for key in [
+        "ALPACA_API_KEY",
+        "ALPACA_SECRET_KEY",
+        "APCA_API_KEY_ID",
+        "APCA_API_SECRET_KEY",
+    ]:
         monkeypatch.delenv(key, raising=False)
     with pytest.raises(ValueError, match="not configured"):
         paper.account_snapshot()
