@@ -17,6 +17,7 @@ Updated 2026-10-23 by Codex
 - Deployment/update script and scoped cleanup preview in `scripts/hosting.py`; no workshop desktops or existing AgentCore sample modified.
 
 **In flight**
+- Data breadth request in `codex/data-sentiment`: expose all existing native Dexter finance inputs, preserve native Exa/X, add Jev-only OpenRouter sentiment via Decisions API, live FRED macro and optional bounded Apify collection. New modules under `backend/worker/`; coordinated cross-lane registry/allowlist edits in `run.ts`, environment example, hosting secret forwarding and docs. No mode-lock/research API layer. Local provider keys are currently empty; live paid-provider checks need configured keys.
 - Directly requested role permissions in managed worktree agent-roles, crossing Lane 1 runtime/tool registry and Lane 4 paper-execution boundary. New role/pipeline modules plus small `agent.py`, `main.py`, worker, and frontend Agent type edits. The custom research router was removed in D13. One orchestrator, research, adversarial, strategy, blind backtester, paper executor and moderator. No new AWS resources. Other fund-dashboard work remains separate.
 
 **Blocked, or need from someone**
