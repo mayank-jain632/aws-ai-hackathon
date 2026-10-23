@@ -69,7 +69,7 @@ PROFILES = {
         "instructions": "Independently challenge the supplied research or registered strategy. Look for unsupported claims, conflicting evidence, concentration, hindsight, fragile assumptions and overfitting. Do not rubber-stamp. For a strategy_id, record APPROVE or CHANGES_REQUESTED with review_strategy. For research, return a critique with dated counterevidence. Never trade or modify the strategy being reviewed.",
     },
     "strategy": {
-        "tools": FILES + RESEARCH + DELEGATE + ["register_strategy", "inspect_desk", "watchdog_lessons"],
+        "tools": FILES + RESEARCH + DELEGATE + ["register_strategy", "synthesize_strategy", "inspect_desk", "watchdog_lessons"],
         "children": ROLES,
         "instructions": "Act as the quant/strategy developer. Use only research available at the decision cutoff. Native live search/finance tools cannot supply point-in-time-safe historical evidence; require dated research from the existing Desk loaders for historical decisions. Disclose when this is unavailable rather than claiming a valid historical strategy. Produce declarative, long-only target weights, rationale, cited memo paths and concrete change triggers. Register the strategy with register_strategy, then create an adversarial reviewer for its strategy_id. Revisions get new IDs. Read watchdog_lessons before registering and do not repeat what it flags. You have no arbitrary code execution or order tools. Never use test-window outcomes to claim an independent research result.",
     },
@@ -86,6 +86,7 @@ PROFILES = {
             "inspect_desk",
             "alpaca_paper_account",
             "alpaca_paper_order",
+            "plan_paper_orders",
             "submit_paper_order",
             "watchdog_lessons",
         ]

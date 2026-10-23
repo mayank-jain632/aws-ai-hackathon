@@ -1,17 +1,20 @@
-# Chaithu · Lane: Desk pipeline, report page, baseline
+# Chaithu · Lane 2: synthesis layer (strategy from research, significance, order planning)
 
-Updated 12:17 by Claude Code
+Updated 13:30 by Claude Code
 
 **Shipped**
-- The Desk pipeline end to end: `data/` snapshots, `backend/app/data.py`, `backend/app/backtest.py` (6 tests), `backend/app/agents/`, `POST /api/run` with cache
-- Plain report page in `frontend/src/` (D6), replacing the Desk UI; canvas preserved on branch `agent-canvas`
-- `README.md` experiment definition (universe, cutoff, baseline, rebalancing, look-ahead rule)
+- The Desk pipeline end to end (earlier today): `data/` snapshots, `backend/app/data.py`, `backend/app/backtest.py`, `backend/app/agents/`, `POST /api/run`.
+- `docs/agent-flow.md`, `.tex`, `.pdf`: high-level agent flow and per-agent variables table for the team.
 
-**In flight**
-- PRD for the next phase: more analysis variables, statistical significance of backtests (walk-forward over every cutoff, masked-ticker leakage check)
+**In flight** (branch `chaithu/synthesis-layer`, D19 proposed)
+- `backend/app/synthesis/`: research bundle contract, `strategy.synthesize` (conviction seed from memos, mandate and policy clamping, optional one-call Bedrock refinement re-clamped in code), `significance.walk_forward` (monthly cutoffs, hit rate, mean excess, t-stat, bootstrap CI vs SPY and equal weight), `orders.plan_orders` (weights x capital minus holdings, sells first, within cash and limits).
+- `backend/app/routes/synthesis.py`: `POST /api/internal/desk/synthesize` (strategy role, registers through `Desk.register`), `POST /api/internal/desk/plan-orders` (executor role, after `execution_checks`), human `GET .../desk/strategies/{id}/significance` and `GET .../desk/runs`; run records in `synthesis.json` beside `desk.json`.
+- Cross-lane, named here: two tool names appended in `backend/app/roles.py` (strategy: `synthesize_strategy`; executor: `plan_paper_orders`), two bridge tools appended in `backend/worker/desk-tools.ts`, one import and one `include_router` line in `backend/app/main.py`. No change to desk gates, paper adapter, schema or policy model.
+- Verified locally: `backend/tests/test_synthesis.py` plus the existing suites pass with `MOCK_AGENTS=1`; Bun worker tests pass; ruff clean. No Bedrock run of the refinement step and no broker call; `test_delegation_capacity.py` cannot run on Windows (`os.killpg`).
 
 **Blocked, or need from someone**
-- Nothing
+- Kushagra: review the three one-line cross-lane edits before merge; the worker registry needs a rebuilt image to expose the two new tools.
+- Mayank: `significance.py` reuses `backtest.backtest` unchanged; your walk-forward on `wf/` stays separate and can replace the t-stat here if it lands first.
 
 **Files I am working in right now**
-- `frontend/src/`, `backend/app/main.py`, `README.md`, `hub/`
+- `backend/app/synthesis/`, `backend/app/routes/synthesis.py`, `backend/tests/test_synthesis.py`, `docs/agent-flow.*`, `hub/status/chaithu.md`
