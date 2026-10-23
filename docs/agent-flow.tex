@@ -158,7 +158,11 @@ Can engage the stop; only a person clears it \\
 \end{longtable}
 \normalsize
 
-\section*{3. Limits to state in the demo}
+\section*{3. How this maps onto the roles on \texttt{main}}
+
+Kushagra's written role requirements take priority over the picture: the roster is flexible, one root can create more orchestrators and task-focused researchers, and the boxes above are context, not a fixed roster. The synthesis boxes are \textbf{tools on existing roles}, not new roles: \texttt{synthesize\_strategy} on the strategy role, \texttt{plan\_paper\_orders} and \texttt{execute\_order\_plan} on the executor role. The blind backtester implementation is Mayank's (lane 2b); synthesis hands it a frozen strategy record (weights, cutoff, end) by \texttt{strategy\_id} and consumes its PASS or FAIL. The significance report is an optional add-on and can be replaced by Mayank's walk-forward once it lands.
+
+\section*{4. Limits to state in the demo}
 \begin{itemize}[leftmargin=1.2em, itemsep=2pt]
   \item Historical evaluation is the recorded monthly target-weight engine on cached closes: no dividends, no costs, fully invested. Significance is a walk-forward over cutoffs with the same frozen weights, which measures robustness of the allocation, not of a live rebalancing process.
   \item Live provider data is not point-in-time safe and never feeds a historical decision.
