@@ -58,3 +58,7 @@ bun --tsconfig-override /app/vendor/dexter/tsconfig.json /app/backend/worker/run
 ```
 
 The server sets `LOCAL_AGENT_ROLE` and `AGENT_ALLOWED_TOOLS`; standalone diagnostics with no permissions return an empty registry. A real Bedrock orchestrator → research → strategy → adversarial handoff wrote and verified a shared file in an ephemeral test container, without orders or market-data calls. This verifies recursive role/file wiring, not a complete investment run, hosted rollout, or real Alpaca execution.
+
+## Alpaca deployment verification
+
+On 2026-10-23, AWS-Hack paper account `PA33F249I` was connected locally and to the existing AWS Secrets Manager environment. The existing EC2 service reloaded the credentials without changing its image. Both the deployed backend and a real hosted Bedrock/Dexter `alpaca_paper_account` call returned ACTIVE/USD, $100,000 cash/equity, no positions and no open orders. CloudFront login and health passed. No orders were submitted; strategy evaluation, human approvals and execution guards still apply. Account balances are a verification snapshot, not a continuing performance claim.

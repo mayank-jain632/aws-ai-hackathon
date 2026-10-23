@@ -61,6 +61,8 @@ docker build --platform linux/arm64 -f backend/Dockerfile -t aws-hackathon-sandb
 
 The script prints the HTTPS URL and records only this deployment's resources in `.local/hosting/resources.json`. It copies configured API secrets from `.env` to Secrets Manager, never into the image. Hosted workers obtain renewable credentials from their instance role. The image registers the native tools listed above. Exa and X search are included when their keys are set; actual provider access requires valid credentials.
 
+Alpaca paper credentials are configured in the existing Secrets Manager environment. On 2026-10-23, the deployed backend and a real hosted Dexter `alpaca_paper_account` call verified AWS-Hack account `PA33F249I` as ACTIVE with $100,000 USD cash/equity and no positions or open orders. No orders were submitted. See [Alpaca verification](docs/agent-roles.md#alpaca-deployment-verification) for scope. Secrets are loaded by `/opt/agent-canvas/start.sh` each time the existing `agent-canvas` systemd service starts; updating the secret requires restarting that service through Systems Manager.
+
 This is a shared hackathon demo, with a single application process and no separate customer tenants. The workshop account and its resources remain subject to the event's lifetime. The hosted board starts independently of your laptop's agent history. Back up `/opt/agent-canvas/state` before removing the host; terminating it deletes that disk.
 
 Preview cleanup:
