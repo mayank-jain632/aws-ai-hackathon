@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -238,6 +239,8 @@ def verify(session) -> bool:
     """One real call per service. Prints PASS or FAIL lines; returns True when all pass."""
     from backend.app.agents import base
     from backend.app.watchdog.opinion import SYSTEM, SecondOpinion
+
+    os.environ.setdefault("WATCHDOG_AWS", "1")
 
     results = []
 

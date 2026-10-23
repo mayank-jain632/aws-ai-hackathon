@@ -1,8 +1,9 @@
 """The watchdog on AWS: Bedrock Guardrail scans, AgentCore Memory, CloudWatch, EventBridge.
 
-On when AWS credentials exist and WATCHDOG_AWS is not "0" (tests and MOCK_AGENTS=1 keep it
-off). Resources come from `scripts/watchdog_aws.py` and are found by name at runtime, or by
-WATCHDOG_GUARDRAIL_ID / WATCHDOG_MEMORY_ID when set. Names follow D25 (owner-named, Owner=aaron):
+Off by default. The hosted app turns it on with the WATCHDOG_GUARDRAIL_ID / _VERSION and
+WATCHDOG_MEMORY_ID that scripts/hosting.py injects; anywhere else WATCHDOG_AWS=1 turns it on
+and finds resources by name. MOCK_AGENTS=1 or WATCHDOG_AWS=0 always keeps it off. Resources
+come from `scripts/watchdog_aws.py`; names follow D25 (owner-named):
 
 - Guardrail `aaron-watchdog`: prompt-attack filter plus a denied topic for evading trading
   limits. ApplyGuardrail screens agent-written strategy rationales and memos.
@@ -47,8 +48,19 @@ CONFIG = Config(retries={"total_max_attempts": 3, "mode": "adaptive"}, connect_t
 AWS_ERRORS = (BotoCoreError, ClientError)
 
 
+def configured() -> bool:
+    """Hosted: the resource IDs scripts/hosting.py injects. Elsewhere: WATCHDOG_AWS=1."""
+    return os.getenv("WATCHDOG_AWS") == "1" or bool(os.getenv("WATCHDOG_GUARDRAIL_ID") or os.getenv("WATCHDOG_MEMORY_ID"))
+
+
 def enabled() -> bool:
-    return os.getenv("WATCHDOG_AWS", "1") != "0" and not base.mock_mode()
+    """Off unless configured, and always off in mock mode or with WATCHDOG_AWS=0."""
+    return os.getenv("WATCHDOG_AWS") != "0" and configured() and not base.mock_mode()
+
+
+def discovery() -> bool:
+    """Finding resources by name needs List permissions the hosted role does not have."""
+    return os.getenv("WATCHDOG_AWS") == "1"
 
 
 @functools.cache
@@ -176,6 +188,8 @@ def guardrail() -> tuple[str, str] | None:
 def find_guardrail() -> tuple[str, str] | None:
     if os.getenv("WATCHDOG_GUARDRAIL_ID"):
         return os.environ["WATCHDOG_GUARDRAIL_ID"], os.getenv("WATCHDOG_GUARDRAIL_VERSION", "1")
+    if not discovery():
+        return None
     bedrock = client("bedrock")
     found = [g for g in bedrock.list_guardrails().get("guardrails", []) if g["name"] == GUARDRAIL_NAME]
     if not found:
@@ -224,6 +238,8 @@ def memory_id() -> str | None:
 def find_memory() -> str | None:
     if os.getenv("WATCHDOG_MEMORY_ID"):
         return os.environ["WATCHDOG_MEMORY_ID"]
+    if not discovery():
+        return None
     control = client("bedrock-agentcore-control")
     for page in control.get_paginator("list_memories").paginate():
         for m in page.get("memories", []):

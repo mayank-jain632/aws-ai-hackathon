@@ -68,7 +68,7 @@ Effort: S is under 30 minutes, M is about an hour, L is past the freeze.
 | Service | Plugs in at | Judges see | Effort | New resource |
 |---|---|---|---|---|
 | Bedrock Guardrails (`ApplyGuardrail`) | `backend/app/watchdog/claims.py` scanning strategy rationales and memos | Prompt-injection and limit-evasion text caught in agent-written evidence | S | Guardrail (authorized) |
-| AgentCore Memory | `backend/app/watchdog/feedback.py` lessons | Lessons persist across funds and sessions; agents retrieve them semantically | M | Memory (authorized) |
+| AgentCore Memory | `backend/app/watchdog/feedback.py` lessons | Each fund's lessons persist across sessions under that fund's server-assigned identity; agents retrieve them semantically | M | Memory (authorized) |
 | CloudWatch metrics and alarms | `gate.enforce` and `monitor.audit` | Blocks per rule and halts on a CloudWatch graph; an alarm on the firm-wide halt | S | Metrics need none; the alarm is a resource (authorized) |
 | EventBridge | Same hooks, `PutEvents` on the default bus | Halts and blocks as events other services can react to | S | Rule and log group (authorized) |
 | AWS DevOps Agent | Point it at the halt alarm | An AWS agent investigating our agent's emergency stop | M | Console setup; not before freeze |
@@ -90,30 +90,37 @@ Effort: S is under 30 minutes, M is about an hour, L is past the freeze.
 
 ## What the watchdog lane wired (on main, not yet verified live)
 
-The code below is on main with stubbed tests. None of it has run against AWS or Alpaca yet: that starts when Aaron loads the workshop credentials and the Alpaca keys, then runs `scripts/watchdog_aws.py --apply` and `--verify`.
+The code below is on main. The AWS pieces passed live checks in Aaron's participant account (not hosted; see Two AWS accounts). Live Alpaca data runs only on the hosted app, where the keys live (D25).
 
 - **Live market data in the pre-trade gate**, from Alpaca with the existing paper keys: asset tradability and status, latest trade against the previous close, the market clock, and the account's equity history for the drawdown peak. Falls back to the snapshot data and says so when Alpaca is unreachable.
 - **Bedrock Guardrail `aaron-watchdog`**: a prompt-attack filter plus a denied topic for limit evasion (splitting orders, resubmitting under new ids, hiding exposure). The monitor runs strategy rationales and cited memos through `ApplyGuardrail` and records interventions as moderator events.
-- **AgentCore Memory `aaron_watchdog_lessons`** with a semantic strategy, so lessons persist across funds and sessions and `watchdog_lessons` can retrieve the relevant ones.
+- **AgentCore Memory `aaron_watchdog_lessons`** with a semantic strategy and one namespace per fund (`/watchdog/funds/{actorId}/lessons/`, keyed on the server-assigned fund ID; Lane 5's isolation patch, 8533f38), so lessons persist across sessions and `watchdog_lessons` retrieves only that fund's.
 - **CloudWatch metrics** in namespace `Team4/Watchdog` (verdicts by rule and decision, halts, moderator events) and an **alarm `aaron-watchdog-firm-wide-halt` on the firm-wide halt**.
 - **EventBridge events** from source `team4.watchdog`, matched by rule `aaron-watchdog-audit`, which writes them to the log group `/aws/events/aaron-watchdog`.
-- **`scripts/watchdog_aws.py`** provisions all of it: preview by default, `--apply` to create, `--verify` for live checks, `--cleanup` to remove. Per D25 it never touches `team4-agent-canvas`; `--policy` prints the exact statement (D26) that Kushagra's deployment owner adds in `scripts/hosting.py`. Everything is tagged `Project`, `Team`, `Name` and `Owner=aaron`.
+- **`scripts/watchdog_aws.py`** provisions all of it: preview by default, `--apply` to create, `--verify` for live checks, `--cleanup` to remove. Per D25 it never touches `team4-agent-canvas`; Lane 5's `scripts/hosting_watchdog.py` reuses it for the hosting account (see Two AWS accounts). Everything is tagged `Project`, `Team`, `Name` and `Owner=aaron`.
 - **Live market data is verified on the hosted app, not locally.** Per D25 the Alpaca keys live only in the hosted secret, so the gate's live checks run once the hosted image includes this code.
 
 ## Next 75 minutes, ranked
 
 1. **Decide on the published model list** (Lane 5 with Lane 1, Kushagra). Hosted agents run on Sol 6.1 now (D24), so this is a judging and laptop-access question, not an outage; switching is a catalog edit plus a hosting rerun.
-2. **Apply D26 and redeploy** (Lane 5). The watchdog's Guardrail, Memory, CloudWatch and EventBridge resources exist and passed live checks at 13:52; the hosted role needs D26 for the hosted watchdog to use them.
+2. **Hosted watchdog on AWS** (Lane 5, in progress). Kushagra's deploy owner creates the hosting account's Guardrail and Memory with `scripts/hosting_watchdog.py` and redeploys; the full set already passed live checks in Aaron's participant account.
 3. **Add Comprehend sentiment** (Lane 3). No resource, one IAM action, and it turns sentiment from an OpenRouter-only input into an AWS AI input.
-4. **Give the existing AgentCore sample runtime one real job** (Lane 5 with Lane 4) if items 1 to 3 land early. Redeploying `backend/agent.py` as the watchdog's second-opinion endpoint and calling it from the app gives PRD item 8 a real AgentCore invocation and trace without moving the canvas.
+4. **Second opinion on AgentCore Runtime** (Aaron's AgentCore session). It hosts the watchdog's second opinion in its own new runtime behind a flag in `backend/app/watchdog/opinion.py`, with Luna on Bedrock as the fallback. Kushagra's sample runtime stays untouched (D25).
 
 **Not before freeze:** moving the canvas to AgentCore Runtime or Harness, Gateway, Code Interpreter evaluation, Knowledge Bases over filings, Step Functions or Scheduler, DynamoDB run records, AgentCore Identity, Browser, Textract, Athena, QuickSight, S3 Vectors, DevOps Agent. Do not use Amazon Forecast (closed to new customers) or Lookout for Metrics (retired).
+
+## Two AWS accounts
+
+- **Aaron's participant account (proof segment, not hosted).** Aaron's `team4-toolkit` login reaches his own participant account, not the account that hosts the app (D28). `scripts/watchdog_aws.py --apply` created the full set there at 13:52 (Guardrail, Memory, CloudWatch alarm, EventBridge rule and log group), and `--verify` passed all seven live checks. Label this evidence "Aaron's participant account, not hosted".
+- **Hosting account (Lane 5).** Kushagra's deploy owner runs `scripts/hosting_watchdog.py`, which reuses `watchdog_aws.apply(..., core_only=True)` to create only the Guardrail and Memory there (43d416a, 50d3a36). `scripts/hosting.py` injects `WATCHDOG_GUARDRAIL_ID`, `WATCHDOG_GUARDRAIL_VERSION` and `WATCHDOG_MEMORY_ID` and scopes the hosted role to those ARNs, PutMetricData in `Team4/Watchdog`, and PutEvents on the default bus. No alarm, rule or log group is created there.
+- **Runbook for the hosting account:** (1) `./workshop-run uv run python scripts/hosting_watchdog.py` to preview; (2) the same with `--apply`; (3) rerun `scripts/hosting.py` so the secret carries the IDs and the role carries the grants, then redeploy.
+- **Off unless configured.** With neither the IDs nor `WATCHDOG_AWS=1`, the watchdog makes no AWS calls. With only the IDs (the hosted case) it never lists resources, so the scoped role sees no AccessDenied. No verdict depends on AWS either way; `scripts/watchdog_aws.py` reads the account from `sts get-caller-identity` and hardcodes no ID or ARN.
 
 ## Needs a human
 
 - **Aaron:** load the workshop CLI credentials into `~/.aws/aws-hackathon-2026.credentials` and `.config`, refreshing them hourly.
 - **Aaron or Kushagra:** decide the model switch. D20 records Kushagra's choice of Sol 6.1, so reversing it is a person's call.
 - **Aaron:** mark D17 and D19 Accepted or leave them Proposed.
-- **Kushagra:** add the D26 statement to the hosted role in `scripts/hosting.py`, redeploy the image so the watchdog's live data and AWS wiring run there, and rerun `scripts/hosting.py` after any catalog change so the IAM policy matches.
+- **Kushagra:** run `scripts/hosting_watchdog.py --apply`, then `scripts/hosting.py`, and redeploy so the hosted watchdog's live data, Guardrail, Memory and metrics run; rerun `scripts/hosting.py` after any catalog change so the IAM policy matches.
 - **Whoever owns the account:** set Bedrock data retention to Default if a GPT call fails with a retention error.
 - **Aaron:** authorize any resource beyond the watchdog's four (a Knowledge Base, an S3 bucket, a Code Interpreter session) before anyone creates it.

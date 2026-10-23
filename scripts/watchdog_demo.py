@@ -7,8 +7,10 @@ the stub account mirrors the connected paper account's $100,000 starting state. 
 credentials and no MOCK_AGENTS, the second opinion calls Bedrock and the watchdog sends its
 verdicts to CloudWatch, EventBridge and AgentCore Memory; otherwise it says it ran in mock mode.
 
-    uv run python scripts/watchdog_demo.py          # pauses between steps
-    uv run python scripts/watchdog_demo.py --fast   # no pauses
+    MOCK_AGENTS=1 uv run python scripts/watchdog_demo.py --fast    # local, no AWS
+    AWS_PROFILE=team4-toolkit WATCHDOG_AWS=1 uv run python scripts/watchdog_demo.py
+                                                                  # Aaron's account, AWS on
+Without --fast it pauses between steps.
 """
 
 from __future__ import annotations
@@ -120,9 +122,13 @@ def step(title, fast):
     print("=" * 100)
 
 
+FUND_IDS = {"calder": "ca1de4000000000a", "ridge": "41d9e0000000000b"}  # server-style IDs scope Memory per fund
+
+
 def fund(key):
     root = SCRATCH / key
     manager = runtime.AgentManager(root=root)
+    manager.fund_id = FUND_IDS[key]
     manager.token = f"token-{key}"
     for role in ["strategy", "adversarial", "backtester", "executor"]:
         manager.agents[role] = runtime.LocalAgent(manager, role, role.title(), "dexter", role)

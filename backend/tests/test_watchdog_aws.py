@@ -31,6 +31,7 @@ class Fake:
 @pytest.fixture
 def clients(tmp_path, monkeypatch):
     monkeypatch.setenv("WATCHDOG_DIR", str(tmp_path / "watchdog-global"))
+    monkeypatch.setenv("WATCHDOG_AWS", "1")
     monkeypatch.setattr(aws, "enabled", lambda: True)
     monkeypatch.setattr(aws, "send", lambda job: job())
     aws.FOUND.clear()
@@ -70,8 +71,8 @@ def blocked_verdict():
     )
 
 
-def test_off_by_default_in_tests():
-    assert os.environ["WATCHDOG_AWS"] == "0"
+def test_off_by_default_in_tests(monkeypatch):
+    monkeypatch.setenv("WATCHDOG_AWS", "0")
     assert aws.enabled() is False
     assert aws.scan_text("anything") is None and aws.recall(None, "anything") == []
 
@@ -196,3 +197,50 @@ def test_memory_fails_closed_without_server_bound_fund(clients):
         assert aws.recall(unbound, "limits") == []
         aws.remember(unbound, "must not be written")
     assert clients["bedrock-agentcore"].calls == []
+
+
+def test_off_with_no_flag_and_no_resource_ids(monkeypatch):
+    monkeypatch.delenv("WATCHDOG_AWS", raising=False)
+    monkeypatch.delenv("WATCHDOG_GUARDRAIL_ID", raising=False)
+    monkeypatch.delenv("WATCHDOG_MEMORY_ID", raising=False)
+    monkeypatch.setattr(aws.base, "mock_mode", lambda: False)
+    assert aws.enabled() is False
+
+
+def test_hosted_contract_ids_only_no_discovery_no_eventbridge_rule(tmp_path, monkeypatch):
+    """What scripts/hosting.py sets: resource IDs, no WATCHDOG_AWS, no List permissions."""
+    from backend.app.agents import base
+
+    monkeypatch.setenv("WATCHDOG_DIR", str(tmp_path / "watchdog-global"))
+    monkeypatch.delenv("WATCHDOG_AWS", raising=False)
+    monkeypatch.setenv("WATCHDOG_GUARDRAIL_ID", "gr-hosted")
+    monkeypatch.setenv("WATCHDOG_GUARDRAIL_VERSION", "1")
+    monkeypatch.setenv("WATCHDOG_MEMORY_ID", "aaron_watchdog_lessons-Hosted1")
+    monkeypatch.setattr(base, "mock_mode", lambda: False)
+    monkeypatch.setattr(aws, "send", lambda job: job())
+    aws.FOUND.clear()
+
+    def denied(**_):
+        raise AssertionError("the hosted role cannot list resources; discovery must not run")
+
+    fakes = {
+        "cloudwatch": Fake(),
+        "events": Fake(put_events={"FailedEntryCount": 0, "Entries": [{"EventId": "e1"}]}),
+        "bedrock": Fake(list_guardrails=denied),
+        "bedrock-runtime": Fake(apply_guardrail={"action": "NONE", "assessments": []}),
+        "bedrock-agentcore-control": Fake(),
+        "bedrock-agentcore": Fake(retrieve_memory_records={"memoryRecordSummaries": []}),
+    }
+    fakes["bedrock-agentcore-control"].get_paginator = lambda name: (_ for _ in ()).throw(AssertionError("no ListMemories"))
+    monkeypatch.setattr(aws, "client", lambda service: fakes[service])
+    assert aws.enabled() is True
+    assert aws.scan_text("A memo.") == {"intervened": False, "findings": []}
+    assert fakes["bedrock-runtime"].calls[0][1]["guardrailIdentifier"] == "gr-hosted"
+    desk = desk_for(SimpleNamespace(registry=tmp_path / "fund" / "agents.json", paused=False, fund_id="general"))
+    entry = feedback.record_verdict(desk, blocked_verdict())
+    assert entry["kind"] == "block"
+    assert fakes["bedrock-agentcore"].calls[0][1]["memoryId"] == "aaron_watchdog_lessons-Hosted1"
+    assert fakes["bedrock-agentcore"].calls[0][1]["actorId"] == "fund-general"
+    assert aws.recall(desk, "limits") == []
+    assert fakes["bedrock-agentcore"].calls[-1][1]["namespace"] == "/watchdog/funds/fund-general/lessons/"
+    aws.FOUND.clear()
