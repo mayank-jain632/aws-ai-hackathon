@@ -59,6 +59,7 @@ plugin({
         import { additionalDataTools } from ${JSON.stringify(pathToFileURL(resolve(root, 'backend/worker/data-tools.ts')).href)};
         import { createWebFetch } from './fetch/web-fetch';
         import { createDeskTools } from ${JSON.stringify(pathToFileURL(resolve(root, 'backend/worker/desk-tools.ts')).href)};
+        import { createWatchdogTools } from ${JSON.stringify(pathToFileURL(resolve(root, 'backend/worker/watchdog-tools.ts')).href)};
         const control = async (action, input, signal) => {
           const response = await fetch('http://127.0.0.1:8000/api/internal/agents' + (action ? '/' + action : ''), {
             method: action ? 'POST' : 'GET',
@@ -94,6 +95,7 @@ plugin({
           ...(process.env.EXASEARCH_API_KEY ? [exaSearch] : []),
           ...(process.env.X_BEARER_TOKEN ? [xSearchTool] : []),
           ...createDeskTools(),
+          ...createWatchdogTools(),
         ].filter(t => (JSON.parse(process.env.AGENT_ALLOWED_TOOLS || '[]').includes('*') || JSON.parse(process.env.AGENT_ALLOWED_TOOLS || '[]').includes(t.name)));
         export const getToolConcurrencyMap = (model) => new Map(getTools(model).map(t => [t.name, !['write_file', 'edit_file', 'submit_paper_order', 'register_strategy', 'review_strategy', 'emergency_stop', 'apify_actor', 'apify_run'].includes(t.name)]));
         export const buildCompactToolDescriptions = (model) => getTools(model).map(t => t.name + ': ' + t.description).join('\\n');

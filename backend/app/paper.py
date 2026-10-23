@@ -9,6 +9,7 @@ from dotenv import dotenv_values
 
 from backend.app.agent import ROOT
 from backend.app.desk import digest, stamp
+from backend.app.watchdog import gate as watchdog_gate
 
 PAPER_URL = "https://paper-api.alpaca.markets"
 BROKER_LOCK = threading.RLock()
@@ -132,6 +133,7 @@ def submit(desk, body):
                 raise ValueError(
                     "Sector-limit enforcement is not connected to the order adapter yet"
                 )
+        watchdog_gate.enforce(desk, body, policy, snapshot)
         # Recheck immediately before the broker call, then persist intent before I/O.
         desk.execution_checks(body.strategy_id)
         record = {

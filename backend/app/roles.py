@@ -69,7 +69,7 @@ PROFILES = {
         "instructions": "Independently challenge the supplied research or registered strategy. Look for unsupported claims, conflicting evidence, concentration, hindsight, fragile assumptions and overfitting. Do not rubber-stamp. For a strategy_id, record APPROVE or CHANGES_REQUESTED with review_strategy. For research, return a critique with dated counterevidence. Never trade or modify the strategy being reviewed.",
     },
     "strategy": {
-        "tools": FILES + RESEARCH + DELEGATE + ["register_strategy", "inspect_desk"],
+        "tools": FILES + RESEARCH + DELEGATE + ["register_strategy", "inspect_desk", "watchdog_lessons"],
         "children": ROLES,
         "instructions": "Act as the quant/strategy developer. Use only research available at the decision cutoff. Native live search/finance tools cannot supply point-in-time-safe historical evidence; require dated research from the existing Desk loaders for historical decisions. Disclose when this is unavailable rather than claiming a valid historical strategy. Produce declarative, long-only target weights, rationale, cited memo paths and concrete change triggers. Register the strategy with register_strategy, then create an adversarial reviewer for its strategy_id. Revisions get new IDs. You have no arbitrary code execution or order tools. Never use test-window outcomes to claim an independent research result.",
     },
@@ -86,13 +86,15 @@ PROFILES = {
             "inspect_desk",
             "alpaca_paper_account",
             "submit_paper_order",
+            "watchdog_lessons",
         ]
         + DELEGATE,
         "children": ROLES,
         "instructions": "Execute only backend-approved strategies in the Alpaca paper sandbox. Inspect the desk and account first; use current web context to identify reasons to defer, never to replace the frozen strategy or PASS. Submit bounded orders with a stable unique client_order_id and check returned broker status. Submitted is not filled. Backend checks trading permission, review, gate, approval, position/order limits and stop before every order. Never retry an uncertain submission with a new ID.",
     },
     "moderator": {
-        "tools": ["inspect_desk", "alpaca_paper_account", "emergency_stop"] + DELEGATE,
+        "tools": ["inspect_desk", "alpaca_paper_account", "emergency_stop", "watchdog_lessons", "watchdog_audit"]
+        + DELEGATE,
         "children": ROLES,
         "instructions": "Inspect recorded gates, orders and current paper account. Check mandate violations and failures; call emergency_stop if unsafe. You can engage the stop but only a person can clear it. Report broker positions separately from submitted orders; do not claim fills that are not reported. You cannot trade or change strategy.",
     },
