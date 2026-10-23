@@ -8,7 +8,7 @@ import secrets
 import shutil
 import signal
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
@@ -67,6 +67,24 @@ def environment():
     ):
         env.pop(key, None)
     return env
+
+
+def evaluation_window():
+    from backend.app.desk import selected_engine
+
+    engine = selected_engine()
+    try:
+        if engine == "wf":
+            from backend.app.wf.gate import available_end
+
+            end = available_end()
+        else:
+            from backend.app import data
+
+            end = data.prices_full([data.REFERENCE]).index.max().date().isoformat()
+        return {"engine": engine, "available_end": end}
+    except (OSError, ValueError) as error:
+        return {"engine": engine, "available_end": None, "unavailable": str(error)[:300]}
 
 
 def bun_binary():
@@ -133,6 +151,8 @@ class LocalAgent:
         self.cancelled = False
         self.holds_slot = False
         self.pending_delegations = 0
+        self.stop_event = asyncio.Event()
+        self.waiting_until = None
 
     def migrate_workspace(self):
         legacy = self.local / "workspace"
@@ -169,6 +189,8 @@ class LocalAgent:
             "parentId": self.parent_id,
             "role": self.role,
             "waitingForAgents": self.pending_delegations > 0,
+            "waitingUntil": self.waiting_until,
+            "monitoring": self.state.get("monitoring", False) and self.state["status"] == "running",
             "queued": self.state["status"] == "running"
             and not self.holds_slot
             and not self.pending_delegations,
@@ -256,7 +278,11 @@ class LocalAgent:
             self.state["messages"].append(
                 {"id": uuid4().hex, "role": "user", "text": prompt, "source": source}
             )
+            self.resume_progress = self.state.get("progress")
+            self.state["progress"] = {"prompt": prompt, "steps": [], "started_at": now(), "complete": False}
+            self.state["monitoring"] = False
             self.state["status"] = "running"
+            self.stop_event.clear()
             self.cancelled = False
             self.activity("Run started")
             self.publish()
@@ -303,7 +329,10 @@ class LocalAgent:
             payload = json.dumps(
                 {
                     "prompt": prompt,
+                    "as_of": now(),
+                    "evaluation": None if self.role == "backtester" else evaluation_window(),
                     "history": history,
+                    "progress": None if self.role == "backtester" else getattr(self, "resume_progress", None),
                     "files": [] if self.role == "backtester" else self.files(),
                     "context": ""
                     if self.role == "backtester"
@@ -328,6 +357,8 @@ class LocalAgent:
                         "tool",
                     )
                 elif kind == "tool_end":
+                    progress = self.state.setdefault("progress", {"steps": []})
+                    progress["steps"] = (progress["steps"] + [{"tool": event.get("tool"), "result": event.get("result", "")[:2000], "time": now()}])[-12:]
                     self.activity(
                         f"{event.get('tool', 'Tool')} completed",
                         event.get("result", ""),
@@ -339,6 +370,10 @@ class LocalAgent:
                         event.get("error", "Tool error"),
                         "error",
                     )
+                elif kind in {"continuation", "monitoring"}:
+                    self.state["monitoring"] = kind == "monitoring"
+                    self.activity("Monitoring specialists" if kind == "monitoring" else "Continuing unfinished work", event.get("message", ""))
+                    self.state["continuation"] = {"iterations": event.get("iterations"), "time": now()}
                 elif kind == "error":
                     raise RuntimeError(
                         event.get("error") or event.get("message") or "Agent error"
@@ -358,6 +393,8 @@ class LocalAgent:
                         f"{event.get('iterations', 0)} model turns",
                         "success",
                     )
+                    self.state.setdefault("progress", {})["complete"] = True
+                    self.state["monitoring"] = False
                     completed = True
                 else:
                     continue
@@ -382,6 +419,8 @@ class LocalAgent:
                 "Run stopped" if self.cancelled else "Run failed", str(error), "error"
             )
         finally:
+            self.stop_event.set()
+            self.waiting_until = None
             if self.process and self.process.returncode is None:
                 os.killpg(self.process.pid, signal.SIGKILL)
                 await self.process.wait()
@@ -393,6 +432,7 @@ class LocalAgent:
 
     async def stop(self):
         self.cancelled = True
+        self.stop_event.set()
         if self.process and self.process.returncode is None:
             os.killpg(self.process.pid, signal.SIGTERM)
         if self.task and not self.task.done():
@@ -476,24 +516,116 @@ class AgentManager:
         finally:
             caller.pending_delegations -= 1
             if caller.pending_delegations == 0 and self.worker_alive(caller):
-                await self.slots.acquire()
-                if (
-                    self.worker_alive(caller)
-                    and caller.pending_delegations == 0
-                    and not caller.holds_slot
-                ):
+                await self.reacquire(caller)
+            caller.publish()
+
+    async def reacquire(self, caller):
+        acquired = asyncio.create_task(self.slots.acquire())
+        stopped = asyncio.create_task(caller.stop_event.wait())
+        accounted = False
+        try:
+            await asyncio.wait({acquired, stopped}, return_when=asyncio.FIRST_COMPLETED)
+            if acquired.done() and not acquired.cancelled():
+                if self.worker_alive(caller) and caller.pending_delegations == 0 and not caller.holds_slot:
                     caller.holds_slot = True
                 else:
                     self.slots.release()
-            caller.publish()
+                accounted = True
+        finally:
+            if not acquired.done():
+                acquired.cancel()
+            stopped.cancel()
+            await asyncio.gather(acquired, stopped, return_exceptions=True)
+            if acquired.done() and not acquired.cancelled() and not accounted:
+                self.slots.release()
 
     @staticmethod
     def worker_alive(agent):
         return (
             not agent.cancelled
+            and not agent.manager.paused
             and agent.process is not None
             and agent.process.returncode is None
         )
+
+    def read_thread(self, agent_id, *, cursor=None, limit=8, max_chars=8000, include_activity=False):
+        agent = self.agents[agent_id]
+        messages = agent.state["messages"]
+        end = min(cursor if cursor is not None else len(messages), len(messages))
+        start = max(0, end - limit)
+        budget = max_chars
+        page = []
+        for message in reversed(messages[start:end]):
+            text = message["text"][:min(4000, budget)]
+            page.append({k: message[k] for k in ("id", "role", "source") if k in message} | {"text": text, "truncated": len(text) < len(message["text"])})
+            budget -= len(text)
+        activity = []
+        if include_activity:
+            for item in agent.state["activity"][-8:]:
+                detail = item.get("detail", "")[:min(1000, budget)]
+                activity.append({"time": item["time"], "label": item["label"], "detail": detail, "truncated": len(detail) < len(item.get("detail", ""))})
+                budget -= len(detail)
+        return {"id": agent.id, "name": agent.name, "status": agent.state["status"], "messages": list(reversed(page)), "activity": activity, "next_cursor": start or None, "total_messages": len(messages)}
+
+    def read_tool_result(self, agent_id, path=None, offset=0, limit=12000):
+        agent = self.agents[agent_id]
+        roots = [agent.local / ".dexter" / name for name in ("tool-results", "web-fetch")]
+        if path is None:
+            return {"agent_id": agent_id, "files": [str(p.relative_to(agent.local)) for root in roots if root.is_dir() for p in root.iterdir() if p.is_file() and not p.is_symlink()][:50]}
+        candidate = Path(path)
+        if not candidate.is_absolute():
+            candidate = agent.local / candidate
+        target = candidate.resolve()
+        if not any(target.is_relative_to(root.absolute()) for root in roots) or candidate.is_symlink():
+            raise ValueError("Only persisted tool-result files for the selected agent are readable")
+        if not target.is_file():
+            raise ValueError("Tool result not found; omit path to list actual persisted files")
+        try:
+            with target.open(encoding="utf-8") as stream:
+                # Character offsets are stable for text pagination, including Unicode.
+                remaining = offset
+                while remaining:
+                    chunk = stream.read(min(remaining, 65536))
+                    if not chunk:
+                        break
+                    remaining -= len(chunk)
+                content = stream.read(limit)
+                more = bool(stream.read(1))
+        except UnicodeDecodeError as error:
+            raise ValueError("Tool result is binary, not a text result") from error
+        return {"agent_id": agent_id, "path": str(target.relative_to(agent.local)), "offset": offset, "content": content, "next_offset": offset + len(content) if more else None}
+
+    async def wait_for_agents(self, caller, seconds, agent_ids):
+        if not self.worker_alive(caller):
+            raise ValueError("Wait requires an active worker in an active fund")
+        children = []
+        for aid in dict.fromkeys(agent_ids):
+            if aid not in self.agents or aid == caller.id or caller.id not in self.ancestors(aid):
+                raise ValueError("Wait can observe only the caller's descendants")
+            children.append(self.agents[aid])
+        waiters = [asyncio.ensure_future(asyncio.shield(a.task)) for a in children if a.task]
+        timer = asyncio.create_task(asyncio.sleep(seconds))
+        stopped = asyncio.create_task(caller.stop_event.wait())
+        started = asyncio.get_running_loop().time()
+        caller.waiting_until = (datetime.now(UTC) + timedelta(seconds=seconds)).isoformat()
+        caller.activity("Monitoring specialists" if children else "Timer wait", f"Up to {seconds:g} seconds")
+        try:
+            async with self.delegating(caller):
+                if children and any(not a.task or a.task.done() for a in children):
+                    reason = "agent_finished"
+                else:
+                    done, _ = await asyncio.wait([*waiters, timer, stopped], return_when=asyncio.FIRST_COMPLETED)
+                    reason = "timer" if timer in done else "agent_finished"
+                if stopped.done() or caller.cancelled or self.paused:
+                    raise ValueError("Wait cancelled: agent stopped or fund paused")
+        finally:
+            caller.waiting_until = None
+            for task in [*waiters, timer, stopped]:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*waiters, timer, stopped, return_exceptions=True)
+            caller.publish()
+        return {"reason": reason, "elapsed_seconds": round(asyncio.get_running_loop().time() - started, 3), "agents": [{"id": a.id, "status": a.state["status"]} for a in children]}
 
     async def create(
         self, parent_id, name, task, role="research", strategy_id=None, model=None

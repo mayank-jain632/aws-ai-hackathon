@@ -3,7 +3,7 @@ export interface AgentMessage { id: string; role: 'user' | 'assistant'; text: st
 export interface Activity { id: string; time: string; label: string; detail: string; kind: string }
 export interface Agent {
   modelChoices: { id: string; name: string }[]
-  waitingForAgents?: boolean; queued?: boolean
+  waitingForAgents?: boolean; queued?: boolean; waitingUntil?: string | null; monitoring?: boolean
   role: 'orchestrator' | 'research' | 'adversarial' | 'strategy' | 'backtester' | 'executor' | 'moderator'; tools: string[]
   id: string; parentId: string | null; name: string; status: AgentStatus; model: string
   messages: AgentMessage[]; activity: Activity[]; files: string[]; workspace: string

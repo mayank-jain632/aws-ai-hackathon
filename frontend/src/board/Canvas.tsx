@@ -129,7 +129,7 @@ export function Canvas({ agents, connected, selectedId, onSelect, onDeselect, po
               <text className="agent-icon" x="35" y="43" textAnchor="middle">{agent.name[0]}</text>
               <text className="agent-name" x="64" y="43">{agent.name.length > 22 ? agent.name.slice(0, 21) + '…' : agent.name}</text>
               <circle className={`status-dot ${agent.status}`} cx="24" cy="84" r="4" />
-              <text className="agent-status" x="36" y="89">{connected ? statusLabel[agent.status] : 'Connecting…'}</text>
+              <text className="agent-status" x="36" y="89">{connected ? agent.status === 'running' && agent.waitingUntil ? 'Waiting' : agent.status === 'running' && (agent.monitoring || agent.waitingForAgents) ? 'Monitoring' : statusLabel[agent.status] : 'Connecting…'}</text>
               <text className="agent-description" x="19" y="117">{agent.role === 'backtester' ? 'Backtester · historical test only' : `${agent.role || 'Agent'} · shared workspace`}</text>
               <line x1="0" x2="300" y1="137" y2="137" stroke="#e2e6ed" />
               <text className="agent-footer" x="19" y="158">{agent.files.length} {agent.files.length === 1 ? 'file' : 'files'}</text>

@@ -51,6 +51,7 @@ RESEARCH = [
     "apify_run",
 ]
 DELEGATE = ["create_agent", "list_agents", "message_agent"]
+SWARM = ["read_agent_thread", "read_tool_result", "wait"]
 ROLES = list(get_args(Role))
 PROFILES = {
     "orchestrator": {
@@ -106,9 +107,24 @@ PROFILES = {
 
 for _role, _profile in PROFILES.items():
     if _role not in {"orchestrator", "backtester"}:
+        _profile["tools"] += SWARM
         _profile["instructions"] += (
             " You can create and message descendants of any registered role when another tool set is needed. Every child uses its own role permissions and conversation. Bind backtesters to an approved frozen strategy_id; do not send them research or live context."
         )
+
+
+PROFILES["orchestrator"]["instructions"] += (
+    " Stay responsible for the full authorized workflow while descendants are working. Launch independent work with wait_for_result=false; monitor status and threads, wait without holding a worker slot, resolve conflicting evidence, follow up or reassign, and advance the next phase. Research should use available fundamentals, filings, macro, market, social/X and sentiment sources with honest coverage gaps. Require an immutable strategy artifact, blind backend evaluation and final adversarial review of the actual evaluation before requesting human execution approval. Keep live evidence, historical simulated fills and actual paper broker orders separate. Missing human thresholds or permissions are concrete blockers; continue other useful work and report the exact missing input. Finish only when the authorized work is complete or no useful work can continue without external input."
+)
+PROFILES["strategy"]["instructions"] += (
+    " Inspect the actual desk policy first. If thresholds are missing, report exactly which human inputs are needed and continue independent research. Register only positive nonzero allocations that sum to one; omit zero-weight names. Choose a fixed already-observed evaluation end at or before the server-provided snapshot end, never the future investment horizon. A strategy selected using current live evidence and then replayed on historical prices has hindsight contamination; disclose it, even if the evaluator is blind. Do not claim an independent clean historical strategy from that replay. Write a strategy markdown artifact in the shared workspace that cites the immutable strategy_id, weights, evaluation dates, source memo paths and change triggers. Executors must follow the registered record and backend gates; the markdown is a readable artifact, not executable code or a substitute for approval. Arbitrary Python strategy execution is unsupported. Do not write a .py file and claim it was tested or deployed."
+)
+PROFILES["adversarial"]["instructions"] += (
+    " After backtesting, perform a final review using inspect_desk and the actual strategy/evaluation artifacts. Record the verdict with review_strategy, citing the result ID, assumptions, leakage label and failed checks. A pre-test research review is not evidence that the test passed. Never turn FAIL into APPROVE for execution."
+)
+PROFILES["executor"]["instructions"] += (
+    " On each authorized management cycle, re-read the registered strategy and its reviewed markdown artifact through a role with file tools, or use the server desk record directly. Refresh current market/account data and every backend gate. Report missing final review, human thresholds or permission instead of inventing them. The orchestrator may wake you for later cycles; an hourly wakeup is not new trading permission. Historical simulator orders/fills are never broker receipts. Live here means current data with Alpaca PAPER only; real-money trading and arbitrary Python execution are unsupported."
+)
 
 
 def role_of(agent) -> str:

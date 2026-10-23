@@ -259,3 +259,119 @@ def test_late_parallel_requests_reacquire_parent_only_once(controlled_board):
         assert manager.slots._value == 4
 
     asyncio.run(exercise())
+
+
+def test_background_children_timer_wait_and_completion_wakeup(controlled_board):
+    manager, processes, _ = controlled_board
+
+    async def exercise():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://localhost") as client:
+            root = manager.agents["dexter"]
+            await root.start("Supervise")
+            await until(lambda: "dexter" in processes)
+            response = await client.post("/api/internal/agents/create", headers=auth(manager, "dexter"), json={"name": "Async", "task": "Research", "wait_for_result": False})
+            assert response.status_code == 200 and response.json()["background"]
+            aid = response.json()["id"]
+            await until(lambda: aid in processes)
+            waiting = asyncio.create_task(client.post("/api/internal/agents/wait", headers=auth(manager, "dexter"), json={"seconds": 3600, "agent_ids": [aid]}))
+            await until(lambda: root.waiting_until is not None and not root.holds_slot)
+            assert root.state["status"] == "running" and root.snapshot()["waitingForAgents"]
+            processes[aid].finish()
+            result = await asyncio.wait_for(waiting, timeout=1)
+            assert result.json()["reason"] == "agent_finished"
+            assert root.holds_slot and root.waiting_until is None
+            timer = await client.post("/api/internal/agents/wait", headers=auth(manager, "dexter"), json={"seconds": 0.01})
+            assert timer.json()["reason"] == "timer" and root.holds_slot
+            await manager.close()
+            assert manager.slots._value == 4
+
+    asyncio.run(exercise())
+
+
+def test_stop_long_timer_and_queued_reacquisition_are_prompt(controlled_board):
+    manager, processes, _ = controlled_board
+
+    async def exercise():
+        root = manager.agents["dexter"]
+        await root.start("Wait")
+        await until(lambda: "dexter" in processes)
+        timer = asyncio.create_task(manager.wait_for_agents(root, 3600, []))
+        await until(lambda: root.waiting_until is not None and not root.holds_slot)
+        await asyncio.wait_for(root.stop(), timeout=0.5)
+        with pytest.raises(ValueError, match="cancelled"):
+            await asyncio.wait_for(timer, timeout=0.5)
+        assert manager.slots._value == 4
+        await root.start("Wait for capacity")
+        await until(lambda: root.holds_slot)
+        # Fill every slot, including the one the timer releases, before it returns.
+        timer = asyncio.create_task(manager.wait_for_agents(root, 0.01, []))
+        await until(lambda: not root.holds_slot)
+        for _ in range(4):
+            await manager.slots.acquire()
+        await until(lambda: root.pending_delegations == 0)
+        await asyncio.wait_for(root.stop(), timeout=0.5)
+        await asyncio.wait_for(timer, timeout=0.5)
+        for _ in range(4):
+            manager.slots.release()
+        assert manager.slots._value == 4
+
+    asyncio.run(exercise())
+
+
+def test_thread_read_is_bounded_paginated_and_fund_private(controlled_board, tmp_path, monkeypatch):
+    manager, _, _ = controlled_board
+    other = runtime.AgentManager(root=tmp_path / "other-fund")
+    sibling = runtime.LocalAgent(manager, "sibling", "Sibling", "dexter", "research")
+    blind = runtime.LocalAgent(manager, "blind", "Blind", "dexter", "backtester")
+    manager.agents.update(sibling=sibling, blind=blind)
+    other.agents["secret-agent"] = runtime.LocalAgent(other, "secret-agent", "Secret", "dexter", "research")
+    sibling.state["messages"] = [{"id": str(i), "role": "assistant", "text": str(i) + "x" * 1000} for i in range(30)]
+    root = manager.agents["dexter"]
+    before = list(root.state["messages"])
+
+    async def exercise():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://localhost") as client:
+            result = await client.get("/api/internal/agents/sibling/thread?limit=3&max_chars=200", headers=auth(manager, "dexter"))
+            assert result.status_code == 200
+            page = result.json()
+            assert [m["id"] for m in page["messages"]] == ["27", "28", "29"]
+            assert sum(len(m["text"]) for m in page["messages"]) <= 200
+            assert page["next_cursor"] == 27 and any(m["truncated"] for m in page["messages"])
+            previous = await client.get("/api/internal/agents/sibling/thread?cursor=27&limit=3", headers=auth(manager, "dexter"))
+            assert previous.json()["messages"][-1]["id"] == "26"
+            assert root.state["messages"] == before
+            assert (await client.get("/api/internal/agents/secret-agent/thread", headers=auth(manager, "dexter"))).status_code == 404
+            assert (await client.get("/api/internal/agents/sibling/thread", headers=auth(other, "dexter"))).status_code == 403
+            for action, body in [("wait", {"seconds": 0.01}), ("result", {"agent_id": "sibling"})]:
+                assert (await client.post("/api/internal/agents/" + action, headers=auth(manager, "blind"), json=body)).status_code == 403
+            assert (await client.get("/api/internal/agents/sibling/thread", headers=auth(manager, "blind"))).status_code == 403
+            assert (await client.get("/api/internal/agents/sibling/thread?limit=100", headers=auth(manager, "dexter"))).status_code == 422
+            assert (await client.post("/api/internal/agents/wait", headers=auth(manager, "dexter"), json={"seconds": 3601})).status_code == 422
+
+    asyncio.run(exercise())
+
+
+def test_persisted_result_reader_has_no_private_state_or_symlink_escape(controlled_board, tmp_path):
+    manager, _, _ = controlled_board
+    root = manager.agents["dexter"]
+    result_dir = root.local / ".dexter" / "tool-results"
+    result_dir.mkdir(parents=True)
+    result_file = result_dir / "real-call.txt"
+    result_file.write_text("Actual tool response " * 100)
+    root.state_path.write_text("PRIVATE STATE")
+    listed = manager.read_tool_result("dexter")
+    assert listed["files"] == [".dexter/tool-results/real-call.txt"]
+    page = manager.read_tool_result("dexter", str(result_file), limit=20)
+    assert page["content"] == "Actual tool response "[:20] and page["next_offset"] == 20
+    assert manager.read_tool_result("dexter", page["path"], offset=20, limit=21)["content"] == result_file.read_text()[20:41]
+    for path in [str(root.state_path), "../agents/secret/state.json", ".dexter/tool-results/../scratchpad/private.json"]:
+        with pytest.raises(ValueError, match="Only persisted"):
+            manager.read_tool_result("dexter", path)
+    outside = tmp_path / "outside.txt"
+    outside.write_text("OTHER FUND")
+    link = result_dir / "escape.txt"
+    link.symlink_to(outside)
+    with pytest.raises(ValueError, match="Only persisted"):
+        manager.read_tool_result("dexter", str(link))
+    with pytest.raises(ValueError, match="not found"):
+        manager.read_tool_result("dexter", ".dexter/tool-results/invented.txt")

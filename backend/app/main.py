@@ -57,6 +57,7 @@ class AgentTask(BaseModel):
     role: Role = "research"
     strategy_id: str | None = Field(default=None, max_length=64)
     model: str | None = Field(default=None, max_length=100)
+    wait_for_result: bool = True
 
 
 def manager(request: Request) -> AgentManager:
@@ -229,6 +230,61 @@ def list_workers(request: Request) -> dict:
     }
 
 
+def swarm_worker(request, tool):
+    caller = authenticate_worker(request)
+    try:
+        require_tool(caller, tool)
+    except PermissionError as error:
+        raise HTTPException(403, str(error)) from error
+    return caller, manager(request)
+
+
+@app.get("/api/internal/agents/{agent_id}/thread")
+def read_worker_thread(
+    agent_id: str, request: Request,
+    cursor: Annotated[int | None, Query(ge=0)] = None,
+    limit: Annotated[int, Query(ge=1, le=20)] = 8,
+    max_chars: Annotated[int, Query(ge=200, le=16000)] = 8000,
+    include_activity: bool = False,
+) -> dict:
+    _, current = swarm_worker(request, "read_agent_thread")
+    if agent_id not in current.agents:
+        raise HTTPException(404, "Agent not found in this fund")
+    return current.read_thread(agent_id, cursor=cursor, limit=limit, max_chars=max_chars, include_activity=include_activity)
+
+
+class AgentResult(BaseModel):
+    agent_id: str = Field(min_length=1, max_length=60)
+    path: str | None = Field(default=None, max_length=4096)
+    offset: int = Field(default=0, ge=0, le=100000000)
+    limit: int = Field(default=12000, ge=1, le=16000)
+
+
+@app.post("/api/internal/agents/result")
+def read_worker_result(body: AgentResult, request: Request) -> dict:
+    _, current = swarm_worker(request, "read_tool_result")
+    if body.agent_id not in current.agents or current.agents[body.agent_id].role == "backtester":
+        raise HTTPException(404, "Readable tool-result agent not found in this fund")
+    try:
+        return current.read_tool_result(body.agent_id, body.path, body.offset, body.limit)
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+
+
+class AgentWait(BaseModel):
+    seconds: float = Field(ge=0.01, le=3600, allow_inf_nan=False)
+    agent_ids: list[Annotated[str, Field(min_length=1, max_length=60)]] = Field(default_factory=list, max_length=16)
+
+
+@app.post("/api/internal/agents/wait")
+async def wait_worker(body: AgentWait, request: Request) -> dict:
+    caller, current = swarm_worker(request, "wait")
+    try:
+        return await current.wait_for_agents(caller, body.seconds, body.agent_ids)
+    except ValueError as error:
+        raise HTTPException(409, str(error)) from error
+
+
 @app.post("/api/internal/agents/{action}")
 async def delegate(action: str, body: AgentTask, request: Request) -> dict:
     caller = authenticate_worker(request)
@@ -265,6 +321,8 @@ async def delegate(action: str, body: AgentTask, request: Request) -> dict:
                         "Blind delegates must evaluate the parent's frozen strategy"
                     )
                 await child.start(body.task, caller.name)
+            if not body.wait_for_result:
+                return {"id": child.id, "name": "Historical evaluator" if caller.role == "backtester" else child.name, "status": child.state["status"], "background": True}
             result = await current.result(child)
             if caller.role == "backtester":
                 result["files"] = []
