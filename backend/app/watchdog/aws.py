@@ -27,6 +27,7 @@ import os
 import queue
 import re
 import threading
+import time
 from datetime import UTC, datetime
 
 from botocore.config import Config
@@ -98,6 +99,14 @@ def send(job) -> None:
         OUTBOX.put_nowait(job)
     except queue.Full:
         log.warning("watchdog AWS outbox full; dropping a write")
+
+
+def flush(timeout: float = 20) -> bool:
+    """Wait for queued AWS writes to finish. Scripts call this before they exit."""
+    deadline = time.monotonic() + timeout
+    while OUTBOX.unfinished_tasks and time.monotonic() < deadline:
+        time.sleep(0.1)
+    return not OUTBOX.unfinished_tasks
 
 
 def metrics(data: list[dict]) -> None:
