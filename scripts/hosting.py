@@ -173,6 +173,7 @@ def main():
     }
     env.update(
         BACKTEST_ENGINE="wf",
+        AGENTCORE_OPINION_ARN="arn:aws:bedrock-agentcore:us-east-1:556200168424:runtime/aaron_watchdog_opinion-v3mruu2T4a",
         AWS_REGION=REGION,
         AWS_CREDENTIAL_MODE="role",
         APP_ACCESS_PASSWORD=access["password"],
@@ -334,6 +335,17 @@ def main():
                 },
             ]
         )
+    policy["Statement"].append(
+        {
+            "Sid": "InvokeWatchdogOpinionRuntime",
+            "Effect": "Allow",
+            "Action": "bedrock-agentcore:InvokeAgentRuntime",
+            "Resource": [
+                env["AGENTCORE_OPINION_ARN"],
+                env["AGENTCORE_OPINION_ARN"] + "/runtime-endpoint/DEFAULT",
+            ],
+        }
+    )
     iam.put_role_policy(
         RoleName=NAME, PolicyName="app", PolicyDocument=json.dumps(policy)
     )
