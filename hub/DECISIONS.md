@@ -13,7 +13,7 @@ Entry format:
 
 ## Open questions (need a human call)
 
-When the team answers one, delete it here and log the answer below as a decision. Questions that one lane can settle on its own live in `hub/PRD.md` section 12 instead.
+When the team answers one, delete it here and log the answer below as a decision. Lane responsibilities and remaining implementation work are in `hub/PRD.md`; older log entries retain the section numbers from the PRD version they described.
 
 - **Q11. One model or several?** Every call uses `gpt-5.6-luna` today. Mixing model families across agents shows more of Bedrock. See `docs/reference/aws-services-and-allowed-models.md` for what the event allows.
 
