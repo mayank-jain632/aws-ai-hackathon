@@ -18,7 +18,11 @@ export interface Fund extends Mandate {
   activity: { id: string; time: string; label: string; detail: string; agent: string; kind: string }[]
   agents: { id: string; name: string; status: string; parentId: string | null }[]
 }
-export const defaults: Mandate = { name: '', objective: 'balanced_growth', description: '', capital: 100000, risk: 'balanced', horizon_months: 36, target_return: null, max_position: 20, max_drawdown: 15, min_cash: 5, max_sector: 40, universe: ['AAPL','MSFT','NVDA','AMZN','GOOGL','JPM','XOM','UNH','PG','CAT'], exclusions: '', benchmark: 'SPY', rebalance: 'monthly', liquidity: 'monthly', mode: 'historical', cutoff: '2024-06-01', trading_allowed: false, approval_required: true, allow_short: false, max_leverage: 1, notes: '' }
+export const defaults: Mandate = { name: '', objective: 'balanced_growth', description: '', capital: 100000, risk: 'balanced', horizon_months: 36, target_return: null, max_position: 20, max_drawdown: 15, min_cash: 5, max_sector: 40, universe: ['AAPL','MSFT','NVDA','AMZN','GOOGL','JPM','XOM','UNH','PG','CAT'], exclusions: '', benchmark: 'SPY', rebalance: 'monthly', liquidity: 'monthly', mode: 'paper', cutoff: '2024-06-01', trading_allowed: true, approval_required: false, allow_short: false, max_leverage: 1, notes: '' }
+export function setupMandate(initial?: Mandate): Mandate {
+  const value = initial ?? defaults
+  return { ...value, universe: [...value.universe] }
+}
 export const riskNames = { conservative: 'Conservative', balanced: 'Balanced', aggressive: 'Growth' }
 export const objectives: Record<string, string> = { capital_preservation: 'Preserve capital', balanced_growth: 'Balanced growth', long_term_growth: 'Long-term growth', income: 'Generate income' }
 export const money = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)

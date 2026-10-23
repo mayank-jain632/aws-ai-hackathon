@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { defaults, objectives, riskNames, money, type Mandate } from './types'
+import { setupMandate, objectives, riskNames, money, type Mandate } from './types'
 
 type Props = { initial?: Mandate; onClose: () => void; onSave: (mandate: Mandate) => Promise<void> }
 export function FundSetup({ initial, onClose, onSave }: Props) {
-  const [value, setValue] = useState<Mandate>(initial || { ...defaults, universe: [...defaults.universe] })
+  const [value, setValue] = useState<Mandate>(() => setupMandate(initial))
   const dialog = useRef<HTMLElement>(null)
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null
@@ -51,10 +51,10 @@ export function FundSetup({ initial, onClose, onSave }: Props) {
       </>}
       {step === 2 && <><div className="section-intro"><h2>Review fund</h2><p>Review the mandate and choose how this fund should work.</p></div>
         <div className="review-strip"><div><small>Fund</small><strong>{value.name}</strong></div><div><small>Paper capital</small><strong>{money(value.capital)}</strong></div><div><small>Approach</small><strong>{riskNames[value.risk]}</strong></div></div>
-        <div className="field-row"><label className="field">Research mode<select value={value.mode} onChange={e => change('mode',e.target.value)}><option value="historical">Historical research</option><option value="paper">Live paper research</option></select></label><label className="field">Research cutoff<input type="date" required value={value.cutoff} onChange={e => change('cutoff',e.target.value)}/><small>Applies to historical research. Benchmark: SPY.</small></label></div>
-        <div className="permission-box"><label className="toggle-row"><span><strong>Permit paper trading</strong><small>Records your consent. Execution still requires the trading integration and its checks.</small></span><input type="checkbox" checked={value.trading_allowed} onChange={e => change('trading_allowed',e.target.checked)}/></label><label className="toggle-row"><span><strong>Require human approval</strong><small>Keep your team in the loop before any proposed order.</small></span><input type="checkbox" checked={value.approval_required} onChange={e => change('approval_required',e.target.checked)}/></label></div>
+        <div className="field-row"><label className="field">Research mode<select value={value.mode} onChange={e => change('mode',e.target.value)}><option value="paper">Live paper research</option><option value="historical">Historical research</option></select></label><label className="field">Historical research cutoff<input type="date" disabled={value.mode !== 'historical'} required={value.mode === 'historical'} value={value.cutoff} onChange={e => change('cutoff',e.target.value)}/><small>{value.mode === 'historical' ? 'Use evidence available by this date. Benchmark: SPY.' : 'Inactive for live research. Historical backtests use their own evaluation dates.'}</small></label></div>
+        <div className="permission-box"><label className="toggle-row"><span><strong>Permit paper trading</strong><small>Agents may place Alpaca paper orders after strategy, evaluation and risk checks pass.</small></span><input type="checkbox" checked={value.trading_allowed} onChange={e => change('trading_allowed',e.target.checked)}/></label><label className="toggle-row"><span><strong>Require human approval</strong><small>Enable to require a person’s approval before paper execution.</small></span><input type="checkbox" checked={value.approval_required} onChange={e => change('approval_required',e.target.checked)}/></label></div>
         <label className="field">Additional instructions <span className="optional">Optional</span><textarea rows={2} maxLength={2000} placeholder="Reporting requirements, investment restrictions, or approval notes…" value={value.notes} onChange={e => change('notes',e.target.value)}/></label>
-        <div className="info-note">Your fund starts in cash, with its own agent canvas and shared files. Research and paper trading only. No real money moves.</div>
+        <div className="info-note">{value.mode === 'historical' ? 'Research uses the historical cutoff. Switch to live paper research to execute at current prices.' : !value.trading_allowed ? 'Live market research only. Enable paper trading to let agents execute.' : value.approval_required ? 'Agents research and evaluate strategies, then wait for your approval before paper execution.' : 'Agents research, evaluate and trade autonomously within your mandate using the Alpaca paper account.'}</div>
       </>}
       {error && <p role="alert" className="fund-error">{error}</p>}
     </div><footer className="setup-footer"><span>Step {step + 1} of 3</span><div>{step > 0 && <button type="button" className="secondary" disabled={busy} onClick={() => setStep(step - 1)}>Back</button>}<button type="submit" className="primary" disabled={busy}>{busy ? 'Saving fund…' : step < 2 ? 'Continue' : initial ? 'Save mandate' : 'Create fund'}</button></div></footer></form>
