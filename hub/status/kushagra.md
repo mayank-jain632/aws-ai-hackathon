@@ -59,3 +59,5 @@ Updated 2026-10-23 by Codex
 - `frontend/src/App.tsx`, `frontend/src/board/Canvas.tsx`, `frontend/src/types.ts`
 - `backend/app/main.py`, `backend/app/agent.py`, `backend/app/access.py`
 - `scripts/hosting.py`, `README.md`, current-state facts in `AGENTS.md`, D7 in `hub/DECISIONS.md`, `hub/status/kushagra.md`
+
+- Direct human authorization relayed by coordinator now covers provisioning the two missing hosted watchdog resources. Created Guardrail and Memory in hosting account only after name discovery found neither, tagged Owner=Kushagra; exact private inventory `.local/hosting/watchdog.json`. Added preview/apply cleanup limited to resources created here and exact-ID/ARN deployment wiring. No Aaron separate-account resources, runtime, alarm or log group changed. Live verification in progress.

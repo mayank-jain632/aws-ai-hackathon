@@ -178,6 +178,17 @@ def main():
         APP_DEMO_ACCOUNTS=json.dumps(access["accounts"]),
         APP_ORIGIN_TOKEN=access["origin_token"],
     )
+    watchdog_file = STATE / "watchdog.json"
+    watchdog = json.loads(watchdog_file.read_text()) if watchdog_file.exists() else {}
+    if watchdog and watchdog.get("account") != account:
+        raise ValueError("Watchdog inventory belongs to a different account")
+    if watchdog.get("guardrail"):
+        env.update(
+            WATCHDOG_GUARDRAIL_ID=watchdog["guardrail"]["id"],
+            WATCHDOG_GUARDRAIL_VERSION="1",
+        )
+    if watchdog.get("memory"):
+        env["WATCHDOG_MEMORY_ID"] = watchdog["memory"]["id"]
     sm = session.client("secretsmanager")
     if not state.get("secret_arn"):
         result = sm.create_secret(
@@ -290,6 +301,38 @@ def main():
             },
         ],
     }
+    if watchdog.get("guardrail") and watchdog.get("memory"):
+        policy["Statement"].extend(
+            [
+                {
+                    "Effect": "Allow",
+                    "Action": "bedrock:ApplyGuardrail",
+                    "Resource": watchdog["guardrail"]["arn"],
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "bedrock-agentcore:CreateEvent",
+                        "bedrock-agentcore:ListEvents",
+                        "bedrock-agentcore:RetrieveMemoryRecords",
+                    ],
+                    "Resource": watchdog["memory"]["arn"],
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": "cloudwatch:PutMetricData",
+                    "Resource": "*",
+                    "Condition": {
+                        "StringEquals": {"cloudwatch:namespace": "Team4/Watchdog"}
+                    },
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": "events:PutEvents",
+                    "Resource": f"arn:aws:events:{REGION}:{account}:event-bus/default",
+                },
+            ]
+        )
     iam.put_role_policy(
         RoleName=NAME, PolicyName="app", PolicyDocument=json.dumps(policy)
     )
