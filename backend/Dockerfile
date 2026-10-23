@@ -19,6 +19,8 @@ COPY --from=javascript /app/backend/worker ./backend/worker
 COPY --from=javascript /app/frontend/dist ./frontend/dist
 COPY backend ./backend
 COPY data ./data
+COPY reports ./reports
+COPY specs ./specs
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 HOME=/tmp DEXTER_SOURCE_DIR=/app/vendor/dexter
 RUN python backend/worker/setup.py
 CMD ["python", "-m", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--timeout-graceful-shutdown", "2"]

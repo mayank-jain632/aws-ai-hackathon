@@ -3,6 +3,10 @@
 !backend/**
 !data/
 !data/**
+!reports/
+!reports/**
+!specs/
+!specs/**
 !frontend/
 !frontend/**
 !package.json
