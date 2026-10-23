@@ -89,6 +89,22 @@ def market_snapshot(symbols):
     return {"paper": True, "source": "Alpaca market data API", "feed": "iex", "feed_scope": "IEX venue subset; not consolidated SIP quotes", "retrieved_at": retrieved.isoformat(), "cache_used": False, "market_clock": clock, "symbols": quotes, "limitations": "Use exchange timestamps and ages to assess freshness; market closure may leave old last trades. Quotes are not guaranteed fill prices. Missing, stale or future timestamps are not current evidence. Broker-reported fills remain definitive."}
 
 
+
+def clock_snapshot():
+    """Best-effort broker clock; unavailable never implies open or a fill."""
+    import os
+
+    from backend.app.watchdog import market
+
+    if os.getenv("WATCHDOG_LIVE_DATA", "1") == "0":
+        return None
+    try:
+        clock = market.get(market.TRADING_URL, "/v2/clock")
+        return clock if isinstance(clock, dict) and isinstance(clock.get("is_open"), bool) else None
+    except (httpx.HTTPError, ValueError, TypeError):
+        return None
+
+
 def submit(desk, body):
     with BROKER_LOCK, desk.lock:
         policy, strategy = desk.execution_checks(body.strategy_id)
@@ -204,6 +220,7 @@ def submit(desk, body):
             filled_avg_price=result.get("filled_avg_price"),
             submitted_at=result.get("submitted_at"),
             broker_response=result.copy(),
+            market_clock=clock_snapshot(),
             filled_at=result.get("filled_at"),
             broker_updated_at=result.get("updated_at"),
         )
@@ -267,6 +284,7 @@ def order_status(desk, client_order_id):
             filled_avg_price=result.get("filled_avg_price"),
             submitted_at=result.get("submitted_at"),
             broker_response=result.copy(),
+            market_clock=clock_snapshot(),
             filled_at=result.get("filled_at"),
             broker_updated_at=result.get("updated_at"),
             last_checked_at=stamp(),

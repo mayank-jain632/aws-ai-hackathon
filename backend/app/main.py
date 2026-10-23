@@ -21,6 +21,7 @@ from backend.app.routes.agentcore import router as agentcore_router
 from backend.app.routes.charts import router as charts_router
 from backend.app.routes.desk import router as desk_router
 from backend.app.routes.funds import router as funds_router
+from backend.app.routes.historical import router as historical_router
 from backend.app.routes.models import router as models_router
 from backend.app.routes.scores import router as scores_router
 from backend.app.routes.sharing import router as sharing_router
@@ -285,7 +286,7 @@ def read_worker_result(body: AgentResult, request: Request) -> dict:
 
 class AgentWait(BaseModel):
     seconds: float = Field(ge=0.01, le=3600, allow_inf_nan=False)
-    agent_ids: list[Annotated[str, Field(min_length=1, max_length=60)]] = Field(default_factory=list, max_length=16)
+    agent_ids: list[Annotated[str, Field(min_length=1, max_length=60)]] = Field(default_factory=list)
 
 
 @app.post("/api/internal/agents/wait")
@@ -354,6 +355,7 @@ app.include_router(watchdog_router)
 app.include_router(scores_router)
 app.include_router(charts_router)
 app.include_router(synthesis_router)
+app.include_router(historical_router)
 app.include_router(agentcore_router)
 
 # The same server serves the built React app and API inside the single container.

@@ -50,7 +50,7 @@ export function createSwarmTools() {
     }),
     new DynamicStructuredTool({
       name: 'wait', description: 'Wait 0.01 to 3600 seconds without using a model/worker slot. If agent_ids are supplied, return when any listed descendant finishes or the timer expires. Pass only agents still running to avoid immediate repeated returns. Stop/pause cancels promptly. This waits within the current run; it does not create a recurring schedule.',
-      schema: z.object({ seconds: z.number().finite().min(0.01).max(3600), agent_ids: z.array(z.string().min(1).max(60)).max(16).default([]) }),
+      schema: z.object({ seconds: z.number().finite().min(0.01).max(3600), agent_ids: z.array(z.string().min(1).max(60)).default([]) }),
       func: async (input, _m, c) => agentControl('/wait', input, c?.signal),
     }),
   ];

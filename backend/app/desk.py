@@ -202,7 +202,7 @@ class Desk:
         mandate = json.loads(getattr(self.manager, "context", "") or "{}").get("mandate", {})
         policy = self.state.get("policy") or {}
         return (
-            mandate.get("mode") == "paper" and mandate.get("trading_allowed") is True
+            mandate.get("mode") in {"paper", "historical"} and mandate.get("trading_allowed") is True
             and mandate.get("approval_required", True) is False
             and policy.get("approval_required", False) is False
         )
@@ -212,7 +212,7 @@ class Desk:
             if self.autonomous_paper() and self.state["stop_source"] in {"initial", "policy_configuration", "human_policy"}:
                 self.state["stop"] = False
                 self.state["stop_source"] = "standing_paper_authorization"
-                self.event("standing_paper_authorization", "Bootstrap stop removed under the saved autonomous paper mandate; explicit user/moderator stops are preserved")
+                self.event("standing_paper_authorization", "Bootstrap stop removed under the saved autonomous simulation mandate; explicit user/moderator stops are preserved")
 
     def set_policy(self, policy, *, origin=None):
         with self.lock:
@@ -229,8 +229,8 @@ class Desk:
     def configure_paper_policy(self, criteria, author):
         with self.lock:
             mandate = json.loads(getattr(self.manager, "context", "") or "{}").get("mandate", {})
-            if mandate.get("mode") != "paper":
-                raise ValueError("Agent policy selection is limited to an explicit paper fund")
+            if mandate.get("mode") not in {"paper", "historical"}:
+                raise ValueError("Agent policy selection requires an explicit paper or historical simulation fund")
             policy = Policy(
                 universe=mandate["universe"], max_position=mandate["max_position"] / 100,
                 max_drawdown=mandate["max_drawdown"] / 100,
@@ -244,7 +244,7 @@ class Desk:
                 if self.state["policy"] == policy.model_dump() and self.state.get("policy_origin", {}).get("type") == "agent":
                     return {"policy": self.state["policy"], "policy_version": self.state["policy_version"], "origin": self.state["policy_origin"]}
                 raise ValueError("Paper criteria are frozen after the first observed evaluation; agents cannot tune thresholds to results")
-            origin = {"type": "agent", "author": author, "rationale": criteria.rationale, "time": stamp(), "authorization": "Human delegated paper policy selection before testing"}
+            origin = {"type": "agent", "author": author, "rationale": criteria.rationale, "time": stamp(), "authorization": "Human delegated simulation policy selection before testing"}
             self.set_policy(policy, origin=origin)
             self.event("paper_policy_selected", {"policy_version": self.state["policy_version"], "policy": self.state["policy"], "origin": self.state["policy_origin"]})
             return {"policy": self.state["policy"], "policy_version": self.state["policy_version"], "origin": self.state["policy_origin"]}

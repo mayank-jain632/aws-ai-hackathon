@@ -1,5 +1,6 @@
 """Capability profiles for the existing Dexter runtime. Identity is backend-owned."""
 
+import json
 from typing import Literal, get_args
 
 Role = Literal[
@@ -135,13 +136,42 @@ def role_of(agent) -> str:
 
 
 def require_tool(agent, tool: str) -> None:
-    permissions = PROFILES[role_of(agent)]["tools"]
+    permissions = profile_for(agent)["tools"]
     if "*" not in permissions and tool not in permissions:
         raise PermissionError(f"The {role_of(agent)} role cannot use {tool}")
 
 
 def allow_child(parent, role: str) -> None:
-    if role not in PROFILES[role_of(parent)]["children"]:
+    if role not in profile_for(parent)["children"]:
         raise PermissionError(
             f"The {role_of(parent)} role cannot create or task a {role} agent"
         )
+
+
+HISTORICAL_TOOLS = ["start_historical_replay", "inspect_historical_replay", "place_order", "advance_historical_replay"]
+
+
+def historical_executor(agent):
+    context = json.loads(getattr(agent.manager, "context", "") or "{}")
+    return role_of(agent) == "executor" and context.get("mandate", {}).get("mode") == "historical"
+
+
+def profile_for(agent):
+    if historical_executor(agent):
+        return {
+            "tools": HISTORICAL_TOOLS + ["report_agent_progress", "wait"],
+            "children": [],
+            "instructions": (
+                "Execute only a historical simulation using start_historical_replay, inspect_historical_replay, "
+                "place_order and advance_historical_replay. Start with the frozen strategy_id and exact evaluation_id "
+                "provided by the supervisor. No web, file, live account, broker or delegation access is available. "
+                "Use only returned quotes at the saved historical clock, never model memory or future evidence. "
+                "Use stable client_order_id values; retrying the same request must not place another simulated order. "
+                "place_order advances one real historical session with the existing WF fill engine; inspect the actual "
+                "cash, holdings, fills and equity after each step. Keep work shallow and demonstrate real simulated "
+                "trading promptly. Advance through observed sessions as appropriate. Simulation can inspect a failed "
+                "evaluation without claiming PASS or live eligibility. Explicit stop, mandate and position/cash limits "
+                "remain authoritative. Report historical simulated fills distinctly from Alpaca paper receipts."
+            ),
+        }
+    return PROFILES[role_of(agent)]

@@ -15,7 +15,7 @@ from uuid import uuid4
 from dotenv import dotenv_values
 
 from backend.app.models import choices, select_model
-from backend.app.roles import PROFILES, allow_child
+from backend.app.roles import PROFILES, allow_child, historical_executor, profile_for
 
 ROOT = Path(__file__).resolve().parents[2]
 LOCAL = ROOT / ".local/agent"
@@ -219,7 +219,7 @@ class LocalAgent:
             "queued": self.state["status"] == "running"
             and not self.holds_slot
             and not self.pending_delegations,
-            "tools": PROFILES[self.role]["tools"],
+            "tools": profile_for(self)["tools"],
             "name": self.name,
             "status": self.state["status"],
             "model": self.model,
@@ -339,9 +339,10 @@ class LocalAgent:
                     if self.role == "backtester"
                     else self.name,
                     "LOCAL_AGENT_ROLE": self.role,
+                    "LOCAL_FUND_MODE": json.loads(self.manager.context or "{}").get("mandate", {}).get("mode", ""),
                     "LOCAL_AGENT_MODEL": self.model,
-                    "AGENT_ALLOWED_TOOLS": json.dumps(PROFILES[self.role]["tools"]),
-                    "AGENT_ROLE_INSTRUCTIONS": PROFILES[self.role]["instructions"],
+                    "AGENT_ALLOWED_TOOLS": json.dumps(profile_for(self)["tools"]),
+                    "AGENT_ROLE_INSTRUCTIONS": profile_for(self)["instructions"],
                     "DEXTER_STATE_DIR": str(self.local / ".dexter"),
                 },
                 stdin=asyncio.subprocess.PIPE,
@@ -359,7 +360,7 @@ class LocalAgent:
                     "evaluation": None if self.role == "backtester" else evaluation_window(),
                     "history": history,
                     "progress": None if self.role == "backtester" else getattr(self, "resume_progress", None),
-                    "files": [] if self.role == "backtester" else self.files(),
+                    "files": [] if self.role == "backtester" or historical_executor(self) else self.files(),
                     "context": ""
                     if self.role == "backtester"
                     else self.manager.context,

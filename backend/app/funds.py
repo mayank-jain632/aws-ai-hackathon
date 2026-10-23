@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator
 
 from backend.app.agent import ROOT, AgentManager
 
@@ -53,15 +53,6 @@ class Mandate(BaseModel):
     allow_short: bool = False
     max_leverage: float = Field(default=1, ge=1, le=2, allow_inf_nan=False)
     notes: str = Field(default="", max_length=2000)
-
-    @model_validator(mode="before")
-    @classmethod
-    def historical_defaults(cls, values):
-        if isinstance(values, dict) and values.get("mode") == "historical":
-            values = {**values}
-            values.setdefault("trading_allowed", False)
-            values.setdefault("approval_required", True)
-        return values
 
     @field_validator("name")
     @classmethod
@@ -169,7 +160,7 @@ class FundStore:
                         else "Live research uses current evidence. A saved historical cutoff is inactive. Historical evaluation is a separate, explicitly dated experiment; do not mix its results with live evidence."
                     ),
                     "workflow": "Reuse saved specialists, inspect actual threads and artifacts, challenge findings independently, register immutable strategies and evaluate with a bound blind backtester. Record completed and incomplete phases, evidence paths, IDs, concrete blockers and next actions in fund-plan.md. Old document-only planning requests do not limit the current delegated workflow.",
-                    "human_gates": "For PAPER workflows the orchestrator or strategist must choose very low pass criteria, as authorized, and record the actual criteria and limits within this server mandate using the authorized backend tool. Freeze the chosen policy before blind testing; never tune thresholds after seeing results or treat prose as a configured policy. A current backend PASS and an actual independent final review establish eligibility. In autonomous paper funds without required human approval, record review findings as advisory and resolve or revise through agents; do not wait for operator adjudication of research metadata. This does not authorize changing the mandate, trading permission, human approval requirements or emergency stop. Missing unsupported enforcement remains a concrete blocker.",
+                    "human_gates": "For PAPER and HISTORICAL SIMULATION workflows the orchestrator or strategist must choose very low pass criteria, as authorized, and record the actual criteria and limits within this server mandate using the authorized backend tool. Freeze the chosen policy before blind testing; never tune thresholds after seeing results or treat prose as a configured policy. A current backend PASS and an actual independent final review establish PAPER eligibility. Historical simulation needs a current frozen WF evaluation and actual final review; it may replay a FAIL without claiming PASS or broker eligibility. In autonomous simulated funds without required human approval, record review findings as advisory and resolve or revise through agents; do not wait for operator adjudication of research metadata. This does not authorize changing the mandate, trading permission, human approval requirements or emergency stop. Historical executors use only historical replay tools and simulated cash/fills; historical mode never routes to Alpaca. Missing unsupported enforcement remains a concrete blocker.",
                     "supervision": "Monitor existing child progress using available thread/status and wait tools, follow up on results, and advance useful independent work. Completion, human blockers and stopped work are distinct; do not claim a phase finished from an iteration limit or a written checklist.",
                 },
             },

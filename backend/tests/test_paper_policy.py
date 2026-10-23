@@ -24,8 +24,7 @@ def test_agents_freeze_criteria_under_mandate_before_testing(tmp_path):
         desk.configure_paper_policy(criteria.model_copy(update={"min_sharpe": -10}), "strategy-agent")
     assert desk.state["policy_version"] == configured["policy_version"]
     desk.manager.context = json.dumps({"mandate": {**mandate, "mode": "historical"}})
-    with pytest.raises(ValueError, match="explicit paper"):
-        desk.configure_paper_policy(criteria, "strategy-agent")
+    assert desk.configure_paper_policy(criteria, "strategy-agent")["policy_version"] == configured["policy_version"]
 
 
 def test_current_alpaca_snapshot_preserves_feed_timestamp_and_staleness(monkeypatch):
@@ -49,10 +48,11 @@ def test_current_alpaca_snapshot_preserves_feed_timestamp_and_staleness(monkeypa
         paper.market_snapshot(["AAPL"])
 
 
+@pytest.mark.parametrize("mode", ["paper", "historical"])
 @pytest.mark.parametrize("source", ["human", "moderator"])
-def test_paper_configuration_preserves_explicit_stop_and_does_not_rearm_after_clear(tmp_path, source):
-    mandate = Mandate(name="Standing paper fund").model_dump()
-    assert mandate["mode"] == "paper" and mandate["trading_allowed"] and not mandate["approval_required"]
+def test_paper_configuration_preserves_explicit_stop_and_does_not_rearm_after_clear(tmp_path, source, mode):
+    mandate = Mandate(name="Standing paper fund", mode=mode).model_dump()
+    assert mandate["mode"] == mode and mandate["trading_allowed"] and not mandate["approval_required"]
     manager = SimpleNamespace(registry=tmp_path / "agents.json", context=json.dumps({"mandate": mandate}))
     desk = Desk(manager)
     desk.state.update(stop=True, stop_source=source)
