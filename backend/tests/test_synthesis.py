@@ -216,3 +216,43 @@ def test_plan_orders_route_requires_gates(board, monkeypatch):
     assert plan.status_code == 200, plan.text
     assert plan.json()["ready"] and all(o["side"] == "buy" for o in plan.json()["orders"])
     assert sum(o["notional"] for o in plan.json()["orders"]) <= 5000 + 1e-6
+
+
+def test_execute_plan_submits_in_order_and_halts_on_block(board, monkeypatch):
+    from backend.app import paper
+
+    manager, client = board
+    client.put("/api/desk/policy", json=policy().model_dump())
+    body = {"name": "b", "bundle": json.loads(bundle().model_dump_json()), "use_model": False}
+    sid = client.post("/api/internal/desk/synthesize", headers=headers("strategy"), json=body).json()["strategy"]["id"]
+    desk = desk_for(manager)
+    desk.state["stop"] = False
+    desk.state["policy"]["trading_allowed"] = True
+    desk.state["policy"]["approval_required"] = False
+    desk.evaluate(sid)
+    desk.state["tests"][sid]["verdict"] = "PASS"
+    client.post("/api/internal/desk/review", headers=headers("adversarial"),
+                json={"strategy_id": sid, "verdict": "APPROVE", "critique": "independent check of concentration and evidence"})
+    snap = snapshot(cash=5000, equity=5000)
+    monkeypatch.setattr("backend.app.routes.synthesis.account_snapshot", lambda: snap)
+    monkeypatch.setattr(paper, "account_snapshot", lambda: snap)
+    calls = []
+
+    def fake_broker(method, path, body=None):
+        calls.append(body["client_order_id"])
+        snap["open_orders"].append({"id": body["client_order_id"]})  # broker now has an open order
+        return {"id": f"brk-{len(calls)}", "status": "accepted", "filled_qty": "0"}
+
+    monkeypatch.setattr(paper, "broker", fake_broker)
+    plan = client.post("/api/internal/desk/plan-orders", headers=headers("executor"), json={"strategy_id": sid}).json()
+    assert plan["ready"] and len(plan["orders"]) >= 2
+    orders = [{"strategy_id": sid, "symbol": o["symbol"], "side": o["side"], "notional": o["notional"], "client_order_id": o["client_order_id"]} for o in plan["orders"]]
+    denied = client.post("/api/internal/desk/execute-plan", headers=headers("strategy"), json={"strategy_id": sid, "orders": orders})
+    assert denied.status_code == 403
+    result = client.post("/api/internal/desk/execute-plan", headers=headers("executor"), json={"strategy_id": sid, "orders": orders}).json()
+    # first order accepted, second blocked because the broker now reports an open order
+    assert result["outcome"] == "blocked" and len(result["submitted"]) == 1
+    assert result["submitted"][0]["status"] == "accepted" and calls == [orders[0]["client_order_id"]]
+    assert "open" in result["halted_reason"].lower() or "existing" in result["halted_reason"].lower()
+    assert result["remaining_client_order_ids"] == [o["client_order_id"] for o in orders[2:]]
+    assert client.get("/api/desk/runs").json()["runs"][-1]["kind"] == "execution"

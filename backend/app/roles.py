@@ -87,6 +87,7 @@ PROFILES = {
             "alpaca_paper_account",
             "alpaca_paper_order",
             "plan_paper_orders",
+            "execute_order_plan",
             "submit_paper_order",
             "watchdog_lessons",
         ]
