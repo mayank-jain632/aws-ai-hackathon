@@ -21,3 +21,8 @@ __pycache__/
 .bedrock_agentcore/
 .bedrock_agentcore.yaml
 resources.json
+
+# Project-local
+backend/.cache/
+data/sec/raw/
+.claude/

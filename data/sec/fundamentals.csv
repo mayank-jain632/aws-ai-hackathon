@@ -1,0 +1,181 @@
+ticker,fy,fp,period_end,filed,form,revenue,net_income,total_debt,concept_revenue,concept_net_income,concept_total_debt
+AAPL,2021,Q2,2021-03-27,2021-04-29,10-Q,89584000000,23630000000,,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AAPL,2021,Q3,2021-06-26,2021-07-28,10-Q,81434000000,21744000000,,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AAPL,2021,Q4,2021-09-25,2021-10-29,10-K,83360000000,20551000000,118700000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+AAPL,2022,Q1,2021-12-25,2022-01-28,10-Q,123945000000,34630000000,117800000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AAPL,2022,Q2,2022-03-26,2022-04-29,10-Q,97278000000,25010000000,113000000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AAPL,2022,Q3,2022-06-25,2022-07-29,10-Q,82959000000,19442000000,108700000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AAPL,2022,Q4,2022-09-24,2022-10-28,10-K,90146000000,20721000000,110100000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+AAPL,2023,Q1,2022-12-31,2023-02-03,10-Q,117154000000,29998000000,109400000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AAPL,2023,Q2,2023-04-01,2023-05-05,10-Q,94836000000,24160000000,107600000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AAPL,2023,Q3,2023-07-01,2023-08-04,10-Q,81797000000,19881000000,105300000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AAPL,2023,Q4,2023-09-30,2023-11-03,10-K,89498000000,22956000000,105103000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+AAPL,2024,Q1,2023-12-30,2024-02-02,10-Q,119575000000,33916000000,106000000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AAPL,2024,Q2,2024-03-30,2024-05-03,10-Q,90753000000,23636000000,102600000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AAPL,2024,Q3,2024-06-29,2024-08-02,10-Q,85777000000,21448000000,98300000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AAPL,2024,Q4,2024-09-28,2024-11-01,10-K,94930000000,14736000000,96662000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+AAPL,2025,Q1,2024-12-28,2025-01-31,10-Q,124300000000,36330000000,94800000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AAPL,2025,Q2,2025-03-29,2025-05-02,10-Q,95359000000,24780000000,92200000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AAPL,2025,Q3,2025-06-28,2025-08-01,10-Q,94036000000,23434000000,91800000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+MSFT,2021,Q3,2021-03-31,2021-04-27,10-Q,41706000000,15457000000,58058000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+MSFT,2021,Q4,2021-06-30,2021-07-29,10-K,46152000000,16458000000,58146000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+MSFT,2022,Q1,2021-09-30,2021-10-26,10-Q,45317000000,20505000000,53288000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+MSFT,2022,Q2,2021-12-31,2022-01-25,10-Q,51728000000,18765000000,53258000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+MSFT,2022,Q3,2022-03-31,2022-04-26,10-Q,49360000000,16728000000,49926000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+MSFT,2022,Q4,2022-06-30,2022-07-28,10-K,51865000000,16740000000,49781000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+MSFT,2023,Q1,2022-09-30,2022-10-25,10-Q,50122000000,17556000000,48622000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+MSFT,2023,Q2,2022-12-31,2023-01-24,10-Q,52747000000,16425000000,48116000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+MSFT,2023,Q3,2023-03-31,2023-04-25,10-Q,52857000000,18299000000,48210000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+MSFT,2023,Q4,2023-06-30,2023-07-27,10-K,56189000000,20081000000,47237000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+MSFT,2024,Q1,2023-09-30,2023-10-24,10-Q,56517000000,22291000000,45694000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+MSFT,2024,Q2,2023-12-31,2024-01-30,10-Q,62020000000,21870000000,47178000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+MSFT,2024,Q3,2024-03-31,2024-04-25,10-Q,61858000000,21939000000,44907000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+MSFT,2024,Q4,2024-06-30,2024-07-30,10-K,64727000000,22036000000,44937000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+MSFT,2025,Q1,2024-09-30,2024-10-30,10-Q,65585000000,24667000000,45117000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+MSFT,2025,Q2,2024-12-31,2025-01-29,10-Q,69632000000,24108000000,44970000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+MSFT,2025,Q3,2025-03-31,2025-04-30,10-Q,70066000000,25824000000,42881000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+MSFT,2025,Q4,2025-06-30,2025-07-30,10-K,76441000000,27233000000,43151000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+NVDA,2021,Q4,2021-01-31,2021-02-26,10-K,5003000000,1457000000,6963000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+NVDA,2022,Q1,2021-05-02,2021-05-26,10-Q,5661000000,1912000000,6963000000.0,Revenues,NetIncomeLoss,LongTermDebt
+NVDA,2022,Q2,2021-08-01,2021-08-20,10-Q,6507000000,2374000000,11943000000.0,Revenues,NetIncomeLoss,LongTermDebt
+NVDA,2022,Q3,2021-10-31,2021-11-22,10-Q,7103000000,2464000000,10944000000.0,Revenues,NetIncomeLoss,LongTermDebt
+NVDA,2022,Q4,2022-01-30,2022-03-18,10-K,7643000000,3002000000,10946000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+NVDA,2023,Q1,2022-05-01,2022-05-27,10-Q,8288000000,1618000000,10947000000.0,Revenues,NetIncomeLoss,LongTermDebt
+NVDA,2023,Q2,2022-07-31,2022-08-31,10-Q,6704000000,656000000,10949000000.0,Revenues,NetIncomeLoss,LongTermDebt
+NVDA,2023,Q3,2022-10-30,2022-11-18,10-Q,5931000000,680000000,10950000000.0,Revenues,NetIncomeLoss,LongTermDebt
+NVDA,2023,Q4,2023-01-29,2023-02-24,10-K,6051000000,1414000000,10953000000.0,Revenues (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+NVDA,2024,Q1,2023-04-30,2023-05-26,10-Q,7192000000,2043000000,10954000000.0,Revenues,NetIncomeLoss,LongTermDebt
+NVDA,2024,Q2,2023-07-30,2023-08-28,10-Q,13507000000,6188000000,9705000000.0,Revenues,NetIncomeLoss,LongTermDebt
+NVDA,2024,Q3,2023-10-29,2023-11-21,10-Q,18120000000,9243000000,9706000000.0,Revenues,NetIncomeLoss,LongTermDebt
+NVDA,2024,Q4,2024-01-28,2024-02-21,10-K,22103000000,12286000000,9709000000.0,Revenues (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+NVDA,2025,Q1,2024-04-28,2024-05-29,10-Q,26044000000,14881000000,9710000000.0,Revenues,NetIncomeLoss,LongTermDebt
+NVDA,2025,Q2,2024-07-28,2024-08-28,10-Q,30040000000,16599000000,8461000000.0,Revenues,NetIncomeLoss,LongTermDebt
+NVDA,2025,Q3,2024-10-27,2024-11-20,10-Q,35082000000,19309000000,8462000000.0,Revenues,NetIncomeLoss,LongTermDebt
+NVDA,2025,Q4,2025-01-26,2025-02-26,10-K,39331000000,22091000000,8463000000.0,Revenues (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+NVDA,2026,Q1,2025-04-27,2025-05-28,10-Q,44062000000,18775000000,8464000000.0,Revenues,NetIncomeLoss,LongTermDebt
+AMZN,2021,Q1,2021-03-31,2021-04-30,10-Q,108518000000,8107000000,33227000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AMZN,2021,Q2,2021-06-30,2021-07-30,10-Q,113080000000,7778000000,51762000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AMZN,2021,Q3,2021-09-30,2021-10-29,10-Q,110812000000,3156000000,51376000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AMZN,2021,Q4,2021-12-31,2022-02-04,10-K,137412000000,14323000000,50553000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+AMZN,2022,Q1,2022-03-31,2022-04-29,10-Q,116444000000,-3844000000,50553000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AMZN,2022,Q2,2022-06-30,2022-07-29,10-Q,121234000000,-2028000000,63435000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AMZN,2022,Q3,2022-09-30,2022-10-28,10-Q,127101000000,2872000000,63541000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AMZN,2022,Q4,2022-12-31,2023-02-03,10-K,149204000000,278000000,70542000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+AMZN,2023,Q1,2023-03-31,2023-04-28,10-Q,127358000000,3172000000,69472000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AMZN,2023,Q2,2023-06-30,2023-08-04,10-Q,134383000000,6750000000,67472000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AMZN,2023,Q3,2023-09-30,2023-10-27,10-Q,143083000000,9879000000,67472000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AMZN,2023,Q4,2023-12-31,2024-02-02,10-K,169961000000,10624000000,67182000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+AMZN,2024,Q1,2024-03-31,2024-05-01,10-Q,143313000000,10431000000,66852000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AMZN,2024,Q2,2024-06-30,2024-08-02,10-Q,147977000000,13485000000,62683000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AMZN,2024,Q3,2024-09-30,2024-11-01,10-Q,158877000000,15328000000,60500000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AMZN,2024,Q4,2024-12-31,2025-02-07,10-K,187792000000,20004000000,58000000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebt
+AMZN,2025,Q1,2025-03-31,2025-05-02,10-Q,155667000000,17127000000,58750000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+AMZN,2025,Q2,2025-06-30,2025-08-01,10-Q,167702000000,18164000000,56082000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebt
+GOOGL,2021,Q1,2021-03-31,2021-04-28,10-Q,55314000000,17930000000,15142000000.0,Revenues,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2021,Q2,2021-06-30,2021-07-28,10-Q,61880000000,18525000000,14608000000.0,Revenues,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2021,Q3,2021-09-30,2021-10-27,10-Q,65118000000,18936000000,14696000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2021,Q4,2021-12-31,2022-02-02,10-K,75325000000,20642000000,15086000000.0,Revenues (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2022,Q1,2022-03-31,2022-04-27,10-Q,68011000000,16436000000,15125000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2022,Q2,2022-06-30,2022-07-27,10-Q,69685000000,16002000000,14966000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2022,Q3,2022-09-30,2022-10-26,10-Q,69092000000,13910000000,15213000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2022,Q4,2022-12-31,2023-02-03,10-K,76048000000,13624000000,15142000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2023,Q1,2023-03-31,2023-04-26,10-Q,69787000000,15051000000,15208000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2023,Q2,2023-06-30,2023-07-26,10-Q,74604000000,18368000000,15159000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2023,Q3,2023-09-30,2023-10-25,10-Q,76693000000,19689000000,15314000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2023,Q4,2023-12-31,2024-01-31,10-K,86310000000,20687000000,14746000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2024,Q1,2024-03-31,2024-04-26,10-Q,80539000000,23662000000,13672000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2024,Q2,2024-06-30,2024-07-24,10-Q,84742000000,23619000000,14280000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2024,Q3,2024-09-30,2024-10-30,10-Q,88268000000,26301000000,14785000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2024,Q4,2024-12-31,2025-02-05,10-K,96469000000,26536000000,14785000000.0,RevenueFromContractWithCustomerExcludingAssessedTax (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2025,Q1,2025-03-31,2025-04-25,10-Q,90234000000,34540000000,14785000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+GOOGL,2025,Q2,2025-06-30,2025-07-24,10-Q,96428000000,28196000000,14785000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2021,Q1,2021-03-31,2021-05-04,10-Q,32266000000,14300000000,279427000000.0,RevenuesNetOfInterestExpense,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2021,Q2,2021-06-30,2021-08-02,10-Q,30479000000,11496000000,299926000000.0,RevenuesNetOfInterestExpense,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2021,Q3,2021-09-30,2021-11-02,10-Q,29647000000,11229000000,298465000000.0,RevenuesNetOfInterestExpense,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2021,Q4,2021-12-31,2022-02-22,10-K,29257000000,9478000000,301005000000.0,RevenuesNetOfInterestExpense (FY minus Q1-Q3),NetIncomeLossAvailableToCommonStockholdersBasic (FY minus Q1-Q3),LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2022,Q1,2022-03-31,2022-05-03,10-Q,30717000000,7845000000,293239000000.0,RevenuesNetOfInterestExpense,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2022,Q2,2022-06-30,2022-08-03,10-Q,30715000000,8649000000,288212000000.0,RevenuesNetOfInterestExpense,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2022,Q3,2022-09-30,2022-11-03,10-Q,32716000000,9737000000,287473000000.0,RevenuesNetOfInterestExpense,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2022,Q4,2022-12-31,2023-02-21,10-K,34547000000,11445000000,295865000000.0,Revenues (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2023,Q1,2023-03-31,2023-05-03,10-Q,38349000000,12193000000,295489000000.0,RevenuesNetOfInterestExpense,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2023,Q2,2023-06-30,2023-08-03,10-Q,41307000000,14011000000,364078000000.0,RevenuesNetOfInterestExpense,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2023,Q3,2023-09-30,2023-11-01,10-Q,39874000000,12685000000,362793000000.0,RevenuesNetOfInterestExpense,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2023,Q4,2023-12-31,2024-02-16,10-K,38574000000,8871000000,391825000000.0,Revenues (FY minus Q1-Q3),NetIncomeLossAvailableToCommonStockholdersBasic (FY minus Q1-Q3),LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2024,Q1,2024-03-31,2024-05-01,10-Q,41934000000,12942000000,395872000000.0,RevenuesNetOfInterestExpense,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2024,Q2,2024-06-30,2024-08-02,10-Q,50200000000,17718000000,394028000000.0,RevenuesNetOfInterestExpense,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2024,Q3,2024-09-30,2024-10-30,10-Q,42654000000,12898000000,410157000000.0,RevenuesNetOfInterestExpense,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2024,Q4,2024-12-31,2025-02-14,10-K,42768000000,13310000000,401418000000.0,RevenuesNetOfInterestExpense (FY minus Q1-Q3),NetIncomeLossAvailableToCommonStockholdersBasic (FY minus Q1-Q3),LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2025,Q1,2025-03-31,2025-05-01,10-Q,45310000000,14317000000,407224000000.0,RevenuesNetOfInterestExpense,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+JPM,2025,Q2,2025-06-30,2025-08-05,10-Q,44912000000,14630000000,419802000000.0,RevenuesNetOfInterestExpense,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities
+XOM,2021,Q1,2021-03-31,2021-05-05,10-Q,59147000000,2796000000,45137000000.0,Revenues,ProfitLoss,LongTermDebtAndCapitalLeaseObligations
+XOM,2021,Q2,2021-06-30,2021-08-04,10-Q,65943000000,4690000000,45319000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligations
+XOM,2021,Q3,2021-09-30,2021-11-03,10-Q,73786000000,6750000000,43639000000.0,Revenues,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligations
+XOM,2021,Q4,2021-12-31,2022-02-23,10-K,86764000000,9362000000,43428000000.0,Revenues (FY minus Q1-Q3),ProfitLoss (FY minus Q1-Q3),LongTermDebtAndCapitalLeaseObligations
+XOM,2022,Q1,2022-03-31,2022-05-04,10-Q,90500000000,5750000000,42651000000.0,Revenues,ProfitLoss,LongTermDebtAndCapitalLeaseObligations
+XOM,2022,Q2,2022-06-30,2022-08-03,10-Q,115681000000,17850000000,39516000000.0,Revenues,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligations
+XOM,2022,Q3,2022-09-30,2022-11-02,10-Q,106512000000,20198000000,39246000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,ProfitLoss,LongTermDebtAndCapitalLeaseObligations
+XOM,2022,Q4,2022-12-31,2023-02-22,10-K,100987000000,11942000000,40559000000.0,Revenues (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebtAndCapitalLeaseObligations
+XOM,2023,Q1,2023-03-31,2023-05-02,10-Q,83644000000,11430000000,39150000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligations
+XOM,2023,Q2,2023-06-30,2023-08-01,10-Q,80795000000,8153000000,37567000000.0,RevenueFromContractWithCustomerExcludingAssessedTax,ProfitLoss,LongTermDebtAndCapitalLeaseObligations
+XOM,2023,Q3,2023-09-30,2023-10-31,10-Q,90760000000,9070000000,36510000000.0,Revenues,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligations
+XOM,2023,Q4,2023-12-31,2024-02-28,10-K,89383000000,8701000000,37483000000.0,Revenues (FY minus Q1-Q3),ProfitLoss (FY minus Q1-Q3),LongTermDebtAndCapitalLeaseObligations
+XOM,2024,Q1,2024-03-31,2024-04-29,10-Q,83083000000,8220000000,32213000000.0,Revenues,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligations
+XOM,2024,Q2,2024-06-30,2024-08-05,10-Q,93060000000,9240000000,36565000000.0,Revenues,NetIncomeLoss,LongTermDebtAndCapitalLeaseObligations
+XOM,2024,Q3,2024-09-30,2024-11-04,10-Q,90016000000,8971000000,36918000000.0,Revenues,ProfitLoss,LongTermDebtAndCapitalLeaseObligations
+XOM,2024,Q4,2024-12-31,2025-02-19,10-K,83426000000,7249000000,36755000000.0,Revenues (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebtAndCapitalLeaseObligations
+XOM,2025,Q1,2025-03-31,2025-05-05,10-Q,83130000000,8033000000,32823000000.0,Revenues,ProfitLoss,LongTermDebtAndCapitalLeaseObligations
+XOM,2025,Q2,2025-06-30,2025-08-04,10-Q,81506000000,7354000000,33570000000.0,Revenues,ProfitLoss,LongTermDebtAndCapitalLeaseObligations
+UNH,2021,Q1,2021-03-31,2021-05-05,10-Q,70196000000,4978000000,46258000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+DebtCurrent
+UNH,2021,Q2,2021-06-30,2021-08-03,10-Q,71321000000,4266000000,48216000000.0,Revenues,NetIncomeLoss,LongTermDebtNoncurrent+DebtCurrent
+UNH,2021,Q3,2021-09-30,2021-11-03,10-Q,72337000000,4191000000,46965000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+DebtCurrent
+UNH,2021,Q4,2021-12-31,2022-02-15,10-K,73743000000,4297000000,46003000000.0,Revenues (FY minus Q1-Q3),ProfitLoss (FY minus Q1-Q3),LongTermDebtNoncurrent+DebtCurrent
+UNH,2022,Q1,2022-03-31,2022-05-04,10-Q,80149000000,5027000000,47493000000.0,Revenues,NetIncomeLoss,LongTermDebtNoncurrent+DebtCurrent
+UNH,2022,Q2,2022-06-30,2022-08-03,10-Q,80332000000,5070000000,51391000000.0,Revenues,NetIncomeLoss,LongTermDebtNoncurrent+DebtCurrent
+UNH,2022,Q3,2022-09-30,2022-11-02,10-Q,80894000000,5384000000,48667000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+DebtCurrent
+UNH,2022,Q4,2022-12-31,2023-02-24,10-K,82787000000,5158000000,57623000000.0,Revenues (FY minus Q1-Q3),ProfitLoss (FY minus Q1-Q3),LongTermDebtNoncurrent+DebtCurrent
+UNH,2023,Q1,2023-03-31,2023-05-03,10-Q,91931000000,5774000000,70588000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+DebtCurrent
+UNH,2023,Q2,2023-06-30,2023-08-02,10-Q,92903000000,5657000000,65589000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+DebtCurrent
+UNH,2023,Q3,2023-09-30,2023-11-06,10-Q,92361000000,5841000000,63369000000.0,Revenues,NetIncomeLoss,LongTermDebtNoncurrent+DebtCurrent
+UNH,2023,Q4,2023-12-31,2024-02-28,10-K,94427000000,5872000000,62537000000.0,Revenues (FY minus Q1-Q3),ProfitLoss (FY minus Q1-Q3),LongTermDebtNoncurrent+DebtCurrent
+UNH,2024,Q1,2024-03-31,2024-05-09,10-Q,99796000000,-1409000000,73637000000.0,Revenues,NetIncomeLoss,LongTermDebtNoncurrent+DebtCurrent
+UNH,2024,Q2,2024-06-30,2024-08-09,10-Q,98855000000,4216000000,75098000000.0,Revenues,NetIncomeLoss,LongTermDebtNoncurrent+DebtCurrent
+UNH,2024,Q3,2024-09-30,2024-11-04,10-Q,100820000000,6258000000,78010000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+DebtCurrent
+UNH,2024,Q4,2024-12-31,2025-02-27,10-K,100807000000,5340000000,76904000000.0,Revenues (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebtNoncurrent+DebtCurrent
+UNH,2025,Q1,2025-03-31,2025-05-07,10-Q,109575000000,6292000000,81271000000.0,Revenues,NetIncomeLoss,LongTermDebtNoncurrent+DebtCurrent
+UNH,2025,Q2,2025-06-30,2025-08-11,10-Q,111616000000,3572000000,79193000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+DebtCurrent
+PG,2021,Q3,2021-03-31,2021-04-20,10-Q,18109000000,3204000000,21053000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2021,Q4,2021-06-30,2021-08-06,10-K,18946000000,2669000000,26719000000.0,Revenues (FY minus Q1-Q3),NetIncomeLossAvailableToCommonStockholdersBasic (FY minus Q1-Q3),LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2022,Q1,2021-09-30,2021-10-19,10-Q,20338000000,4042000000,20558000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2022,Q2,2021-12-31,2022-01-19,10-Q,20953000000,4242000000,22322000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2022,Q3,2022-03-31,2022-04-20,10-Q,19381000000,3355000000,23767000000.0,Revenues,NetIncomeLoss,LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2022,Q4,2022-06-30,2022-08-05,10-K,19515000000,3154000000,26495000000.0,Revenues (FY minus Q1-Q3),ProfitLoss (FY minus Q1-Q3),LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2023,Q1,2022-09-30,2022-10-19,10-Q,20612000000,3939000000,21286000000.0,Revenues,NetIncomeLoss,LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2023,Q2,2022-12-31,2023-01-19,10-Q,20773000000,3863000000,20582000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2023,Q3,2023-03-31,2023-04-21,10-Q,20068000000,3328000000,22874000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2023,Q4,2023-06-30,2023-08-04,10-K,20553000000,3241000000,28329000000.0,Revenues (FY minus Q1-Q3),NetIncomeLossAvailableToCommonStockholdersBasic (FY minus Q1-Q3),LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2024,Q1,2023-09-30,2023-10-18,10-Q,21871000000,4521000000,24069000000.0,Revenues,NetIncomeLoss,LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2024,Q2,2023-12-31,2024-01-23,10-Q,21441000000,3398000000,23096000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2024,Q3,2024-03-31,2024-04-19,10-Q,20195000000,3685000000,24253000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2024,Q4,2024-06-30,2024-08-05,10-K,20532000000,2991000000,29107000000.0,Revenues (FY minus Q1-Q3),NetIncomeLossAvailableToCommonStockholdersBasic (FY minus Q1-Q3),LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2025,Q1,2024-09-30,2024-10-18,10-Q,21737000000,3987000000,25744000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2025,Q2,2024-12-31,2025-01-22,10-Q,21882000000,4659000000,25263000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2025,Q3,2025-03-31,2025-04-24,10-Q,19776000000,3769000000,24252000000.0,Revenues,NetIncomeLoss,LongTermDebtNoncurrent+LongTermDebtCurrent
+PG,2025,Q4,2025-06-30,2025-08-04,10-K,20889000000,3559000000,30372000000.0,Revenues (FY minus Q1-Q3),NetIncomeLoss (FY minus Q1-Q3),LongTermDebtNoncurrent+LongTermDebtCurrent
+CAT,2021,Q1,2021-03-31,2021-05-05,10-Q,11887000000,1530000000,28014000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2021,Q2,2021-06-30,2021-08-04,10-Q,12889000000,1414000000,28014000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2021,Q3,2021-09-30,2021-11-03,10-Q,12397000000,1426000000,28014000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2021,Q4,2021-12-31,2022-02-16,10-K,13798000000,2123000000,31437000000.0,Revenues (FY minus Q1-Q3),ProfitLoss (FY minus Q1-Q3),LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2022,Q1,2022-03-31,2022-05-04,10-Q,13589000000,1537000000,31437000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2022,Q2,2022-06-30,2022-08-03,10-Q,14247000000,1673000000,31437000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2022,Q3,2022-09-30,2022-11-02,10-Q,14994000000,2041000000,31437000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2022,Q4,2022-12-31,2023-02-15,10-K,16597000000,1454000000,31671000000.0,Revenues (FY minus Q1-Q3),NetIncomeLossAvailableToCommonStockholdersBasic (FY minus Q1-Q3),LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2023,Q1,2023-03-31,2023-05-03,10-Q,15862000000,1943000000,31671000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2023,Q2,2023-06-30,2023-08-02,10-Q,17318000000,2922000000,31671000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2023,Q3,2023-09-30,2023-11-01,10-Q,16810000000,2793000000,31671000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2023,Q4,2023-12-31,2024-02-16,10-K,17070000000,2674000000,29115000000.0,Revenues (FY minus Q1-Q3),ProfitLoss (FY minus Q1-Q3),LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2024,Q1,2024-03-31,2024-05-01,10-Q,15799000000,2854000000,29115000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2024,Q2,2024-06-30,2024-08-07,10-Q,16689000000,2681000000,29115000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2024,Q3,2024-09-30,2024-11-06,10-Q,16106000000,2463000000,29115000000.0,Revenues,ProfitLoss,LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2024,Q4,2024-12-31,2025-02-14,10-K,16215000000,2794000000,31744000000.0,Revenues (FY minus Q1-Q3),NetIncomeLossAvailableToCommonStockholdersBasic (FY minus Q1-Q3),LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2025,Q1,2025-03-31,2025-05-07,10-Q,14249000000,2003000000,31744000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+ShortTermBorrowings
+CAT,2025,Q2,2025-06-30,2025-08-06,10-Q,16569000000,2179000000,31744000000.0,Revenues,NetIncomeLossAvailableToCommonStockholdersBasic,LongTermDebtNoncurrent+ShortTermBorrowings
