@@ -13,6 +13,8 @@ from uuid import uuid4
 
 from dotenv import dotenv_values
 
+from backend.app.roles import PROFILES, allow_child
+
 ROOT = Path(__file__).resolve().parents[2]
 LOCAL = ROOT / ".local/agent"
 DEXTER_SOURCE = Path(os.environ.get("DEXTER_SOURCE_DIR", ROOT / ".local/dexter"))
@@ -78,11 +80,14 @@ def bun_binary():
 
 
 class LocalAgent:
-    def __init__(self, manager, agent_id="dexter", name="Dexter", parent_id=None):
+    def __init__(self, manager, agent_id="dexter", name="Dexter", parent_id=None, role=None):
         self.manager = manager
         self.id = agent_id
         self.name = name
         self.parent_id = parent_id
+        self.role = role or ("orchestrator" if agent_id == "dexter" else "research")
+        if self.role not in PROFILES:
+            raise ValueError("Unknown agent role")
         self.local = (
             manager.root / "agent"
             if agent_id == "dexter"
@@ -140,6 +145,8 @@ class LocalAgent:
         return {
             "id": self.id,
             "parentId": self.parent_id,
+            "role": self.role,
+            "tools": PROFILES[self.role]["tools"],
             "name": self.name,
             "status": self.state["status"],
             "model": "us.openai.gpt-5.6-luna",
@@ -191,13 +198,21 @@ class LocalAgent:
             bun_binary()
             if not (DEXTER_SOURCE / ".revision").exists():
                 raise RuntimeError("Dexter source is missing. Run npm run setup:agent.")
+            if self.role == "backtester":
+                from backend.app.desk import desk_for
+
+                record = desk_for(self.manager).strategy(self.state.get("strategy_id", ""))
+                prompt = "Call run_backtest and report its exact result. Frozen numeric strategy: " + json.dumps({
+                    "strategy_id": record["id"], "weights": record["weights"],
+                    "cutoff": record["cutoff"], "end": record["end"],
+                })
             history = []
             for message in self.state["messages"]:
                 if message["role"] == "user":
                     history.append({"query": message["text"], "answer": ""})
                 elif history and message["role"] == "assistant":
                     history[-1]["answer"] = message["text"]
-            history = [turn for turn in history if turn["answer"]][-8:]
+            history = [turn for turn in history if turn["answer"]][-8:] if self.role != "backtester" else []
             self.state["messages"].append(
                 {"id": uuid4().hex, "role": "user", "text": prompt, "source": source}
             )
@@ -220,7 +235,10 @@ class LocalAgent:
                     **environment(),
                     "AGENT_CONTROL_TOKEN": self.manager.token,
                     "LOCAL_AGENT_ID": self.id,
-                    "LOCAL_AGENT_NAME": self.name,
+                    "LOCAL_AGENT_NAME": "Historical evaluator" if self.role == "backtester" else self.name,
+                    "LOCAL_AGENT_ROLE": self.role,
+                    "AGENT_ALLOWED_TOOLS": json.dumps(PROFILES[self.role]["tools"]),
+                    "AGENT_ROLE_INSTRUCTIONS": PROFILES[self.role]["instructions"],
                     "DEXTER_STATE_DIR": str(self.local / ".dexter"),
                 },
                 stdin=asyncio.subprocess.PIPE,
@@ -235,8 +253,8 @@ class LocalAgent:
                 {
                     "prompt": prompt,
                     "history": history,
-                    "files": self.files(),
-                    "context": self.manager.context,
+                    "files": [] if self.role == "backtester" else self.files(),
+                    "context": "" if self.role == "backtester" else self.manager.context,
                 }
             ).encode()
             self.process.stdin.write(payload)
@@ -275,6 +293,8 @@ class LocalAgent:
                 elif kind == "done":
                     answer = event.get("answer", "")
                     if answer.startswith("Error:"):
+                        raise RuntimeError(answer)
+                    if answer.startswith("Reached maximum iterations"):
                         raise RuntimeError(answer)
                     if answer:
                         self.state["messages"].append(
@@ -346,7 +366,7 @@ class AgentManager:
         if self.registry.exists():
             for item in json.loads(self.registry.read_text()):
                 self.agents[item["id"]] = LocalAgent(
-                    self, item["id"], item["name"], item["parentId"]
+                    self, item["id"], item["name"], item["parentId"], item.get("role")
                 )
 
     def snapshot(self):
@@ -370,11 +390,21 @@ class AgentManager:
             agent_id = self.agents[agent_id].parent_id
         return found
 
-    async def create(self, parent_id, name, task):
+    async def create(self, parent_id, name, task, role="research", strategy_id=None):
         async with self.lock:
-            if len(self.agents) >= 6:
-                raise ValueError("This local board supports up to six agents.")
-            child = LocalAgent(self, uuid4().hex[:12], name.strip(), parent_id)
+            allow_child(self.agents[parent_id], role)
+            if len(self.agents) >= 16:
+                raise ValueError("This board supports up to sixteen agents; reuse idle specialists.")
+            if role == "backtester":
+                from backend.app.desk import desk_for
+
+                desk = desk_for(self)
+                desk.strategy(strategy_id)
+                if desk.state["reviews"].get(strategy_id, {}).get("verdict") != "APPROVE":
+                    raise ValueError("Create an adversarial reviewer and obtain approval before blind evaluation")
+            child = LocalAgent(self, uuid4().hex[:12], name.strip(), parent_id, role)
+            if role == "backtester":
+                child.state["strategy_id"] = strategy_id
             self.agents[child.id] = child
             try:
                 await child.start(task, self.agents[parent_id].name)
@@ -385,7 +415,7 @@ class AgentManager:
             temporary.write_text(
                 json.dumps(
                     [
-                        {"id": a.id, "name": a.name, "parentId": a.parent_id}
+                        {"id": a.id, "name": a.name, "parentId": a.parent_id, "role": a.role}
                         for a in self.agents.values()
                         if a.id != "dexter"
                     ]

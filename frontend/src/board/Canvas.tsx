@@ -130,7 +130,7 @@ export function Canvas({ agents, connected, selectedId, onSelect, onDeselect, po
               <text className="agent-name" x="64" y="43">{agent.name.length > 22 ? agent.name.slice(0, 21) + '…' : agent.name}</text>
               <circle className={`status-dot ${agent.status}`} cx="24" cy="84" r="4" />
               <text className="agent-status" x="36" y="89">{connected ? statusLabel[agent.status] : 'Connecting…'}</text>
-              <text className="agent-description" x="19" y="117">{agent.parentId ? 'Specialist agent · shared workspace' : 'Research, delegate, and work together.'}</text>
+              <text className="agent-description" x="19" y="117">{agent.role === 'backtester' ? 'Backtester · historical test only' : `${agent.role || 'Agent'} · shared workspace`}</text>
               <line x1="0" x2="300" y1="137" y2="137" stroke="#e2e6ed" />
               <text className="agent-footer" x="19" y="158">{agent.files.length} {agent.files.length === 1 ? 'file' : 'files'}</text>
               {tree.children.get(agent.id)?.length ? <g role="button" tabIndex={0} aria-label={`${collapsed.has(agent.id) ? 'Expand' : 'Collapse'} ${agent.name} branch`} onPointerDown={event => event.stopPropagation()} onClick={() => toggleBranch(agent.id)} onKeyDown={event => {
