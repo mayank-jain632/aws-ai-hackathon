@@ -1,6 +1,6 @@
 # AWS hackathon
 
-A local agent canvas using React/Vite, FastAPI, and Dexter's actual agent loop. Agents form a recursive tree: each agent can create and manage its own subagents. All workers run in one Docker sandbox and share the same workspace and filesystem. Model calls use Amazon Bedrock.
+A fund management workspace using React/Vite, FastAPI, and Dexter's actual agent loop. Create a fund with a mandate, review its dashboard, and work with its own recursive agent canvas. Agents within a fund share files and keep separate conversations. Everything runs in one Docker container, with Amazon Bedrock model calls.
 
 ## Set up and run
 
@@ -14,7 +14,7 @@ npm run dev
 
 This builds one image and starts one container containing the production frontend, FastAPI backend, and all Dexter workers. No separate frontend or backend process is needed. The first build downloads dependencies; later starts reuse cached layers. Source changes require rebuilding with the same command.
 
-Configure the workshop credentials below before starting. Open http://127.0.0.1:5173. Click an agent to chat or inspect its activity and shared files. Try:
+Configure the workshop credentials below before starting. Open http://127.0.0.1:5173. The fund dashboard preserves your existing board as Team 4 fund. Create another fund in three steps: goals and capital, risk/universe limits, then research mode and permissions. Presets fill sensible defaults; advanced fields remain editable. Each fund has an overview, pause/archive controls, and its own agent canvas. Starting capital is paper cash; no returns, trades, or valuations are invented. Use Start fund planning to create a real Bedrock-authored brief and checklist, or open the canvas and try:
 
 > Create a researcher named Scout. Ask Scout to create a writer agent that writes a short introduction in hello.txt, reads it back, and reports the result.
 
@@ -46,7 +46,7 @@ The tools are on `main`. Their registration and provider calls were checked with
 
 The hosted version runs the same single container on a dedicated EC2 instance. CloudFront provides HTTPS and forwards live API/event traffic without caching it. An encrypted EBS disk stores agent conversations, files, and shared canvas positions across container restarts and deployments. ECR stores the image, Secrets Manager stores API keys and demo credentials, and an IAM instance role grants Bedrock access. Systems Manager manages the host without an open SSH port.
 
-The demo accounts are `kush@example.com`, `mayank@example.com`, and `gerson@example.com`. Demo passwords are saved locally in ignored `.local/hosting/demo-accounts.json`. All accounts join one shared board; chats show who sent each message. Agent activity, files, dragged positions, and connected viewer counts update across browsers. Pan, zoom, selection, and collapsed branches stay personal.
+The demo accounts are `kush@example.com`, `mayank@example.com`, and `gerson@example.com`. Demo passwords are saved locally in ignored `.local/hosting/demo-accounts.json`. All accounts join the same fund workspace; each fund has its own shared board; chats show who sent each message. Agent activity, files, dragged positions, and connected viewer counts update across browsers. Pan, zoom, selection, and collapsed branches stay personal.
 
 Build and deploy or update from this laptop:
 
@@ -69,7 +69,7 @@ Add `--apply` to remove the app. CloudFront disabling and instance termination a
 
 ## Shared workspace
 
-Every agent reads and writes `.local/workspace/` on your laptop, mounted as `/app/.local/workspace` in Docker. Changes are visible to all agents immediately. Coordinate edits when working on the same file.
+The original Team 4 fund keeps its existing `.local/workspace/`, conversations, roster, and layout. New funds store their runtime under `.local/funds/<fund-id>/`, with a shared `workspace/` and separate `agent/`, `agents/`, roster, and layout. Fund metadata lives in `.local/funds.json`. Files, chats, worker authentication tokens, and canvas positions are scoped per fund. All agents inside a fund see its file changes immediately.
 
 Conversations and activity remain separate. Dexter's history is in `.local/agent/`; created agents' histories are under `.local/agents/<id>/`. The roster is in `.local/agents.json`. All of `.local/` is excluded from Git and survives container restarts. The shared canvas layout is stored in `.local/layout.json`.
 
@@ -101,7 +101,9 @@ Credentials stay in the backend. Model requests incur normal Bedrock charges. Ru
 ## Code and checks
 
 - `frontend/src/board/`: recursive tree layout and SVG canvas adapted from the sibling takehome project.
-- `frontend/src/App.tsx`: selected agent's chat, activity, and shared files.
+- `frontend/src/funds/`: fund dashboard, setup, and overview.
+- `frontend/src/AgentWorkspace.tsx`: selected agent's chat, activity, and shared files.
+- `backend/app/funds.py` and `backend/app/routes/funds.py`: fund mandates and scoped canvas access.
 - `backend/app/`: FastAPI, worker lifecycle, and parent–child ownership.
 - `backend/worker/`: pinned Dexter source setup and Bedrock/tool adapters.
 - `backend/Dockerfile` and `compose.yaml`: shared local sandbox.

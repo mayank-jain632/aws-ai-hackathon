@@ -49,13 +49,94 @@ def test_paused_fund_cannot_start_an_agent(tmp_path):
 @pytest.mark.parametrize(
     "values",
     [
-        dict(name="  "),
-        dict(name="Invalid", capital=-1),
-        dict(name="Invalid", universe=["../other"]),
-        dict(name="Invalid", max_drawdown=float("inf")),
-        dict(name="Invalid", cutoff="2024-02-31"),
+        {"name": "  "},
+        {"name": "Invalid", "capital": -1},
+        {"name": "Invalid", "universe": ["../other"]},
+        {"name": "Invalid", "max_drawdown": float("inf")},
+        {"name": "Invalid", "cutoff": "2024-02-31"},
     ],
 )
 def test_invalid_mandates_rejected(values):
     with pytest.raises(ValidationError):
         Mandate(**values)
+
+
+def test_fund_api_scopes_files_tokens_and_layout(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import backend.app.funds as module
+    from backend.app import main
+
+    monkeypatch.setattr(module, "ROOT", tmp_path)
+    monkeypatch.setattr(
+        main, "AgentManager", lambda: AgentManager(root=tmp_path / ".local")
+    )
+    with TestClient(main.app, base_url="http://localhost") as client:
+        first = client.post("/api/funds", json={"name": "First fund"}).json()["id"]
+        second = client.post("/api/funds", json={"name": "Second fund"}).json()["id"]
+        runtime = main.app.state.funds.runtime(first)
+        (runtime.root / "workspace" / "secret.txt").write_text("first fund only")
+        assert (
+            client.get(
+                f"/api/funds/{first}/agents/dexter/file", params={"path": "secret.txt"}
+            ).status_code
+            == 200
+        )
+        assert (
+            client.get(
+                f"/api/funds/{second}/agents/dexter/file", params={"path": "secret.txt"}
+            ).status_code
+            == 404
+        )
+        assert (
+            client.get(
+                f"/api/funds/{second}/agents/dexter/file",
+                params={"path": "../../secret.txt"},
+            ).status_code
+            == 403
+        )
+        assert (
+            client.patch(
+                f"/api/funds/{first}/board/layout",
+                json={"agent_id": "dexter", "position": {"x": 42, "y": 80}},
+            ).status_code
+            == 200
+        )
+        assert client.get(f"/api/funds/{second}/agents").json()["positions"] == {}
+        assert (
+            client.get(f"/api/funds/{first}/agents").json()["positions"]["dexter"]["x"]
+            == 42
+        )
+        assert (
+            client.get(
+                "/api/internal/agents",
+                headers={"X-Agent-ID": "dexter", "X-Agent-Token": runtime.token},
+            ).status_code
+            == 200
+        )
+        assert (
+            client.get(
+                "/api/internal/agents",
+                headers={"X-Agent-ID": "dexter", "X-Agent-Token": "invalid"},
+            ).status_code
+            == 403
+        )
+        assert (
+            client.patch(
+                f"/api/funds/{first}/status", json={"status": "paused"}
+            ).status_code
+            == 200
+        )
+        assert (
+            client.post(
+                f"/api/funds/{first}/agents/dexter/messages", json={"text": "Run now"}
+            ).status_code
+            == 409
+        )
+        assert (
+            client.patch(
+                f"/api/funds/{first}/status", json={"status": "active"}
+            ).status_code
+            == 200
+        )
+        assert client.get("/api/funds/does-not-exist").status_code == 404

@@ -1,14 +1,15 @@
 """Fund creation, mandate management, and scoped existing canvas API."""
 
-from contextlib import asynccontextmanager
 from collections.abc import AsyncIterable
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel
 
+from backend.app.agent import AgentManager
 from backend.app.funds import FundStore, Mandate
 
 
@@ -91,11 +92,17 @@ async def change_status(fund_id: str, body: StatusUpdate, request: Request) -> d
 
 
 # Reuse the tested canvas handlers without duplicating their validation and SSE behavior.
+def event_runtime(fund_id: str, request: Request) -> AgentManager:
+    return fund(request, fund_id)
+
+
 @router.get("/api/funds/{fund_id}/events", response_class=EventSourceResponse)
-async def fund_events(fund_id: str, request: Request) -> AsyncIterable[ServerSentEvent]:
+async def fund_events(
+    request: Request, runtime: Annotated[AgentManager, Depends(event_runtime)]
+) -> AsyncIterable[ServerSentEvent]:
     from backend.app.main import events
 
-    request.state.fund_manager = fund(request, fund_id)
+    request.state.fund_manager = runtime
     async for event in events(request):
         yield event
 
